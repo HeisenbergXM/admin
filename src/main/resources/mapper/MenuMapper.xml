@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.admin.mapper.MenuMapper">
+
+    <select id="selectAllEnabled" resultType="com.company.admin.entity.Menu">
+        SELECT * FROM sys_menu
+        WHERE status = 1 AND deleted = 0
+        ORDER BY sort_order ASC
+    </select>
+
+    <select id="selectByUserId" resultType="com.company.admin.entity.Menu">
+        SELECT DISTINCT m.*
+        FROM sys_user_role ur
+        INNER JOIN sys_role r ON ur.role_id = r.id AND r.status = 1 AND r.deleted = 0
+        INNER JOIN sys_role_menu rm ON r.id = rm.role_id
+        INNER JOIN sys_menu m ON rm.menu_id = m.id AND m.status = 1 AND m.deleted = 0
+        WHERE ur.user_id = #{userId}
+        ORDER BY m.sort_order ASC
+    </select>
+
+</mapper>

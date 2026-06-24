@@ -1,0 +1,106 @@
+package com.company.admin.controller;
+
+import com.company.admin.annotation.OpLog;
+import com.company.admin.common.PageResult;
+import com.company.admin.common.Result;
+import com.company.admin.dto.request.*;
+import com.company.admin.entity.User;
+import com.company.admin.service.UserService;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import javax.validation.Valid;
+
+@RestController
+@RequestMapping("/api/user")
+public class UserController {
+
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @GetMapping("/list")
+    @PreAuthorize("hasAuthority('sys:user:list')")
+    public Result<PageResult<User>> list(UserQueryRequest request) {
+        return Result.success(userService.page(request));
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('sys:user:list')")
+    public Result<User> getById(@PathVariable Long id) {
+        return Result.success(userService.getById(id));
+    }
+
+    @OpLog(value = "新增用户", type = OpLog.LogType.INSERT)
+    @PostMapping
+    @PreAuthorize("hasAuthority('sys:user:add')")
+    public Result<Void> create(@Valid @RequestBody UserCreateRequest request) {
+        userService.create(request);
+        return Result.success();
+    }
+
+    @OpLog(value = "修改用户", type = OpLog.LogType.UPDATE)
+    @PutMapping
+    @PreAuthorize("hasAuthority('sys:user:edit')")
+    public Result<Void> update(@Valid @RequestBody UserUpdateRequest request) {
+        userService.update(request);
+        return Result.success();
+    }
+
+    @OpLog(value = "删除用户", type = OpLog.LogType.DELETE)
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('sys:user:delete')")
+    public Result<Void> delete(@PathVariable Long id) {
+        userService.delete(id);
+        return Result.success();
+    }
+
+    @GetMapping("/{id}/roles")
+    @PreAuthorize("hasAuthority('sys:user:list')")
+    public Result<?> getUserRoles(@PathVariable Long id) {
+        return Result.success(userService.getUserRoleIds(id));
+    }
+
+    @OpLog(value = "分配用户角色", type = OpLog.LogType.UPDATE)
+    @PutMapping("/{id}/roles")
+    @PreAuthorize("hasAuthority('sys:user:role')")
+    public Result<Void> assignRoles(@PathVariable Long id,
+                                    @Valid @RequestBody UserRoleRequest request) {
+        request.setUserId(id);
+        userService.assignRoles(request);
+        return Result.success();
+    }
+
+    @OpLog(value = "重置密码", type = OpLog.LogType.UPDATE)
+    @PutMapping("/{id}/reset-password")
+    @PreAuthorize("hasAuthority('sys:user:resetPwd')")
+    public Result<Void> resetPassword(@PathVariable Long id) {
+        userService.resetPassword(id);
+        return Result.success();
+    }
+
+    @PutMapping("/profile")
+    public Result<Void> updateProfile(Authentication authentication,
+                                      @Valid @RequestBody UserUpdateRequest request) {
+        Long userId = getCurrentUserId(authentication);
+        userService.updateProfile(userId, request);
+        return Result.success();
+    }
+
+    @PutMapping("/password")
+    public Result<Void> updatePassword(Authentication authentication,
+                                       @RequestBody PasswordUpdateRequest request) {
+        Long userId = getCurrentUserId(authentication);
+        userService.updatePassword(userId, request.getOldPassword(),
+                request.getNewPassword());
+        return Result.success();
+    }
+
+    private Long getCurrentUserId(Authentication authentication) {
+        String username = authentication.getName();
+        User user = userService.getByUsername(username);
+        return user.getId();
+    }
+}
