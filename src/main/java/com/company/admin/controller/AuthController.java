@@ -6,6 +6,7 @@ import com.company.admin.dto.response.LoginResponse;
 import com.company.admin.dto.response.UserInfoResponse;
 import com.company.admin.service.AuthService;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;

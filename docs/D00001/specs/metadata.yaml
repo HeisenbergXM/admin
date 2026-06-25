@@ -1,0 +1,17 @@
+spec_id: D00001
+external_id: D00001
+request_type: 产品需求
+request_type_code: product
+title: 车辆全生命周期管理系统（VLM）
+source_files:
+  - sources/Sample of Master Sheet.xlsx
+status: pending_approval
+created: 2026-06-23
+key_decisions:
+  - 生命周期严格流程卡控（前置阶段未确认不可执行后续操作）
+  - 收款必须在持有正式发票之后（形式发票须先转正）
+  - 形式发票转正式发票保留两组发票记录
+  - 车型/内饰/外饰从 DATA 表拆分为独立主数据；经销商维护归入主数据管理
+  - 生命周期各阶段独立建表，主表只存主键/VIN/生命周期阶段
+  - 每阶段确认机制：确认前可改、确认后锁定并推进下一阶段；阶段表含确认人/确认时间+创建/修改审计字段
+  - 物流单据驱动批量配送：车厂到仓库用运输单(整单确认)；仓库到经销商用发车清单→行车路单→经销商行(按经销商行签收确认)

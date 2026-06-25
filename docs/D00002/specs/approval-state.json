@@ -1,0 +1,25 @@
+{
+  "spec_id": "D00002",
+  "status": "pending_approval",
+  "title": "车辆全生命周期管理系统 · 前端页面设计（页面与流转说明）",
+  "created": "2026-06-24",
+  "derived_from": "D00001",
+  "artifacts": {
+    "source": "source.md",
+    "metadata": "metadata.yaml",
+    "design": "design.md",
+    "tasks": "tasks.md"
+  },
+  "key_decisions": [
+    "呈现粒度：线框图 + 字段表 + 交互流转说明",
+    "覆盖范围：仅核心业务模块（生产/运输/销售/财务/全景视图）",
+    "不含登录页与全局布局框架",
+    "全系统统一草稿→确认→推进生命周期交互范式",
+    "仅车辆全景视图（业务主管）可导出"
+  ],
+  "approval": {
+    "approved": false,
+    "approved_by": null,
+    "approved_at": null
+  }
+}

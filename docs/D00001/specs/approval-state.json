@@ -1,0 +1,22 @@
+{
+  "spec_id": "D00001",
+  "status": "pending_approval",
+  "title": "车辆全生命周期管理系统（VLM）",
+  "created": "2026-06-23",
+  "artifacts": {
+    "source": "source.md",
+    "metadata": "metadata.yaml",
+    "design": "design.md",
+    "tasks": "tasks.md"
+  },
+  "key_decisions": [
+    "生命周期严格流程卡控",
+    "形式发票转正式发票保留两组发票记录",
+    "车型/内饰/外饰从 DATA 表拆分为独立主数据"
+  ],
+  "approval": {
+    "approved": false,
+    "approved_by": null,
+    "approved_at": null
+  }
+}
