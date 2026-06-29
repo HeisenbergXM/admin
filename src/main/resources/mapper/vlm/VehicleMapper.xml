@@ -35,6 +35,55 @@
         WHERE v.id = #{vehicleId} AND v.deleted = 0
     </select>
 
+    <select id="selectVehiclePage" resultType="com.company.admin.dto.response.VehicleListResponse">
+        SELECT
+            v.id,
+            v.vin,
+            v.lifecycle_stage,
+            p.model_id,
+            m.model_name,
+            m.series,
+            m.spec,
+            m.model_code,
+            p.year_make,
+            p.exterior_color_id,
+            ec.color_name AS exterior_color_name,
+            p.interior_color_id,
+            ic.color_name AS interior_color_name,
+            a.dealer_id,
+            d.dealer_name,
+            p.stage_status AS production_status,
+            v.create_time,
+            v.update_time
+        FROM t_vehicle v
+        LEFT JOIN t_veh_production p ON p.vehicle_id = v.id AND p.deleted = 0
+        LEFT JOIN t_md_model m ON m.id = p.model_id AND m.deleted = 0
+        LEFT JOIN t_md_exterior_color ec ON ec.id = p.exterior_color_id AND ec.deleted = 0
+        LEFT JOIN t_md_interior_color ic ON ic.id = p.interior_color_id AND ic.deleted = 0
+        LEFT JOIN t_veh_allocation a ON a.vehicle_id = v.id AND a.deleted = 0
+        LEFT JOIN t_md_dealer d ON d.id = a.dealer_id AND d.deleted = 0
+        WHERE v.deleted = 0
+        <if test="query.vin != null and query.vin != ''">
+            AND v.vin LIKE CONCAT('%', #{query.vin}, '%')
+        </if>
+        <if test="query.modelId != null">
+            AND p.model_id = #{query.modelId}
+        </if>
+        <if test="query.modelName != null and query.modelName != ''">
+            AND m.model_name LIKE CONCAT('%', #{query.modelName}, '%')
+        </if>
+        <if test="query.series != null and query.series != ''">
+            AND m.series = #{query.series}
+        </if>
+        <if test="query.lifecycleStage != null and query.lifecycleStage != ''">
+            AND v.lifecycle_stage = #{query.lifecycleStage}
+        </if>
+        <if test="query.dealerId != null">
+            AND a.dealer_id = #{query.dealerId}
+        </if>
+        ORDER BY v.id DESC
+    </select>
+
     <select id="selectBasicInfoByIds" resultType="com.company.admin.dto.response.VehicleBasicInfo">
         <include refid="basicInfoSelect"/>
         WHERE v.id IN
