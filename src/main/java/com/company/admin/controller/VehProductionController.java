@@ -6,6 +6,7 @@ import com.company.admin.dto.request.ProductionSaveRequest;
 import com.company.admin.dto.response.ProductionResponse;
 import com.company.admin.service.VehProductionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,7 +40,7 @@ public class VehProductionController {
     @Operation(summary = "更新生产草稿")
     @PreAuthorize("hasAuthority('sys:vehicle:edit')")
     @OpLog(value = "更新生产草稿", type = OpLog.LogType.UPDATE)
-    public Result<Void> updateProduction(@PathVariable Long vehicleId,
+    public Result<Void> updateProduction(@Parameter(description = "车辆 ID") @PathVariable Long vehicleId,
                                          @Valid @RequestBody ProductionSaveRequest request) {
         vehProductionService.updateProduction(vehicleId, request);
         return Result.success();
@@ -49,7 +50,7 @@ public class VehProductionController {
     @Operation(summary = "确认生产录入")
     @PreAuthorize("hasAuthority('sys:vehicle:confirm')")
     @OpLog(value = "确认生产录入", type = OpLog.LogType.UPDATE)
-    public Result<Void> confirmProduction(@PathVariable Long vehicleId) {
+    public Result<Void> confirmProduction(@Parameter(description = "车辆 ID") @PathVariable Long vehicleId) {
         vehProductionService.confirmProduction(vehicleId);
         return Result.success();
     }
@@ -57,7 +58,7 @@ public class VehProductionController {
     @GetMapping("/{vehicleId}")
     @Operation(summary = "获取生产数据")
     @PreAuthorize("hasAuthority('sys:vehicle:list')")
-    public Result<ProductionResponse> getProduction(@PathVariable Long vehicleId) {
+    public Result<ProductionResponse> getProduction(@Parameter(description = "车辆 ID") @PathVariable Long vehicleId) {
         return Result.success(vehProductionService.getProduction(vehicleId));
     }
 }

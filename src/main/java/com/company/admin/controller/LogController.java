@@ -1,5 +1,9 @@
 package com.company.admin.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.company.admin.annotation.OpLog;
 import com.company.admin.common.PageResult;
 import com.company.admin.common.Result;
@@ -14,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Tag(name = "日志管理")
 @RequestMapping("/api/log")
 public class LogController {
 
@@ -27,20 +32,22 @@ public class LogController {
     }
 
     @GetMapping("/operation/list")
+    @Operation(summary = "操作日志分页列表")
     @OpLog(value = "查询操作日志", type = OpLog.LogType.SELECT, saveResult = true)
     @PreAuthorize("hasAuthority('sys:log:list')")
     public Result<PageResult<OperationLog>> operationList(
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @Parameter(description = "页码，从 1 开始") @RequestParam(defaultValue = "1") int pageNum,
+            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
         return Result.success(operationLogService.page(pageNum, pageSize));
     }
 
     @GetMapping("/login/list")
+    @Operation(summary = "登录日志分页列表")
     @OpLog(value = "查询登录日志", type = OpLog.LogType.SELECT, saveResult = true)
     @PreAuthorize("hasAuthority('sys:log:list')")
     public Result<PageResult<LoginLog>> loginList(
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @Parameter(description = "页码，从 1 开始") @RequestParam(defaultValue = "1") int pageNum,
+            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
         return Result.success(loginLogService.page(pageNum, pageSize));
     }
 }

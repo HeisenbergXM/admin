@@ -1,14 +1,23 @@
 package com.company.admin.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.List;
 import java.util.Set;
 
+@Schema(description = "当前登录用户信息")
 public class UserInfoResponse {
+    @Schema(description = "用户 ID")
     private Long userId;
+    @Schema(description = "用户名")
     private String username;
+    @Schema(description = "昵称")
     private String nickname;
+    @Schema(description = "头像地址")
     private String avatar;
+    @Schema(description = "角色编码列表")
     private List<String> roles;
+    @Schema(description = "权限标识集合")
     private Set<String> permissions;
 
     public Long getUserId() {

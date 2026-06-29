@@ -7,17 +7,18 @@ import com.company.admin.dto.request.DictItemSaveRequest;
 import com.company.admin.dto.request.DictTypeCreateRequest;
 import com.company.admin.dto.request.DictTypeQueryRequest;
 import com.company.admin.dto.request.DictTypeUpdateRequest;
+import com.company.admin.dto.request.StatusUpdateRequest;
 import com.company.admin.entity.DictItem;
 import com.company.admin.entity.DictType;
 import com.company.admin.service.DictService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 字典管理控制器
@@ -55,7 +56,7 @@ public class DictController {
     @Operation(summary = "编辑字典类型")
     @PreAuthorize("hasAuthority('sys:dict:edit')")
     @OpLog(value = "编辑字典类型", type = OpLog.LogType.UPDATE)
-    public Result<Void> updateType(@PathVariable Long id,
+    public Result<Void> updateType(@Parameter(description = "主键 ID") @PathVariable Long id,
                                    @Valid @RequestBody DictTypeUpdateRequest request) {
         request.setId(id);
         dictService.updateDictType(request);
@@ -66,7 +67,7 @@ public class DictController {
     @Operation(summary = "删除字典类型")
     @PreAuthorize("hasAuthority('sys:dict:delete')")
     @OpLog(value = "删除字典类型", type = OpLog.LogType.DELETE)
-    public Result<Void> deleteType(@PathVariable Long id) {
+    public Result<Void> deleteType(@Parameter(description = "主键 ID") @PathVariable Long id) {
         dictService.deleteDictType(id);
         return Result.success();
     }
@@ -75,9 +76,9 @@ public class DictController {
     @Operation(summary = "启停字典类型")
     @PreAuthorize("hasAuthority('sys:dict:edit')")
     @OpLog(value = "启停字典类型", type = OpLog.LogType.UPDATE)
-    public Result<Void> toggleTypeStatus(@PathVariable Long id,
-                                         @RequestBody Map<String, Integer> body) {
-        dictService.toggleDictTypeStatus(id, body.get("status"));
+    public Result<Void> toggleTypeStatus(@Parameter(description = "主键 ID") @PathVariable Long id,
+                                         @Valid @RequestBody StatusUpdateRequest request) {
+        dictService.toggleDictTypeStatus(id, request.getStatus());
         return Result.success();
     }
 
@@ -86,7 +87,7 @@ public class DictController {
     @GetMapping("/types/{typeId}/items")
     @Operation(summary = "字典项列表")
     @PreAuthorize("hasAuthority('sys:dict:list')")
-    public Result<List<DictItem>> listItems(@PathVariable Long typeId) {
+    public Result<List<DictItem>> listItems(@Parameter(description = "字典类型 ID") @PathVariable Long typeId) {
         return Result.success(dictService.listDictItems(typeId));
     }
 
@@ -103,7 +104,7 @@ public class DictController {
     @Operation(summary = "编辑字典项")
     @PreAuthorize("hasAuthority('sys:dict:edit')")
     @OpLog(value = "编辑字典项", type = OpLog.LogType.UPDATE)
-    public Result<Void> updateItem(@PathVariable Long id,
+    public Result<Void> updateItem(@Parameter(description = "主键 ID") @PathVariable Long id,
                                    @Valid @RequestBody DictItemSaveRequest request) {
         request.setId(id);
         dictService.updateDictItem(request);
@@ -114,7 +115,7 @@ public class DictController {
     @Operation(summary = "删除字典项")
     @PreAuthorize("hasAuthority('sys:dict:delete')")
     @OpLog(value = "删除字典项", type = OpLog.LogType.DELETE)
-    public Result<Void> deleteItem(@PathVariable Long id) {
+    public Result<Void> deleteItem(@Parameter(description = "主键 ID") @PathVariable Long id) {
         dictService.deleteDictItem(id);
         return Result.success();
     }
@@ -123,9 +124,9 @@ public class DictController {
     @Operation(summary = "启停字典项")
     @PreAuthorize("hasAuthority('sys:dict:edit')")
     @OpLog(value = "启停字典项", type = OpLog.LogType.UPDATE)
-    public Result<Void> toggleItemStatus(@PathVariable Long id,
-                                         @RequestBody Map<String, Integer> body) {
-        dictService.toggleDictItemStatus(id, body.get("status"));
+    public Result<Void> toggleItemStatus(@Parameter(description = "主键 ID") @PathVariable Long id,
+                                         @Valid @RequestBody StatusUpdateRequest request) {
+        dictService.toggleDictItemStatus(id, request.getStatus());
         return Result.success();
     }
 
@@ -133,7 +134,7 @@ public class DictController {
 
     @GetMapping("/code/{dictCode}")
     @Operation(summary = "按字典编码获取字典项列表（前端下拉用）")
-    public Result<List<DictItem>> getItemsByCode(@PathVariable String dictCode) {
+    public Result<List<DictItem>> getItemsByCode(@Parameter(description = "字典编码") @PathVariable String dictCode) {
         return Result.success(dictService.getItemsByCode(dictCode));
     }
 }

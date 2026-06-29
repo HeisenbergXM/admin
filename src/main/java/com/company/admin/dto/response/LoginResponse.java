@@ -1,7 +1,12 @@
 package com.company.admin.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "登录响应")
 public class LoginResponse {
+    @Schema(description = "JWT 访问令牌")
     private String token;
+    @Schema(description = "用户 ID")
     private Long userId;
 
     public LoginResponse() {

@@ -1,23 +1,35 @@
 package com.company.admin.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
 @TableName("sys_operation_log")
+@Schema(description = "操作日志")
 public class OperationLog {
 
     @TableId(type = IdType.AUTO)
+    @Schema(description = "主键 ID")
     private Long id;
 
+    @Schema(description = "用户 ID")
     private Long userId;
+    @Schema(description = "用户名")
     private String username;
+    @Schema(description = "操作名称")
     private String operation;
+    @Schema(description = "请求方法")
     private String method;
+    @Schema(description = "请求参数")
     private String params;
+    @Schema(description = "执行结果")
     private String result;
+    @Schema(description = "IP 地址")
     private String ip;
 
     @TableField(fill = FieldFill.INSERT)
+    @Schema(description = "创建时间")
     private LocalDateTime createTime;
 
     public Long getId() {

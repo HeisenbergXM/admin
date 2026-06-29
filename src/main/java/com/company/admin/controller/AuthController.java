@@ -1,5 +1,8 @@
 package com.company.admin.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.company.admin.common.Result;
 import com.company.admin.dto.request.LoginRequest;
 import com.company.admin.dto.response.LoginResponse;
@@ -12,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 @RestController
+@Tag(name = "认证管理")
 @RequestMapping("/api/auth")
 public class AuthController {
 
@@ -22,6 +26,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Operation(summary = "用户登录")
     public Result<LoginResponse> login(@Valid @RequestBody LoginRequest request,
                                         HttpServletRequest httpRequest) {
         LoginResponse response = authService.login(request, httpRequest);
@@ -29,6 +34,7 @@ public class AuthController {
     }
 
     @GetMapping("/info")
+    @Operation(summary = "获取当前用户信息")
     public Result<UserInfoResponse> info(Authentication authentication) {
         UserInfoResponse response = authService.getCurrentUserInfo(
                 authentication.getName());

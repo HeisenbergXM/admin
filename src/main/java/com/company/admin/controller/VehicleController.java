@@ -9,6 +9,7 @@ import com.company.admin.dto.response.VehicleDetailResponse;
 import com.company.admin.dto.response.VehicleListResponse;
 import com.company.admin.service.VehicleService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,13 +39,13 @@ public class VehicleController {
     @GetMapping("/{id}")
     @Operation(summary = "车辆详情")
     @PreAuthorize("hasAuthority('sys:vehicle:list')")
-    public Result<VehicleDetailResponse> getDetail(@PathVariable Long id) {
+    public Result<VehicleDetailResponse> getDetail(@Parameter(description = "主键 ID") @PathVariable Long id) {
         return Result.success(vehicleService.getDetail(id));
     }
 
     @GetMapping("/{id}/basic-info")
     @Operation(summary = "车辆基本信息")
-    public Result<VehicleBasicInfo> getBasicInfo(@PathVariable Long id) {
+    public Result<VehicleBasicInfo> getBasicInfo(@Parameter(description = "主键 ID") @PathVariable Long id) {
         return Result.success(vehicleService.getBasicInfo(id));
     }
 
@@ -56,7 +57,7 @@ public class VehicleController {
 
     @GetMapping("/check-vin")
     @Operation(summary = "VIN 唯一性校验")
-    public Result<Boolean> checkVin(@RequestParam String vin) {
+    public Result<Boolean> checkVin(@Parameter(description = "车辆识别码 VIN") @RequestParam String vin) {
         return Result.success(vehicleService.checkVinAvailable(vin));
     }
 }

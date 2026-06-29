@@ -1,20 +1,31 @@
 package com.company.admin.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
+@Schema(description = "菜单创建或编辑请求")
 public class MenuCreateRequest {
+    @Schema(description = "父级 ID")
     private Long parentId;
     @NotBlank(message = "菜单名称不能为空")
     @Size(max = 50, message = "菜单名称最长50个字符")
+    @Schema(description = "菜单名称")
     private String menuName;
     @NotNull(message = "菜单类型不能为空")
+    @Schema(description = "菜单类型：1=目录，2=菜单，3=按钮")
     private Integer menuType;
+    @Schema(description = "路由路径")
     private String path;
+    @Schema(description = "权限标识")
     private String permission;
+    @Schema(description = "菜单图标")
     private String icon;
+    @Schema(description = "排序号")
     private Integer sortOrder;
+    @Schema(description = "状态：0=停用，1=正常", example = "1")
     private Integer status;
 
     public Long getParentId() {

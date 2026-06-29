@@ -1,14 +1,20 @@
 package com.company.admin.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.baomidou.mybatisplus.annotation.*;
 
 @TableName("sys_role_menu")
+@Schema(description = "角色菜单关联")
 public class RoleMenu {
 
     @TableId(type = IdType.AUTO)
+    @Schema(description = "主键 ID")
     private Long id;
 
+    @Schema(description = "角色 ID")
     private Long roleId;
+    @Schema(description = "菜单 ID")
     private Long menuId;
 
     public Long getId() {

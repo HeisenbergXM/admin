@@ -1,29 +1,43 @@
 package com.company.admin.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.baomidou.mybatisplus.annotation.*;
 import java.time.LocalDateTime;
 
 @TableName("sys_user")
+@Schema(description = "用户")
 public class User {
 
     @TableId(type = IdType.AUTO)
+    @Schema(description = "主键 ID")
     private Long id;
 
+    @Schema(description = "用户名")
     private String username;
+    @Schema(description = "密码")
     private String password;
+    @Schema(description = "昵称")
     private String nickname;
+    @Schema(description = "邮箱")
     private String email;
+    @Schema(description = "手机号")
     private String phone;
+    @Schema(description = "状态：0=停用，1=正常", example = "1")
     private Integer status;
+    @Schema(description = "头像地址")
     private String avatar;
 
     @TableField(fill = FieldFill.INSERT)
+    @Schema(description = "创建时间")
     private LocalDateTime createTime;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
+    @Schema(description = "更新时间")
     private LocalDateTime updateTime;
 
     @TableLogic
+    @Schema(description = "逻辑删除标记：0=未删除，1=已删除")
     private Integer deleted;
 
     public Long getId() {

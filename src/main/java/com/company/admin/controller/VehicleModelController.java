@@ -6,16 +6,17 @@ import com.company.admin.common.Result;
 import com.company.admin.dto.request.ModelCreateRequest;
 import com.company.admin.dto.request.ModelQueryRequest;
 import com.company.admin.dto.request.ModelUpdateRequest;
+import com.company.admin.dto.request.StatusUpdateRequest;
 import com.company.admin.entity.VehicleModel;
 import com.company.admin.service.VehicleModelService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 车型数据控制器
@@ -63,7 +64,7 @@ public class VehicleModelController {
     @Operation(summary = "编辑车型")
     @PreAuthorize("hasAuthority('sys:master:edit')")
     @OpLog(value = "编辑车型", type = OpLog.LogType.UPDATE)
-    public Result<Void> updateModel(@PathVariable Long id,
+    public Result<Void> updateModel(@Parameter(description = "主键 ID") @PathVariable Long id,
                                     @Valid @RequestBody ModelUpdateRequest request) {
         request.setId(id);
         vehicleModelService.updateModel(request);
@@ -74,7 +75,7 @@ public class VehicleModelController {
     @Operation(summary = "删除车型")
     @PreAuthorize("hasAuthority('sys:master:delete')")
     @OpLog(value = "删除车型", type = OpLog.LogType.DELETE)
-    public Result<Void> deleteModel(@PathVariable Long id) {
+    public Result<Void> deleteModel(@Parameter(description = "主键 ID") @PathVariable Long id) {
         vehicleModelService.deleteModel(id);
         return Result.success();
     }
@@ -83,9 +84,9 @@ public class VehicleModelController {
     @Operation(summary = "启停车型")
     @PreAuthorize("hasAuthority('sys:master:edit')")
     @OpLog(value = "启停车型", type = OpLog.LogType.UPDATE)
-    public Result<Void> toggleModelStatus(@PathVariable Long id,
-                                          @RequestBody Map<String, Integer> body) {
-        vehicleModelService.toggleModelStatus(id, body.get("status"));
+    public Result<Void> toggleModelStatus(@Parameter(description = "主键 ID") @PathVariable Long id,
+                                          @Valid @RequestBody StatusUpdateRequest request) {
+        vehicleModelService.toggleModelStatus(id, request.getStatus());
         return Result.success();
     }
 }

@@ -1,21 +1,27 @@
 package com.company.admin.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 /**
  * 外饰颜色创建请求
  */
+@Schema(description = "外饰颜色创建请求")
 public class ExteriorColorCreateRequest {
 
     @NotBlank(message = "颜色名称不能为空")
     @Size(max = 100, message = "颜色名称长度不能超过100")
+    @Schema(description = "颜色名称")
     private String colorName;
 
     @Size(max = 100, message = "中文名称长度不能超过100")
+    @Schema(description = "颜色中文名称")
     private String colorNameCn;
 
     /** 状态：0停用 1正常，默认1 */
+    @Schema(description = "状态：0=停用，1=正常", example = "1")
     private Integer status = 1;
 
     public String getColorName() {

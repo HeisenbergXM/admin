@@ -1,9 +1,15 @@
 package com.company.admin.common;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(description = "统一响应结果")
 public class Result<T> {
 
+    @Schema(description = "业务状态码")
     private int code;
+    @Schema(description = "响应数据")
     private T data;
+    @Schema(description = "响应消息")
     private String message;
 
     private Result() {}

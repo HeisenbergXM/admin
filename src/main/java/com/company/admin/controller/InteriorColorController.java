@@ -6,16 +6,17 @@ import com.company.admin.common.Result;
 import com.company.admin.dto.request.InteriorColorCreateRequest;
 import com.company.admin.dto.request.InteriorColorQueryRequest;
 import com.company.admin.dto.request.InteriorColorUpdateRequest;
+import com.company.admin.dto.request.StatusUpdateRequest;
 import com.company.admin.entity.InteriorColor;
 import com.company.admin.service.InteriorColorService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 内饰颜色控制器
@@ -57,7 +58,7 @@ public class InteriorColorController {
     @Operation(summary = "编辑内饰颜色")
     @PreAuthorize("hasAuthority('sys:master:edit')")
     @OpLog(value = "编辑内饰颜色", type = OpLog.LogType.UPDATE)
-    public Result<Void> updateInteriorColor(@PathVariable Long id,
+    public Result<Void> updateInteriorColor(@Parameter(description = "主键 ID") @PathVariable Long id,
                                             @Valid @RequestBody InteriorColorUpdateRequest request) {
         request.setId(id);
         interiorColorService.updateInteriorColor(request);
@@ -68,7 +69,7 @@ public class InteriorColorController {
     @Operation(summary = "删除内饰颜色")
     @PreAuthorize("hasAuthority('sys:master:delete')")
     @OpLog(value = "删除内饰颜色", type = OpLog.LogType.DELETE)
-    public Result<Void> deleteInteriorColor(@PathVariable Long id) {
+    public Result<Void> deleteInteriorColor(@Parameter(description = "主键 ID") @PathVariable Long id) {
         interiorColorService.deleteInteriorColor(id);
         return Result.success();
     }
@@ -77,9 +78,9 @@ public class InteriorColorController {
     @Operation(summary = "启停内饰颜色")
     @PreAuthorize("hasAuthority('sys:master:edit')")
     @OpLog(value = "启停内饰颜色", type = OpLog.LogType.UPDATE)
-    public Result<Void> toggleInteriorColorStatus(@PathVariable Long id,
-                                                  @RequestBody Map<String, Integer> body) {
-        interiorColorService.toggleInteriorColorStatus(id, body.get("status"));
+    public Result<Void> toggleInteriorColorStatus(@Parameter(description = "主键 ID") @PathVariable Long id,
+                                                  @Valid @RequestBody StatusUpdateRequest request) {
+        interiorColorService.toggleInteriorColorStatus(id, request.getStatus());
         return Result.success();
     }
 }
