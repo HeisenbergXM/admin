@@ -41,7 +41,10 @@ public enum ErrorCode {
     TRANSPORT_ORDER_NOT_FOUND(6011, "运输单不存在"),
     DISPATCH_LIST_NOT_FOUND(6012, "发车清单不存在"),
     WAYBILL_NOT_FOUND(6013, "行车路单不存在"),
-    WAYBILL_DEALER_NOT_FOUND(6014, "经销商行不存在");
+    WAYBILL_DEALER_NOT_FOUND(6014, "经销商行不存在"),
+    DICT_TYPE_NOT_FOUND(6015, "字典类型不存在"),
+    DICT_ITEM_NOT_FOUND(6016, "字典项不存在"),
+    DICT_ITEM_ID_REQUIRED(6017, "字典项 ID 不能为空");
 
     private final int code;
     private final String message;

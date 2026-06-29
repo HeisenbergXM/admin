@@ -1,6 +1,7 @@
 package com.company.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
@@ -74,7 +75,7 @@ public class DictServiceImpl implements DictService {
     public void updateDictType(DictTypeUpdateRequest request) {
         DictType dictType = dictTypeMapper.selectById(request.getId());
         if (dictType == null) {
-            throw new BusinessException(400, "字典类型不存在");
+            throw new BusinessException(ErrorCode.DICT_TYPE_NOT_FOUND);
         }
         DictType update = new DictType();
         update.setId(request.getId());
@@ -99,12 +100,13 @@ public class DictServiceImpl implements DictService {
     @Override
     @Transactional
     public void toggleDictTypeStatus(Long id, Integer status) {
-        DictType dictType = dictTypeMapper.selectById(id);
-        if (dictType == null) {
-            throw new BusinessException(400, "字典类型不存在");
+        validateStatus(status);
+        int rows = dictTypeMapper.update(null, new UpdateWrapper<DictType>()
+                .eq("id", id)
+                .set("status", status));
+        if (rows == 0) {
+            throw new BusinessException(ErrorCode.DICT_TYPE_NOT_FOUND);
         }
-        dictType.setStatus(status);
-        dictTypeMapper.updateById(dictType);
     }
 
     @Override
@@ -130,11 +132,11 @@ public class DictServiceImpl implements DictService {
     @Transactional
     public void updateDictItem(DictItemSaveRequest request) {
         if (request.getId() == null) {
-            throw new BusinessException(400, "字典项 ID 不能为空");
+            throw new BusinessException(ErrorCode.DICT_ITEM_ID_REQUIRED);
         }
         DictItem existing = dictItemMapper.selectById(request.getId());
         if (existing == null) {
-            throw new BusinessException(400, "字典项不存在");
+            throw new BusinessException(ErrorCode.DICT_ITEM_NOT_FOUND);
         }
         DictItem update = new DictItem();
         update.setId(request.getId());
@@ -149,18 +151,23 @@ public class DictServiceImpl implements DictService {
     @Override
     @Transactional
     public void deleteDictItem(Long id) {
+        DictItem item = dictItemMapper.selectById(id);
+        if (item == null) {
+            throw new BusinessException(ErrorCode.DICT_ITEM_NOT_FOUND);
+        }
         dictItemMapper.deleteById(id);
     }
 
     @Override
     @Transactional
     public void toggleDictItemStatus(Long id, Integer status) {
-        DictItem item = dictItemMapper.selectById(id);
-        if (item == null) {
-            throw new BusinessException(400, "字典项不存在");
+        validateStatus(status);
+        int rows = dictItemMapper.update(null, new UpdateWrapper<DictItem>()
+                .eq("id", id)
+                .set("status", status));
+        if (rows == 0) {
+            throw new BusinessException(ErrorCode.DICT_ITEM_NOT_FOUND);
         }
-        item.setStatus(status);
-        dictItemMapper.updateById(item);
     }
 
     @Override
@@ -170,12 +177,18 @@ public class DictServiceImpl implements DictService {
                         .eq(DictType::getDictCode, dictCode)
                         .eq(DictType::getStatus, 1));
         if (dictType == null) {
-            return List.of();
+            throw new BusinessException(ErrorCode.DICT_TYPE_NOT_FOUND);
         }
         return dictItemMapper.selectList(
                 new LambdaQueryWrapper<DictItem>()
                         .eq(DictItem::getDictTypeId, dictType.getId())
                         .eq(DictItem::getStatus, 1)
                         .orderByAsc(DictItem::getSortOrder));
+    }
+
+    private void validateStatus(Integer status) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST);
+        }
     }
 }

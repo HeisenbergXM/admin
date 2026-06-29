@@ -3,6 +3,8 @@ package com.company.admin.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @Data
@@ -10,6 +12,8 @@ import javax.validation.constraints.NotNull;
 public class StatusUpdateRequest {
 
     @NotNull(message = "状态不能为空")
+    @Min(value = 0, message = "状态只能为 0 或 1")
+    @Max(value = 1, message = "状态只能为 0 或 1")
     @Schema(description = "状态：0=停用，1=正常", example = "1")
     private Integer status;
 }
