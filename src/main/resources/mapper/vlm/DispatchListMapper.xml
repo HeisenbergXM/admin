@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.admin.mapper.DispatchListMapper">
+
+    <select id="selectDispatchPage" resultType="com.company.admin.dto.response.DispatchListResponse">
+        SELECT
+            dl.id,
+            dl.dispatch_no,
+            dl.list_status,
+            dl.created_at,
+            SUM(CASE WHEN wd.row_status = 'CONFIRMED' THEN 1 ELSE 0 END) AS confirmed_dealer_rows,
+            SUM(CASE WHEN wd.id IS NOT NULL AND wd.row_status != 'CONFIRMED' THEN 1 ELSE 0 END) AS draft_dealer_rows
+        FROM t_dispatch_list dl
+        LEFT JOIN t_waybill w ON w.dispatch_list_id = dl.id
+        LEFT JOIN t_waybill_dealer wd ON wd.waybill_id = w.id
+        WHERE dl.deleted = 0
+        <if test="query.dispatchNo != null and query.dispatchNo != ''">
+            AND dl.dispatch_no LIKE CONCAT('%', #{query.dispatchNo}, '%')
+        </if>
+        GROUP BY dl.id, dl.dispatch_no, dl.list_status, dl.created_at
+        ORDER BY dl.id DESC
+    </select>
+</mapper>

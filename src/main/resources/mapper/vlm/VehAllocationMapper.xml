@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.admin.mapper.VehAllocationMapper">
+
+    <select id="selectAllocationPage" resultType="com.company.admin.dto.response.AllocationResponse">
+        SELECT
+            a.id,
+            a.vehicle_id,
+            v.vin,
+            a.stage_status,
+            a.allocated_date,
+            a.dealer_id,
+            d.dealer_name,
+            a.sales_status,
+            a.remark3,
+            a.confirmed_by,
+            a.confirmed_at
+        FROM t_veh_allocation a
+        INNER JOIN t_vehicle v ON v.id = a.vehicle_id AND v.deleted = 0
+        LEFT JOIN t_md_dealer d ON d.id = a.dealer_id AND d.deleted = 0
+        WHERE a.deleted = 0
+        <if test="query.vin != null and query.vin != ''">
+            AND v.vin LIKE CONCAT('%', #{query.vin}, '%')
+        </if>
+        <if test="query.dealerId != null">
+            AND a.dealer_id = #{query.dealerId}
+        </if>
+        <if test="query.stageStatus != null and query.stageStatus != ''">
+            AND a.stage_status = #{query.stageStatus}
+        </if>
+        ORDER BY a.id DESC
+    </select>
+</mapper>

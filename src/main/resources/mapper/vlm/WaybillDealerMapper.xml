@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.admin.mapper.WaybillDealerMapper">
+
+    <select id="selectByWaybillId" resultType="com.company.admin.entity.WaybillDealer">
+        SELECT id, waybill_id, dealer_id, etd_to_dealer, eta_to_dealer,
+               received_date, delivery_status, remark7, row_status,
+               confirmed_by, confirmed_at
+        FROM t_waybill_dealer
+        WHERE waybill_id = #{waybillId}
+        ORDER BY id ASC
+    </select>
+
+    <select id="selectByDispatchListId" resultType="com.company.admin.entity.WaybillDealer">
+        SELECT wd.id, wd.waybill_id, wd.dealer_id, wd.etd_to_dealer, wd.eta_to_dealer,
+               wd.received_date, wd.delivery_status, wd.remark7, wd.row_status,
+               wd.confirmed_by, wd.confirmed_at
+        FROM t_waybill_dealer wd
+        INNER JOIN t_waybill w ON w.id = wd.waybill_id
+        WHERE w.dispatch_list_id = #{dispatchListId}
+        ORDER BY wd.id ASC
+    </select>
+</mapper>

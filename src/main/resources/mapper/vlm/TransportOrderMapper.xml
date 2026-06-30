@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.admin.mapper.TransportOrderMapper">
+
+    <select id="selectOrderPage" resultType="com.company.admin.dto.response.TransportOrderListResponse">
+        SELECT
+            o.id,
+            o.order_no,
+            o.date_to_storage_yard,
+            o.order_status,
+            o.confirmed_by,
+            o.confirmed_at,
+            o.created_at,
+            COUNT(i.id) AS item_count
+        FROM t_transport_order o
+        LEFT JOIN t_transport_order_item i ON i.transport_order_id = o.id
+        WHERE o.deleted = 0
+        <if test="query.orderNo != null and query.orderNo != ''">
+            AND o.order_no LIKE CONCAT('%', #{query.orderNo}, '%')
+        </if>
+        <if test="query.orderStatus != null and query.orderStatus != ''">
+            AND o.order_status = #{query.orderStatus}
+        </if>
+        <if test="query.startDate != null">
+            AND o.date_to_storage_yard &gt;= #{query.startDate}
+        </if>
+        <if test="query.endDate != null">
+            AND o.date_to_storage_yard &lt;= #{query.endDate}
+        </if>
+        GROUP BY o.id, o.order_no, o.date_to_storage_yard, o.order_status,
+                 o.confirmed_by, o.confirmed_at, o.created_at
+        ORDER BY o.id DESC
+    </select>
+</mapper>

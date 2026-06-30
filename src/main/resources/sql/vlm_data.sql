@@ -38,7 +38,65 @@ INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, ico
 (152, 150,'收款确认',       2, '/finance/payment',       NULL, 'payment',    142),
 
 -- 车辆全景视图
-(160, 0,  '车辆全景视图',   2, '/panorama',              NULL, 'panorama',   150);
+(160, 0,  '车辆全景视图',   2, '/panorama',              NULL, 'panorama',   150),
+
+-- 字典管理按钮
+(1000, 100, '字典查询',       3, NULL, 'sys:dict:list',          NULL, 1000),
+(1001, 100, '字典新增',       3, NULL, 'sys:dict:add',           NULL, 1001),
+(1002, 100, '字典编辑',       3, NULL, 'sys:dict:edit',          NULL, 1002),
+(1003, 100, '字典删除',       3, NULL, 'sys:dict:delete',        NULL, 1003),
+
+-- 主数据按钮
+(1010, 110, '主数据查询',     3, NULL, 'sys:master:list',        NULL, 1010),
+(1011, 110, '主数据新增',     3, NULL, 'sys:master:add',         NULL, 1011),
+(1012, 110, '主数据编辑',     3, NULL, 'sys:master:edit',        NULL, 1012),
+(1013, 110, '主数据删除',     3, NULL, 'sys:master:delete',      NULL, 1013),
+
+-- 车辆生产按钮
+(1020, 121, '车辆查询',       3, NULL, 'sys:vehicle:list',       NULL, 1020),
+(1021, 121, '车辆新增',       3, NULL, 'sys:vehicle:add',        NULL, 1021),
+(1022, 121, '车辆编辑',       3, NULL, 'sys:vehicle:edit',       NULL, 1022),
+(1023, 121, '车辆确认',       3, NULL, 'sys:vehicle:confirm',    NULL, 1023),
+
+-- 运输单按钮
+(1030, 131, '运输单查询',     3, NULL, 'vlm:transport:list',     NULL, 1030),
+(1031, 131, '运输单新增',     3, NULL, 'vlm:transport:add',      NULL, 1031),
+(1032, 131, '运输单编辑',     3, NULL, 'vlm:transport:edit',     NULL, 1032),
+(1033, 131, '运输单确认',     3, NULL, 'vlm:transport:confirm',  NULL, 1033),
+
+-- 发车清单按钮
+(1040, 132, '发车清单查询',   3, NULL, 'vlm:dispatch:list',      NULL, 1040),
+(1041, 132, '发车清单新增',   3, NULL, 'vlm:dispatch:add',       NULL, 1041),
+(1042, 132, '发车清单编辑',   3, NULL, 'vlm:dispatch:edit',      NULL, 1042),
+(1043, 132, '发车清单确认',   3, NULL, 'vlm:dispatch:confirm',   NULL, 1043),
+
+-- 销售分配按钮
+(1050, 141, '销售分配查询',   3, NULL, 'vlm:allocation:list',    NULL, 1050),
+(1051, 141, '销售分配新增',   3, NULL, 'vlm:allocation:add',     NULL, 1051),
+(1052, 141, '销售分配编辑',   3, NULL, 'vlm:allocation:edit',    NULL, 1052),
+(1053, 141, '销售分配确认',   3, NULL, 'vlm:allocation:confirm', NULL, 1053),
+
+-- 上牌按钮
+(1060, 142, '上牌查询',       3, NULL, 'vlm:registration:list',  NULL, 1060),
+(1061, 142, '上牌新增',       3, NULL, 'vlm:registration:add',   NULL, 1061),
+(1062, 142, '上牌编辑',       3, NULL, 'vlm:registration:edit',  NULL, 1062),
+(1063, 142, '上牌确认',       3, NULL, 'vlm:registration:confirm', NULL, 1063),
+
+-- 发票按钮
+(1070, 151, '发票查询',       3, NULL, 'vlm:invoice:list',       NULL, 1070),
+(1071, 151, '发票新增',       3, NULL, 'vlm:invoice:add',        NULL, 1071),
+(1072, 151, '发票编辑',       3, NULL, 'vlm:invoice:edit',       NULL, 1072),
+(1073, 151, '形式发票转正',   3, NULL, 'vlm:invoice:convert',    NULL, 1073),
+
+-- 收款按钮
+(1080, 152, '收款查询',       3, NULL, 'vlm:payment:list',       NULL, 1080),
+(1081, 152, '收款新增',       3, NULL, 'vlm:payment:add',        NULL, 1081),
+(1082, 152, '收款编辑',       3, NULL, 'vlm:payment:edit',       NULL, 1082),
+(1083, 152, '收款确认',       3, NULL, 'vlm:payment:confirm',    NULL, 1083),
+
+-- 全景按钮
+(1090, 160, '全景查看',       3, NULL, 'vlm:panorama:view',      NULL, 1090),
+(1091, 160, '全景导出',       3, NULL, 'vlm:panorama:export',    NULL, 1091);
 
 -- ADMIN 角色自动获得 VLM 所有菜单
 INSERT INTO sys_role_menu (role_id, menu_id)
@@ -58,24 +116,33 @@ INSERT INTO sys_role (id, role_name, role_code, description, status) VALUES
 
 -- 生产专员：生产管理
 INSERT INTO sys_role_menu (role_id, menu_id) VALUES
-(100, 120), (100, 121);
+(100, 120), (100, 121),
+(100, 1020), (100, 1021), (100, 1022), (100, 1023);
 
 -- 物流专员：运输管理
 INSERT INTO sys_role_menu (role_id, menu_id) VALUES
-(101, 130), (101, 131), (101, 132);
+(101, 130), (101, 131), (101, 132),
+(101, 1030), (101, 1031), (101, 1032), (101, 1033),
+(101, 1040), (101, 1041), (101, 1042), (101, 1043);
 
 -- 销售专员：销售管理
 INSERT INTO sys_role_menu (role_id, menu_id) VALUES
-(102, 140), (102, 141), (102, 142);
+(102, 140), (102, 141), (102, 142),
+(102, 1050), (102, 1051), (102, 1052), (102, 1053),
+(102, 1060), (102, 1061), (102, 1062), (102, 1063);
 
 -- 财务专员：财务管理
 INSERT INTO sys_role_menu (role_id, menu_id) VALUES
-(103, 150), (103, 151), (103, 152);
+(103, 150), (103, 151), (103, 152),
+(103, 1070), (103, 1071), (103, 1072), (103, 1073),
+(103, 1080), (103, 1081), (103, 1082), (103, 1083);
 
 -- 主数据管理员：主数据管理 + 字典管理
 INSERT INTO sys_role_menu (role_id, menu_id) VALUES
 (104, 100),
-(104, 110), (104, 111), (104, 112), (104, 113), (104, 114);
+(104, 1000), (104, 1001), (104, 1002), (104, 1003),
+(104, 110), (104, 111), (104, 112), (104, 113), (104, 114),
+(104, 1010), (104, 1011), (104, 1012), (104, 1013);
 
 -- 业务主管：全部模块（只读）+ 车辆全景视图
 INSERT INTO sys_role_menu (role_id, menu_id)

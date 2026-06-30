@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.admin.mapper.TransportOrderItemMapper">
+
+    <select id="countOpenOccupancy" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM t_transport_order_item i
+        INNER JOIN t_transport_order o ON o.id = i.transport_order_id AND o.deleted = 0
+        WHERE i.vehicle_id = #{vehicleId}
+          AND o.order_status = 'DRAFT'
+          AND i.transport_order_id != #{orderId}
+    </select>
+
+    <select id="selectByOrderId" resultType="com.company.admin.entity.TransportOrderItem">
+        SELECT id, transport_order_id, vehicle_id, saic_buy_off_date
+        FROM t_transport_order_item
+        WHERE transport_order_id = #{orderId}
+        ORDER BY id ASC
+    </select>
+</mapper>
