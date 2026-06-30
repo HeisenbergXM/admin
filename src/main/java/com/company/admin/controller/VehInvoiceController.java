@@ -41,9 +41,9 @@ public class VehInvoiceController {
     }
 
     @PostMapping("/{vehicleId}")
-    @Operation(summary = "发票确认")
+    @Operation(summary = "保存发票草稿")
     @PreAuthorize("hasAuthority('vlm:invoice:add')")
-    @OpLog(value = "发票确认", type = OpLog.LogType.INSERT)
+    @OpLog(value = "保存发票草稿", type = OpLog.LogType.INSERT)
     public Result<Long> createInvoice(@Parameter(description = "车辆 ID") @PathVariable Long vehicleId,
                                       @Valid @RequestBody InvoiceCreateRequest request) {
         return Result.success(vehInvoiceService.createInvoice(vehicleId, request));
@@ -59,10 +59,19 @@ public class VehInvoiceController {
         return Result.success();
     }
 
+    @PostMapping("/{id}/confirm")
+    @Operation(summary = "确认发票")
+    @PreAuthorize("hasAuthority('vlm:invoice:edit')")
+    @OpLog(value = "确认发票", type = OpLog.LogType.UPDATE)
+    public Result<Void> confirmInvoice(@Parameter(description = "发票 ID") @PathVariable Long id) {
+        vehInvoiceService.confirmInvoice(id);
+        return Result.success();
+    }
+
     @PostMapping("/{vehicleId}/convert")
-    @Operation(summary = "形式发票转正式")
+    @Operation(summary = "保存形式发票转正式草稿")
     @PreAuthorize("hasAuthority('vlm:invoice:convert')")
-    @OpLog(value = "形式发票转正式", type = OpLog.LogType.INSERT)
+    @OpLog(value = "保存形式发票转正式草稿", type = OpLog.LogType.INSERT)
     public Result<Long> convertProforma(@Parameter(description = "车辆 ID") @PathVariable Long vehicleId,
                                         @Valid @RequestBody InvoiceConvertRequest request) {
         return Result.success(vehInvoiceService.convertProforma(vehicleId, request));

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
 
@@ -21,12 +22,16 @@ public class ProductionSaveRequest {
     private String vin;
 
     @Schema(description = "车型 ID")
+    @NotNull(message = "车型不能为空")
     private Long modelId;
     @Schema(description = "外饰颜色 ID")
+    @NotNull(message = "外饰颜色不能为空")
     private Long exteriorColorId;
     @Schema(description = "内饰颜色 ID")
+    @NotNull(message = "内饰颜色不能为空")
     private Long interiorColorId;
     @Schema(description = "发动机号")
+    @NotBlank(message = "发动机号不能为空")
     private String engineNumber;
     @Schema(description = "年款")
     private String yearMake;

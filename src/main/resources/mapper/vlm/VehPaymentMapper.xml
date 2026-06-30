@@ -6,18 +6,22 @@
     <select id="selectPaymentPage" resultType="com.company.admin.dto.response.PaymentResponse">
         SELECT
             p.id,
-            p.vehicle_id,
+            v.id AS vehicle_id,
             v.vin,
             p.stage_status,
             p.payment_date,
             p.credit_full_payment_date,
             p.payment_status,
             p.remark5,
-            CASE WHEN latest.invoice_type = 'INVOICED' THEN TRUE ELSE FALSE END AS has_formal_invoice,
+            CASE
+                WHEN latest.invoice_type = 'INVOICED'
+                 AND latest.stage_status = 'CONFIRMED' THEN TRUE
+                ELSE FALSE
+            END AS has_formal_invoice,
             p.confirmed_by,
             p.confirmed_at
-        FROM t_veh_payment p
-        INNER JOIN t_vehicle v ON v.id = p.vehicle_id AND v.deleted = 0
+        FROM t_vehicle v
+        LEFT JOIN t_veh_payment p ON p.vehicle_id = v.id AND p.deleted = 0
         LEFT JOIN (
             SELECT i.*
             FROM t_veh_invoice i
@@ -28,8 +32,9 @@
                 GROUP BY vehicle_id
             ) x ON x.vehicle_id = i.vehicle_id AND x.max_seq = i.invoice_seq
             WHERE i.deleted = 0
-        ) latest ON latest.vehicle_id = p.vehicle_id
-        WHERE p.deleted = 0
+        ) latest ON latest.vehicle_id = v.id
+        WHERE v.deleted = 0
+          AND v.lifecycle_stage = 'PENDING_PAYMENT'
         <if test="query.vin != null and query.vin != ''">
             AND v.vin LIKE CONCAT('%', #{query.vin}, '%')
         </if>
@@ -41,10 +46,13 @@
         </if>
         <if test="query.hasFormalInvoice != null and query.hasFormalInvoice">
             AND latest.invoice_type = 'INVOICED'
+            AND latest.stage_status = 'CONFIRMED'
         </if>
         <if test="query.hasFormalInvoice != null and !query.hasFormalInvoice">
-            AND (latest.invoice_type IS NULL OR latest.invoice_type != 'INVOICED')
+            AND (latest.invoice_type IS NULL
+                 OR latest.invoice_type != 'INVOICED'
+                 OR latest.stage_status != 'CONFIRMED')
         </if>
-        ORDER BY p.id DESC
+        ORDER BY v.id DESC
     </select>
 </mapper>

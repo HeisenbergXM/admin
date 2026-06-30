@@ -17,4 +17,11 @@
         SELECT role_id FROM sys_user_role WHERE user_id = #{userId}
     </select>
 
+    <select id="selectRoleCodesByUserId" resultType="java.lang.String">
+        SELECT DISTINCT r.role_code
+        FROM sys_user_role ur
+        INNER JOIN sys_role r ON ur.role_id = r.id AND r.status = 1 AND r.deleted = 0
+        WHERE ur.user_id = #{userId}
+    </select>
+
 </mapper>

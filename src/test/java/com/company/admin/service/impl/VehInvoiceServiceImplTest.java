@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,17 +40,33 @@ class VehInvoiceServiceImplTest {
     private VehInvoiceServiceImpl service;
 
     @Test
-    void createInvoiceConfirmsFirstInvoiceAndAdvancesToPayment() {
+    void createInvoiceSavesFirstInvoiceAsDraftWithoutAdvancing() {
         when(vehInvoiceMapper.selectCount(any())).thenReturn(0L);
         service.createInvoice(99L, createRequest("INVOICED"));
 
         verify(lifecycleService).assertStage(99L, LifecycleStage.PENDING_INVOICE);
-        verify(lifecycleService).advanceStage(99L, LifecycleStage.PENDING_INVOICE, LifecycleStage.PENDING_PAYMENT);
+        verify(lifecycleService, never())
+                .advanceStage(any(), any(), any());
         ArgumentCaptor<VehInvoice> captor = ArgumentCaptor.forClass(VehInvoice.class);
         verify(vehInvoiceMapper).insert(captor.capture());
         assertEquals(99L, captor.getValue().getVehicleId());
         assertEquals(1, captor.getValue().getInvoiceSeq());
         assertEquals("INVOICED", captor.getValue().getInvoiceType());
+        assertEquals(StageStatus.DRAFT.name(), captor.getValue().getStageStatus());
+    }
+
+    @Test
+    void confirmFirstInvoiceLocksDraftAndAdvancesToPayment() {
+        VehInvoice invoice = invoice(1, "INVOICED");
+        invoice.setStageStatus(StageStatus.DRAFT.name());
+        when(vehInvoiceMapper.selectById(1L)).thenReturn(invoice);
+
+        service.confirmInvoice(1L);
+
+        verify(lifecycleService).assertStage(99L, LifecycleStage.PENDING_INVOICE);
+        verify(lifecycleService).advanceStage(99L, LifecycleStage.PENDING_INVOICE, LifecycleStage.PENDING_PAYMENT);
+        ArgumentCaptor<VehInvoice> captor = ArgumentCaptor.forClass(VehInvoice.class);
+        verify(vehInvoiceMapper).updateById(captor.capture());
         assertEquals(StageStatus.CONFIRMED.name(), captor.getValue().getStageStatus());
         assertNotNull(captor.getValue().getConfirmedAt());
     }
@@ -65,7 +82,7 @@ class VehInvoiceServiceImplTest {
     }
 
     @Test
-    void convertCreatesSecondFormalInvoiceForProformaVehicle() {
+    void convertCreatesDraftSecondFormalInvoiceForProformaVehicle() {
         when(vehInvoiceMapper.selectList(any())).thenReturn(List.of(invoice(1, "PROFORMA_INVOICED")));
 
         service.convertProforma(99L, convertRequest());
@@ -75,6 +92,22 @@ class VehInvoiceServiceImplTest {
         verify(vehInvoiceMapper).insert(captor.capture());
         assertEquals(2, captor.getValue().getInvoiceSeq());
         assertEquals("INVOICED", captor.getValue().getInvoiceType());
+        assertEquals(StageStatus.DRAFT.name(), captor.getValue().getStageStatus());
+    }
+
+    @Test
+    void confirmSecondInvoiceLocksDraftWithoutChangingPaymentStage() {
+        VehInvoice invoice = invoice(2, "INVOICED");
+        invoice.setStageStatus(StageStatus.DRAFT.name());
+        when(vehInvoiceMapper.selectById(2L)).thenReturn(invoice);
+
+        service.confirmInvoice(2L);
+
+        verify(lifecycleService).assertStage(99L, LifecycleStage.PENDING_PAYMENT);
+        verify(lifecycleService, never())
+                .advanceStage(any(), any(), any());
+        ArgumentCaptor<VehInvoice> captor = ArgumentCaptor.forClass(VehInvoice.class);
+        verify(vehInvoiceMapper).updateById(captor.capture());
         assertEquals(StageStatus.CONFIRMED.name(), captor.getValue().getStageStatus());
     }
 

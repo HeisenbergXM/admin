@@ -262,7 +262,8 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
             return false;
         }
         InvoiceResponse latest = invoices.get(invoices.size() - 1);
-        return "INVOICED".equals(latest.getInvoiceType());
+        return "INVOICED".equals(latest.getInvoiceType())
+                && StageStatus.CONFIRMED.name().equals(latest.getStageStatus());
     }
 
     private List<ExportRow> toExportRows(VehiclePanoramaResponse panorama) {

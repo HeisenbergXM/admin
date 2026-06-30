@@ -4,6 +4,7 @@ import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
 import com.company.admin.dto.request.LoginRequest;
 import com.company.admin.dto.response.LoginResponse;
+import com.company.admin.dto.response.MenuTreeResponse;
 import com.company.admin.dto.response.UserInfoResponse;
 import com.company.admin.entity.LoginLog;
 import com.company.admin.entity.Menu;
@@ -14,6 +15,7 @@ import com.company.admin.mapper.UserMapper;
 import com.company.admin.security.JwtTokenUtil;
 import com.company.admin.service.AuthService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -87,9 +89,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(400, "用户不存在");
         }
 
-        // 获取用户角色
-        List<String> roles = userMapper.selectRoleIdsByUserId(user.getId())
-                .stream().map(String::valueOf).collect(Collectors.toList());
+        // 获取用户角色编码
+        List<String> roles = userMapper.selectRoleCodesByUserId(user.getId());
 
         // 获取用户权限
         Set<String> permissions = new HashSet<>(userMapper.selectPermissionsByUserId(user.getId()));
@@ -104,7 +105,27 @@ public class AuthServiceImpl implements AuthService {
         response.setAvatar(user.getAvatar());
         response.setRoles(roles);
         response.setPermissions(permissions);
+        response.setMenus(buildMenuTree(menus));
         return response;
+    }
+
+    private List<MenuTreeResponse> buildMenuTree(List<Menu> menus) {
+        List<Menu> navMenus = menus.stream()
+                .filter(menu -> menu.getMenuType() == null || menu.getMenuType() != 3)
+                .collect(Collectors.toList());
+        return buildMenuTree(navMenus, 0L);
+    }
+
+    private List<MenuTreeResponse> buildMenuTree(List<Menu> menus, Long parentId) {
+        return menus.stream()
+                .filter(menu -> parentId.equals(menu.getParentId()))
+                .map(menu -> {
+                    MenuTreeResponse node = new MenuTreeResponse();
+                    BeanUtils.copyProperties(menu, node);
+                    node.setChildren(buildMenuTree(menus, menu.getId()));
+                    return node;
+                })
+                .collect(Collectors.toList());
     }
 
     private void recordLoginFail(String username, HttpServletRequest request,

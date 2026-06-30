@@ -6,6 +6,7 @@ import com.company.admin.dto.response.VehicleBasicInfo;
 import com.company.admin.dto.response.VehiclePanoramaResponse;
 import com.company.admin.entity.Vehicle;
 import com.company.admin.entity.VehInvoice;
+import com.company.admin.entity.VehPayment;
 import com.company.admin.entity.VehProduction;
 import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.StageStatus;
@@ -89,12 +90,41 @@ class VehiclePanoramaServiceImplTest {
         assertEquals("PENDING_INBOUND", response.getTimeline().get(0).getStage());
     }
 
+    @Test
+    void getPanoramaDoesNotTreatDraftFormalInvoiceAsEffective() {
+        Vehicle vehicle = new Vehicle();
+        vehicle.setId(99L);
+        vehicle.setVin("LSJW56U95RG000001");
+        vehicle.setLifecycleStage(LifecycleStage.PENDING_PAYMENT.name());
+        VehicleBasicInfo basicInfo = new VehicleBasicInfo();
+        basicInfo.setId(99L);
+        basicInfo.setVin(vehicle.getVin());
+        VehPayment payment = new VehPayment();
+        payment.setVehicleId(99L);
+        payment.setStageStatus(StageStatus.DRAFT.name());
+
+        when(vehicleMapper.selectOne(any())).thenReturn(vehicle);
+        when(vehicleMapper.selectBasicInfoById(99L)).thenReturn(basicInfo);
+        when(vehInvoiceMapper.selectList(any())).thenReturn(List.of(
+                invoice(1, "PROFORMA_INVOICED", StageStatus.CONFIRMED.name()),
+                invoice(2, "INVOICED", StageStatus.DRAFT.name())));
+        when(vehPaymentMapper.selectOne(any())).thenReturn(payment);
+
+        VehiclePanoramaResponse response = service.getPanorama(vehicle.getVin());
+
+        assertEquals(Boolean.FALSE, response.getPayment().getHasFormalInvoice());
+    }
+
     private VehInvoice invoice(Integer seq) {
+        return invoice(seq, "INVOICED", StageStatus.CONFIRMED.name());
+    }
+
+    private VehInvoice invoice(Integer seq, String type, String status) {
         VehInvoice invoice = new VehInvoice();
         invoice.setVehicleId(99L);
         invoice.setInvoiceSeq(seq);
-        invoice.setInvoiceType("INVOICED");
-        invoice.setStageStatus(StageStatus.CONFIRMED.name());
+        invoice.setInvoiceType(type);
+        invoice.setStageStatus(status);
         invoice.setConfirmedAt(LocalDateTime.of(2026, 7, seq, 10, 0));
         return invoice;
     }

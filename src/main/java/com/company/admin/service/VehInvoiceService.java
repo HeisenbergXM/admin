@@ -17,6 +17,8 @@ public interface VehInvoiceService {
 
     void updateInvoice(Long id, InvoiceCreateRequest request);
 
+    void confirmInvoice(Long id);
+
     Long convertProforma(Long vehicleId, InvoiceConvertRequest request);
 
     List<InvoiceResponse> getInvoices(Long vehicleId);

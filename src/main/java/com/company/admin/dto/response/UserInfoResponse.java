@@ -19,6 +19,8 @@ public class UserInfoResponse {
     private List<String> roles;
     @Schema(description = "权限标识集合")
     private Set<String> permissions;
+    @Schema(description = "授权菜单树")
+    private List<MenuTreeResponse> menus;
 
     public Long getUserId() {
         return userId;
@@ -66,5 +68,13 @@ public class UserInfoResponse {
 
     public void setPermissions(Set<String> permissions) {
         this.permissions = permissions;
+    }
+
+    public List<MenuTreeResponse> getMenus() {
+        return menus;
+    }
+
+    public void setMenus(List<MenuTreeResponse> menus) {
+        this.menus = menus;
     }
 }

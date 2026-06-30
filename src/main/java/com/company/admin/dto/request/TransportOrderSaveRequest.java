@@ -3,6 +3,7 @@ package com.company.admin.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 @Data
@@ -13,6 +14,7 @@ public class TransportOrderSaveRequest {
     private String orderNo;
 
     @Schema(description = "到仓库日期")
+    @NotNull(message = "到仓库日期不能为空")
     private LocalDate dateToStorageYard;
 
     @Schema(description = "备注2")

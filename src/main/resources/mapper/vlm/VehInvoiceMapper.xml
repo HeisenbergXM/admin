@@ -5,24 +5,39 @@
 
     <select id="selectInvoicePage" resultType="com.company.admin.dto.response.InvoiceListResponse">
         SELECT
-            latest.vehicle_id,
             v.vin,
+            v.id AS vehicle_id,
             latest.id AS latest_invoice_id,
             latest.invoice_seq AS latest_invoice_seq,
             latest.invoice_type AS latest_invoice_type,
             latest.invoice_no AS latest_invoice_no,
             latest.invoice_date AS latest_invoice_date,
-            CASE WHEN latest.invoice_type = 'INVOICED' THEN TRUE ELSE FALSE END AS has_formal_invoice,
-            cnt.invoice_count
-        FROM t_veh_invoice latest
-        INNER JOIN (
+            CASE
+                WHEN latest.invoice_type = 'INVOICED'
+                 AND latest.stage_status = 'CONFIRMED' THEN TRUE
+                ELSE FALSE
+            END AS has_formal_invoice,
+            COALESCE(cnt.invoice_count, 0) AS invoice_count
+        FROM t_vehicle v
+        LEFT JOIN (
+            SELECT i.*
+            FROM t_veh_invoice i
+            INNER JOIN (
+                SELECT vehicle_id, MAX(invoice_seq) AS max_seq
+                FROM t_veh_invoice
+                WHERE deleted = 0
+                GROUP BY vehicle_id
+            ) x ON x.vehicle_id = i.vehicle_id AND x.max_seq = i.invoice_seq
+            WHERE i.deleted = 0
+        ) latest ON latest.vehicle_id = v.id
+        LEFT JOIN (
             SELECT vehicle_id, MAX(invoice_seq) AS max_seq, COUNT(1) AS invoice_count
             FROM t_veh_invoice
             WHERE deleted = 0
             GROUP BY vehicle_id
-        ) cnt ON cnt.vehicle_id = latest.vehicle_id AND cnt.max_seq = latest.invoice_seq
-        INNER JOIN t_vehicle v ON v.id = latest.vehicle_id AND v.deleted = 0
-        WHERE latest.deleted = 0
+        ) cnt ON cnt.vehicle_id = v.id
+        WHERE v.deleted = 0
+          AND v.lifecycle_stage IN ('PENDING_INVOICE', 'PENDING_PAYMENT')
         <if test="query.vin != null and query.vin != ''">
             AND v.vin LIKE CONCAT('%', #{query.vin}, '%')
         </if>
@@ -31,10 +46,13 @@
         </if>
         <if test="query.hasFormalInvoice != null and query.hasFormalInvoice">
             AND latest.invoice_type = 'INVOICED'
+            AND latest.stage_status = 'CONFIRMED'
         </if>
         <if test="query.hasFormalInvoice != null and !query.hasFormalInvoice">
-            AND latest.invoice_type != 'INVOICED'
+            AND (latest.invoice_type IS NULL
+                 OR latest.invoice_type != 'INVOICED'
+                 OR latest.stage_status != 'CONFIRMED')
         </if>
-        ORDER BY latest.id DESC
+        ORDER BY v.id DESC
     </select>
 </mapper>

@@ -56,9 +56,8 @@ public class VehInvoiceServiceImpl implements VehInvoiceService {
         copyCreateFields(request, invoice);
         invoice.setVehicleId(vehicleId);
         invoice.setInvoiceSeq(1);
-        markConfirmed(invoice);
+        invoice.setStageStatus(StageStatus.DRAFT.name());
         vehInvoiceMapper.insert(invoice);
-        lifecycleService.advanceStage(vehicleId, LifecycleStage.PENDING_INVOICE, LifecycleStage.PENDING_PAYMENT);
         return invoice.getId();
     }
 
@@ -69,6 +68,36 @@ public class VehInvoiceServiceImpl implements VehInvoiceService {
         lifecycleService.assertNotConfirmed(invoice.getStageStatus());
         copyCreateFields(request, invoice);
         vehInvoiceMapper.updateById(invoice);
+    }
+
+    @Override
+    @Transactional
+    public void confirmInvoice(Long id) {
+        VehInvoice invoice = getInvoiceEntity(id);
+        lifecycleService.assertNotConfirmed(invoice.getStageStatus());
+
+        if (Integer.valueOf(1).equals(invoice.getInvoiceSeq())) {
+            lifecycleService.assertStage(invoice.getVehicleId(), LifecycleStage.PENDING_INVOICE);
+            markConfirmed(invoice);
+            vehInvoiceMapper.updateById(invoice);
+            lifecycleService.advanceStage(
+                    invoice.getVehicleId(),
+                    LifecycleStage.PENDING_INVOICE,
+                    LifecycleStage.PENDING_PAYMENT);
+            return;
+        }
+
+        if (Integer.valueOf(2).equals(invoice.getInvoiceSeq())) {
+            lifecycleService.assertStage(invoice.getVehicleId(), LifecycleStage.PENDING_PAYMENT);
+            if (!FORMAL_INVOICE.equals(invoice.getInvoiceType())) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "转正发票必须为正式发票");
+            }
+            markConfirmed(invoice);
+            vehInvoiceMapper.updateById(invoice);
+            return;
+        }
+
+        throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "发票序号不合法");
     }
 
     @Override
@@ -86,7 +115,7 @@ public class VehInvoiceServiceImpl implements VehInvoiceService {
         invoice.setInvoiceNo(request.getInvoiceNo());
         invoice.setInvoiceDate(request.getInvoiceDate());
         invoice.setRemark(request.getRemark());
-        markConfirmed(invoice);
+        invoice.setStageStatus(StageStatus.DRAFT.name());
         vehInvoiceMapper.insert(invoice);
         return invoice.getId();
     }

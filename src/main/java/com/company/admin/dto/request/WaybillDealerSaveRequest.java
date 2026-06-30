@@ -3,6 +3,7 @@ package com.company.admin.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 @Data
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 public class WaybillDealerSaveRequest {
 
     @Schema(description = "经销商 ID")
+    @NotNull(message = "经销商不能为空")
     private Long dealerId;
 
     @Schema(description = "发车日期")

@@ -10,4 +10,6 @@ public interface UserMapper extends BaseMapper<User> {
     List<String> selectPermissionsByUserId(@Param("userId") Long userId);
 
     List<Long> selectRoleIdsByUserId(@Param("userId") Long userId);
+
+    List<String> selectRoleCodesByUserId(@Param("userId") Long userId);
 }
