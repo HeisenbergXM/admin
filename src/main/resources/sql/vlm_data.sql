@@ -9,36 +9,36 @@ USE admin_system;
 
 INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, icon, sort_order) VALUES
 -- 字典管理（归入系统管理）
-(100, 1,  '字典管理',       2, '/system/dict',           NULL, 'dict',       60),
+(100, 1,  '字典管理',       2, '/system/dict',           'sys:dict:list', 'dict',       60),
 
 -- 主数据管理
 (110, 0,  '主数据管理',     1, '/master-data',           NULL, 'master',     100),
-(111, 110,'车型数据',       2, '/master-data/model',     NULL, 'model',      101),
-(112, 110,'外饰颜色',       2, '/master-data/exterior',  NULL, 'color',      102),
-(113, 110,'内饰颜色',       2, '/master-data/interior',  NULL, 'color',      103),
-(114, 110,'经销商维护',     2, '/master-data/dealer',    NULL, 'dealer',     104),
+(111, 110,'车型数据',       2, '/master-data/model',     'sys:master:list', 'model',      101),
+(112, 110,'外饰颜色',       2, '/master-data/exterior',  'sys:master:list', 'color',      102),
+(113, 110,'内饰颜色',       2, '/master-data/interior',  'sys:master:list', 'color',      103),
+(114, 110,'经销商维护',     2, '/master-data/dealer',    'sys:master:list', 'dealer',     104),
 
 -- 生产管理
 (120, 0,  '生产管理',       1, '/production',            NULL, 'production', 110),
-(121, 120,'车辆录入',       2, '/production/vehicle',    NULL, 'vehicle',    111),
+(121, 120,'车辆录入',       2, '/production/vehicle',    'sys:vehicle:list', 'vehicle',    111),
 
 -- 运输管理
 (130, 0,  '运输管理',       1, '/transport',             NULL, 'transport',  120),
-(131, 130,'车厂到仓库',     2, '/transport/inbound',     NULL, 'inbound',    121),
-(132, 130,'仓库到经销商',   2, '/transport/outbound',    NULL, 'outbound',   122),
+(131, 130,'车厂到仓库',     2, '/transport/inbound',     'vlm:transport:list', 'inbound',    121),
+(132, 130,'仓库到经销商',   2, '/transport/outbound',    'vlm:dispatch:list', 'outbound',   122),
 
 -- 销售管理
 (140, 0,  '销售管理',       1, '/sales',                 NULL, 'sales',      130),
-(141, 140,'车辆销售',       2, '/sales/allocation',      NULL, 'allocation', 131),
-(142, 140,'车辆上牌',       2, '/sales/registration',    NULL, 'registration',132),
+(141, 140,'车辆销售',       2, '/sales/allocation',      'vlm:allocation:list', 'allocation', 131),
+(142, 140,'车辆上牌',       2, '/sales/registration',    'vlm:registration:list', 'registration',132),
 
 -- 财务管理
 (150, 0,  '财务管理',       1, '/finance',               NULL, 'finance',    140),
-(151, 150,'发票确认',       2, '/finance/invoice',       NULL, 'invoice',    141),
-(152, 150,'收款确认',       2, '/finance/payment',       NULL, 'payment',    142),
+(151, 150,'发票确认',       2, '/finance/invoice',       'vlm:invoice:list', 'invoice',    141),
+(152, 150,'收款确认',       2, '/finance/payment',       'vlm:payment:list', 'payment',    142),
 
 -- 车辆全景视图
-(160, 0,  '车辆全景视图',   2, '/panorama',              NULL, 'panorama',   150),
+(160, 0,  '车辆全景视图',   2, '/panorama',              'vlm:panorama:view', 'panorama',   150),
 
 -- 字典管理按钮
 (1000, 100, '字典查询',       3, NULL, 'sys:dict:list',          NULL, 1000),

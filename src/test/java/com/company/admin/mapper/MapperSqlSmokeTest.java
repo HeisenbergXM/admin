@@ -76,6 +76,34 @@ class MapperSqlSmokeTest {
     }
 
     @Test
+    void adminUserGetsAllEnabledPermissionsWithoutRoleMenuRows() {
+        jdbcTemplate.update("INSERT INTO sys_role (id, role_code, status, deleted) VALUES (12, 'ADMIN', 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_user_role (user_id, role_id) VALUES (3, 12)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (200, 0, '用户管理', 2, '/system/user', 'sys:user:list', 1, 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (201, 0, '新增用户', 3, NULL, 'sys:user:add', 2, 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (202, 0, '停用菜单', 2, '/disabled', 'sys:disabled:list', 3, 0, 0)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (203, 0, '目录', 1, '/dir', NULL, 4, 1, 0)");
+
+        List<String> permissions = userMapper.selectPermissionsByUserId(3L);
+
+        assertEquals(List.of("sys:user:list", "sys:user:add"), permissions);
+    }
+
+    @Test
+    void adminUserGetsAllEnabledMenusWithoutRoleMenuRows() {
+        jdbcTemplate.update("INSERT INTO sys_role (id, role_code, status, deleted) VALUES (13, 'ADMIN', 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_user_role (user_id, role_id) VALUES (4, 13)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (210, 0, '系统管理', 1, '/system', NULL, 1, 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (211, 210, '用户管理', 2, '/system/user', 'sys:user:list', 2, 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (212, 211, '新增用户', 3, NULL, 'sys:user:add', 3, 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (213, 0, '停用菜单', 2, '/disabled', 'sys:disabled:list', 4, 0, 0)");
+
+        List<Menu> menus = menuMapper.selectByUserId(4L);
+
+        assertEquals(List.of(210L, 211L, 212L), menus.stream().map(Menu::getId).toList());
+    }
+
+    @Test
     void userMenusIncludeAncestorsWhenOnlyLeafPermissionIsAssigned() {
         jdbcTemplate.update("INSERT INTO sys_role (id, role_code, status, deleted) VALUES (11, 'MENU_TEST', 1, 0)");
         jdbcTemplate.update("INSERT INTO sys_user_role (user_id, role_id) VALUES (2, 11)");
