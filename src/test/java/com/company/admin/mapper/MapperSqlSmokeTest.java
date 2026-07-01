@@ -5,6 +5,7 @@ import com.company.admin.dto.request.InvoiceQueryRequest;
 import com.company.admin.dto.request.PaymentQueryRequest;
 import com.company.admin.dto.response.InvoiceListResponse;
 import com.company.admin.dto.response.PaymentResponse;
+import com.company.admin.entity.Menu;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +32,8 @@ class MapperSqlSmokeTest {
     private VehPaymentMapper vehPaymentMapper;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private MenuMapper menuMapper;
 
     @Test
     void invoicePageIncludesPendingInvoiceVehiclesWithoutInvoiceRows() {
@@ -70,6 +73,20 @@ class MapperSqlSmokeTest {
         List<String> roleCodes = userMapper.selectRoleCodesByUserId(1L);
 
         assertEquals(List.of("ADMIN"), roleCodes);
+    }
+
+    @Test
+    void userMenusIncludeAncestorsWhenOnlyLeafPermissionIsAssigned() {
+        jdbcTemplate.update("INSERT INTO sys_role (id, role_code, status, deleted) VALUES (11, 'MENU_TEST', 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_user_role (user_id, role_id) VALUES (2, 11)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (100, 0, '系统管理', 1, '/system', NULL, 1, 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (101, 100, '菜单管理', 2, '/system/menu', 'sys:menu:list', 2, 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, permission, sort_order, status, deleted) VALUES (102, 101, '新增菜单', 3, NULL, 'sys:menu:add', 3, 1, 0)");
+        jdbcTemplate.update("INSERT INTO sys_role_menu (role_id, menu_id) VALUES (11, 102)");
+
+        List<Menu> menus = menuMapper.selectByUserId(2L);
+
+        assertEquals(List.of(100L, 101L, 102L), menus.stream().map(Menu::getId).toList());
     }
 
     @Test

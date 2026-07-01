@@ -9,13 +9,32 @@
     </select>
 
     <select id="selectByUserId" resultType="com.company.admin.entity.Menu">
-        SELECT DISTINCT m.*
-        FROM sys_user_role ur
-        INNER JOIN sys_role r ON ur.role_id = r.id AND r.status = 1 AND r.deleted = 0
-        INNER JOIN sys_role_menu rm ON r.id = rm.role_id
-        INNER JOIN sys_menu m ON rm.menu_id = m.id AND m.status = 1 AND m.deleted = 0
-        WHERE ur.user_id = #{userId}
-        ORDER BY m.sort_order ASC
+        WITH RECURSIVE authorized_menu (
+            id, parent_id, menu_name, menu_type, path, permission, icon,
+            sort_order, status, create_time, update_time, deleted
+        ) AS (
+            SELECT
+                m.id, m.parent_id, m.menu_name, m.menu_type, m.path, m.permission,
+                m.icon, m.sort_order, m.status, m.create_time, m.update_time, m.deleted
+            FROM sys_user_role ur
+            INNER JOIN sys_role r ON ur.role_id = r.id AND r.status = 1 AND r.deleted = 0
+            INNER JOIN sys_role_menu rm ON r.id = rm.role_id
+            INNER JOIN sys_menu m ON rm.menu_id = m.id AND m.status = 1 AND m.deleted = 0
+            WHERE ur.user_id = #{userId}
+            UNION
+            SELECT
+                parent.id, parent.parent_id, parent.menu_name, parent.menu_type,
+                parent.path, parent.permission, parent.icon, parent.sort_order,
+                parent.status, parent.create_time, parent.update_time, parent.deleted
+            FROM sys_menu parent
+            INNER JOIN authorized_menu child ON child.parent_id = parent.id
+            WHERE parent.status = 1 AND parent.deleted = 0
+        )
+        SELECT DISTINCT
+            id, parent_id, menu_name, menu_type, path, permission, icon,
+            sort_order, status, create_time, update_time, deleted
+        FROM authorized_menu
+        ORDER BY sort_order ASC
     </select>
 
 </mapper>
