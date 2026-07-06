@@ -6,12 +6,48 @@ DROP TABLE IF EXISTS t_veh_payment;
 DROP TABLE IF EXISTS t_veh_invoice;
 DROP TABLE IF EXISTS t_veh_allocation;
 DROP TABLE IF EXISTS t_md_dealer;
+DROP TABLE IF EXISTS t_md_interior_color;
+DROP TABLE IF EXISTS t_md_exterior_color;
+DROP TABLE IF EXISTS t_md_model;
+DROP TABLE IF EXISTS t_veh_production;
 DROP TABLE IF EXISTS t_vehicle;
 
 CREATE TABLE t_vehicle (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     vin VARCHAR(17) NOT NULL,
     lifecycle_stage VARCHAR(30) NOT NULL,
+    deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE t_veh_production (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    vehicle_id BIGINT NOT NULL,
+    stage_status VARCHAR(20),
+    model_id BIGINT,
+    year_make VARCHAR(20),
+    exterior_color_id BIGINT,
+    interior_color_id BIGINT,
+    deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE t_md_model (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    model_name VARCHAR(100),
+    series VARCHAR(100),
+    spec VARCHAR(100),
+    model_code VARCHAR(100),
+    deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE t_md_exterior_color (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    color_name VARCHAR(100),
+    deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE t_md_interior_color (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    color_name VARCHAR(100),
     deleted TINYINT NOT NULL DEFAULT 0
 );
 

@@ -3,11 +3,14 @@ package com.company.admin.service.impl;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
 import com.company.admin.dto.request.AllocationSaveRequest;
+import com.company.admin.dto.response.AllocationResponse;
+import com.company.admin.dto.response.VehicleBasicInfo;
 import com.company.admin.entity.VehAllocation;
 import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehAllocationMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.VehicleBasicService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -35,6 +38,9 @@ class VehAllocationServiceImplTest {
 
     @Mock
     private LifecycleService lifecycleService;
+
+    @Mock
+    private VehicleBasicService vehicleBasicService;
 
     @InjectMocks
     private VehAllocationServiceImpl service;
@@ -93,6 +99,29 @@ class VehAllocationServiceImplTest {
                 () -> service.updateAllocation(99L, saveRequest()));
 
         assertEquals(ErrorCode.STAGE_ALREADY_CONFIRMED.getCode(), exception.getCode());
+    }
+
+    @Test
+    void getAllocationReturnsPendingVehicleBasicInfoWhenDraftDoesNotExist() {
+        when(vehAllocationMapper.selectOne(any())).thenReturn(null);
+        VehicleBasicInfo basicInfo = new VehicleBasicInfo();
+        basicInfo.setId(99L);
+        basicInfo.setVin("VIN00000000000099");
+        basicInfo.setLifecycleStage(LifecycleStage.PENDING_ALLOCATION.name());
+        basicInfo.setModelName("MG4 EV");
+        basicInfo.setExteriorColorName("Moon White");
+        basicInfo.setYearMake("2026");
+        when(vehicleBasicService.getBasicInfo(99L)).thenReturn(basicInfo);
+
+        AllocationResponse response = service.getAllocation(99L);
+
+        assertEquals(99L, response.getVehicleId());
+        assertEquals("VIN00000000000099", response.getVin());
+        assertEquals(LifecycleStage.PENDING_ALLOCATION.name(), response.getStageStatus());
+        assertEquals(LifecycleStage.PENDING_ALLOCATION.name(), response.getLifecycleStage());
+        assertEquals("MG4 EV", response.getModelName());
+        assertEquals("Moon White", response.getExteriorColorName());
+        assertEquals("2026", response.getYearMake());
     }
 
     private AllocationSaveRequest saveRequest() {

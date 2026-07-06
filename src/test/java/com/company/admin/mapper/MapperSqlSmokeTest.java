@@ -20,6 +20,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.beans.PropertyAccessorFactory.forBeanPropertyAccess;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -42,6 +43,10 @@ class MapperSqlSmokeTest {
     @Test
     void allocationPageIncludesPendingAllocationVehiclesWithoutAllocationRows() {
         jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (4, 'VIN00000000000004', 'PENDING_ALLOCATION', 0)");
+        jdbcTemplate.update("INSERT INTO t_md_model (id, model_name, series, spec, model_code, deleted) VALUES (41, 'MG4 EV', 'MG', 'Luxury', 'MG4-LUX', 0)");
+        jdbcTemplate.update("INSERT INTO t_md_exterior_color (id, color_name, deleted) VALUES (42, 'Moon White', 0)");
+        jdbcTemplate.update("INSERT INTO t_md_interior_color (id, color_name, deleted) VALUES (43, 'Cloud Gray', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_production (vehicle_id, stage_status, model_id, year_make, exterior_color_id, interior_color_id, deleted) VALUES (4, 'CONFIRMED', 41, '2026', 42, 43, 0)");
         AllocationQueryRequest request = new AllocationQueryRequest();
         request.setStageStatus("PENDING_ALLOCATION");
 
@@ -52,6 +57,11 @@ class MapperSqlSmokeTest {
         AllocationResponse row = page.getRecords().get(0);
         assertEquals(4L, row.getVehicleId());
         assertEquals("VIN00000000000004", row.getVin());
+        assertEquals("PENDING_ALLOCATION", row.getStageStatus());
+        assertEquals("PENDING_ALLOCATION", forBeanPropertyAccess(row).getPropertyValue("lifecycleStage"));
+        assertEquals("MG4 EV", forBeanPropertyAccess(row).getPropertyValue("modelName"));
+        assertEquals("Moon White", forBeanPropertyAccess(row).getPropertyValue("exteriorColorName"));
+        assertEquals("2026", forBeanPropertyAccess(row).getPropertyValue("yearMake"));
     }
 
     @Test

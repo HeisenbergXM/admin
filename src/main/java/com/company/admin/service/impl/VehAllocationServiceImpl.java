@@ -82,7 +82,21 @@ public class VehAllocationServiceImpl implements VehAllocationService {
 
     @Override
     public AllocationResponse getAllocation(Long vehicleId) {
-        return toResponse(getAllocationEntity(vehicleId));
+        VehAllocation allocation = findAllocation(vehicleId);
+        if (allocation != null) {
+            return toResponse(allocation);
+        }
+
+        VehicleBasicInfo basicInfo = vehicleBasicService.getBasicInfo(vehicleId);
+        if (!LifecycleStage.PENDING_ALLOCATION.name().equals(basicInfo.getLifecycleStage())) {
+            throw new BusinessException(ErrorCode.STAGE_DATA_NOT_FOUND);
+        }
+
+        AllocationResponse response = new AllocationResponse();
+        response.setVehicleId(vehicleId);
+        response.setStageStatus(basicInfo.getLifecycleStage());
+        copyBasicInfo(basicInfo, response);
+        return response;
     }
 
     private VehAllocation findAllocation(Long vehicleId) {
@@ -111,9 +125,24 @@ public class VehAllocationServiceImpl implements VehAllocationService {
         BeanUtils.copyProperties(allocation, response);
         if (vehicleBasicService != null) {
             VehicleBasicInfo basicInfo = vehicleBasicService.getBasicInfo(allocation.getVehicleId());
-            response.setVin(basicInfo.getVin());
-            response.setDealerName(basicInfo.getDealerName());
+            copyBasicInfo(basicInfo, response);
         }
         return response;
+    }
+
+    private void copyBasicInfo(VehicleBasicInfo basicInfo, AllocationResponse response) {
+        response.setVin(basicInfo.getVin());
+        response.setLifecycleStage(basicInfo.getLifecycleStage());
+        response.setModelId(basicInfo.getModelId());
+        response.setModelName(basicInfo.getModelName());
+        response.setSeries(basicInfo.getSeries());
+        response.setSpec(basicInfo.getSpec());
+        response.setModelCode(basicInfo.getModelCode());
+        response.setYearMake(basicInfo.getYearMake());
+        response.setExteriorColorId(basicInfo.getExteriorColorId());
+        response.setExteriorColorName(basicInfo.getExteriorColorName());
+        response.setInteriorColorId(basicInfo.getInteriorColorId());
+        response.setInteriorColorName(basicInfo.getInteriorColorName());
+        response.setDealerName(basicInfo.getDealerName());
     }
 }
