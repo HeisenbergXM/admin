@@ -15,8 +15,14 @@ public class InvoiceListResponse {
     @Schema(description = "VIN")
     private String vin;
 
+    @Schema(description = "当前生命周期阶段")
+    private String lifecycleStage;
+
     @Schema(description = "最新发票 ID")
     private Long latestInvoiceId;
+
+    @Schema(description = "最新发票阶段状态")
+    private String latestStageStatus;
 
     @Schema(description = "最新发票序号")
     private Integer latestInvoiceSeq;

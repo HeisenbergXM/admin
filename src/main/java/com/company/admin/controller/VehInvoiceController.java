@@ -61,7 +61,7 @@ public class VehInvoiceController {
 
     @PostMapping("/{id}/confirm")
     @Operation(summary = "确认发票")
-    @PreAuthorize("hasAuthority('vlm:invoice:edit')")
+    @PreAuthorize("hasAuthority('vlm:invoice:confirm')")
     @OpLog(value = "确认发票", type = OpLog.LogType.UPDATE)
     public Result<Void> confirmInvoice(@Parameter(description = "发票 ID") @PathVariable Long id) {
         vehInvoiceService.confirmInvoice(id);

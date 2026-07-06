@@ -15,6 +15,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -77,6 +79,38 @@ class MapperSqlSmokeTest {
         assertEquals("VIN00000000000001", row.getVin());
         assertFalse(row.getHasFormalInvoice());
         assertEquals(0, row.getInvoiceCount());
+    }
+
+    @Test
+    void invoicePageExposesLatestDraftStatusForSavedInvoiceDrafts() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (5, 'VIN00000000000005', 'PENDING_INVOICE', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_invoice (id, vehicle_id, stage_status, invoice_seq, invoice_type, invoice_no, deleted) VALUES (50, 5, 'DRAFT', 1, 'INVOICED', 'INV-DRAFT', 0)");
+
+        Page<InvoiceListResponse> page = vehInvoiceMapper.selectInvoicePage(
+                new Page<>(1, 10), new InvoiceQueryRequest());
+
+        assertEquals(1, page.getRecords().size());
+        InvoiceListResponse row = page.getRecords().get(0);
+        assertEquals(50L, row.getLatestInvoiceId());
+        assertEquals("DRAFT", forBeanPropertyAccess(row).getPropertyValue("latestStageStatus"));
+        assertEquals("PENDING_INVOICE", forBeanPropertyAccess(row).getPropertyValue("lifecycleStage"));
+    }
+
+    @Test
+    void allocationPageExposesDraftStatusForSavedAllocationDrafts() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (6, 'VIN00000000000006', 'PENDING_ALLOCATION', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_allocation (id, vehicle_id, stage_status, dealer_id, deleted) VALUES (60, 6, 'DRAFT', 600, 0)");
+        AllocationQueryRequest request = new AllocationQueryRequest();
+        request.setStageStatus("PENDING_ALLOCATION");
+
+        Page<AllocationResponse> page = vehAllocationMapper.selectAllocationPage(
+                new Page<>(1, 10), request);
+
+        assertEquals(1, page.getRecords().size());
+        AllocationResponse row = page.getRecords().get(0);
+        assertEquals(60L, row.getId());
+        assertEquals("DRAFT", row.getStageStatus());
+        assertEquals("PENDING_ALLOCATION", row.getLifecycleStage());
     }
 
     @Test
@@ -157,5 +191,14 @@ class MapperSqlSmokeTest {
 
         assertEquals(1, page.getRecords().size());
         assertTrue(page.getRecords().get(0).getHasFormalInvoice());
+    }
+
+    @Test
+    void adminSystemSeedDefinesInvoiceConfirmPermission() throws IOException {
+        String sql = new String(
+                getClass().getResourceAsStream("/sql/admin_system.sql").readAllBytes(),
+                StandardCharsets.UTF_8);
+
+        assertTrue(sql.contains("'vlm:invoice:confirm'"));
     }
 }

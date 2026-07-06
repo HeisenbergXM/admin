@@ -7,7 +7,9 @@
         SELECT
             v.vin,
             v.id AS vehicle_id,
+            v.lifecycle_stage,
             latest.id AS latest_invoice_id,
+            latest.stage_status AS latest_stage_status,
             latest.invoice_seq AS latest_invoice_seq,
             latest.invoice_type AS latest_invoice_type,
             latest.invoice_no AS latest_invoice_no,
