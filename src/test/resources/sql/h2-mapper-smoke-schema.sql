@@ -4,6 +4,8 @@ DROP TABLE IF EXISTS sys_menu;
 DROP TABLE IF EXISTS sys_role;
 DROP TABLE IF EXISTS t_veh_payment;
 DROP TABLE IF EXISTS t_veh_invoice;
+DROP TABLE IF EXISTS t_veh_allocation;
+DROP TABLE IF EXISTS t_md_dealer;
 DROP TABLE IF EXISTS t_vehicle;
 
 CREATE TABLE t_vehicle (
@@ -34,6 +36,25 @@ CREATE TABLE t_veh_payment (
     remark5 VARCHAR(500),
     confirmed_by VARCHAR(50),
     confirmed_at TIMESTAMP,
+    deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE t_veh_allocation (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    vehicle_id BIGINT NOT NULL,
+    stage_status VARCHAR(20),
+    allocated_date DATE,
+    dealer_id BIGINT,
+    sales_status VARCHAR(50),
+    remark3 VARCHAR(500),
+    confirmed_by VARCHAR(50),
+    confirmed_at TIMESTAMP,
+    deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE t_md_dealer (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    dealer_name VARCHAR(100),
     deleted TINYINT NOT NULL DEFAULT 0
 );
 

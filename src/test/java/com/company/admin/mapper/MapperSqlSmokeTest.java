@@ -1,8 +1,10 @@
 package com.company.admin.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.company.admin.dto.request.AllocationQueryRequest;
 import com.company.admin.dto.request.InvoiceQueryRequest;
 import com.company.admin.dto.request.PaymentQueryRequest;
+import com.company.admin.dto.response.AllocationResponse;
 import com.company.admin.dto.response.InvoiceListResponse;
 import com.company.admin.dto.response.PaymentResponse;
 import com.company.admin.entity.Menu;
@@ -27,6 +29,8 @@ class MapperSqlSmokeTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
+    private VehAllocationMapper vehAllocationMapper;
+    @Autowired
     private VehInvoiceMapper vehInvoiceMapper;
     @Autowired
     private VehPaymentMapper vehPaymentMapper;
@@ -34,6 +38,21 @@ class MapperSqlSmokeTest {
     private UserMapper userMapper;
     @Autowired
     private MenuMapper menuMapper;
+
+    @Test
+    void allocationPageIncludesPendingAllocationVehiclesWithoutAllocationRows() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (4, 'VIN00000000000004', 'PENDING_ALLOCATION', 0)");
+        AllocationQueryRequest request = new AllocationQueryRequest();
+        request.setStageStatus("PENDING_ALLOCATION");
+
+        Page<AllocationResponse> page = vehAllocationMapper.selectAllocationPage(
+                new Page<>(1, 10), request);
+
+        assertEquals(1, page.getRecords().size());
+        AllocationResponse row = page.getRecords().get(0);
+        assertEquals(4L, row.getVehicleId());
+        assertEquals("VIN00000000000004", row.getVin());
+    }
 
     @Test
     void invoicePageIncludesPendingInvoiceVehiclesWithoutInvoiceRows() {
