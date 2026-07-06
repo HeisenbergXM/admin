@@ -116,6 +116,7 @@ public class VehPaymentServiceImpl implements VehPaymentService {
         if (vehicleBasicService != null) {
             VehicleBasicInfo basicInfo = vehicleBasicService.getBasicInfo(payment.getVehicleId());
             response.setVin(basicInfo.getVin());
+            response.setLifecycleStage(basicInfo.getLifecycleStage());
         }
         return response;
     }

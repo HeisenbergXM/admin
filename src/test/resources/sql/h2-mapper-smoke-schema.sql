@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS sys_role_menu;
 DROP TABLE IF EXISTS sys_menu;
 DROP TABLE IF EXISTS sys_role;
 DROP TABLE IF EXISTS t_veh_payment;
+DROP TABLE IF EXISTS t_veh_registration;
 DROP TABLE IF EXISTS t_veh_invoice;
 DROP TABLE IF EXISTS t_veh_allocation;
 DROP TABLE IF EXISTS t_md_dealer;
@@ -70,6 +71,20 @@ CREATE TABLE t_veh_payment (
     credit_full_payment_date DATE,
     payment_status VARCHAR(50),
     remark5 VARCHAR(500),
+    confirmed_by VARCHAR(50),
+    confirmed_at TIMESTAMP,
+    deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE t_veh_registration (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    vehicle_id BIGINT NOT NULL,
+    stage_status VARCHAR(20),
+    drosstech_status VARCHAR(50),
+    upload_date DATE,
+    registration_date DATE,
+    customer_region VARCHAR(100),
+    remark8 VARCHAR(500),
     confirmed_by VARCHAR(50),
     confirmed_at TIMESTAMP,
     deleted TINYINT NOT NULL DEFAULT 0

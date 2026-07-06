@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.dto.request.AllocationQueryRequest;
 import com.company.admin.dto.request.InvoiceQueryRequest;
 import com.company.admin.dto.request.PaymentQueryRequest;
+import com.company.admin.dto.request.RegistrationQueryRequest;
 import com.company.admin.dto.response.AllocationResponse;
 import com.company.admin.dto.response.InvoiceListResponse;
 import com.company.admin.dto.response.PaymentResponse;
+import com.company.admin.dto.response.RegistrationResponse;
 import com.company.admin.entity.Menu;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +39,8 @@ class MapperSqlSmokeTest {
     private VehInvoiceMapper vehInvoiceMapper;
     @Autowired
     private VehPaymentMapper vehPaymentMapper;
+    @Autowired
+    private VehRegistrationMapper vehRegistrationMapper;
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -126,6 +130,56 @@ class MapperSqlSmokeTest {
         PaymentResponse row = page.getRecords().get(0);
         assertEquals(2L, row.getVehicleId());
         assertFalse(row.getHasFormalInvoice());
+    }
+
+    @Test
+    void paymentPageFiltersPendingPaymentByVehicleLifecycleWhenPaymentRecordIsDraft() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (7, 'VIN00000000000007', 'PENDING_PAYMENT', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_payment (id, vehicle_id, stage_status, payment_status, deleted) VALUES (70, 7, 'DRAFT', 'PENDING', 0)");
+        PaymentQueryRequest request = new PaymentQueryRequest();
+        request.setStageStatus("PENDING_PAYMENT");
+
+        Page<PaymentResponse> page = vehPaymentMapper.selectPaymentPage(
+                new Page<>(1, 10), request);
+
+        assertEquals(1, page.getRecords().size());
+        PaymentResponse row = page.getRecords().get(0);
+        assertEquals(70L, row.getId());
+        assertEquals("DRAFT", row.getStageStatus());
+        assertEquals("PENDING_PAYMENT", forBeanPropertyAccess(row).getPropertyValue("lifecycleStage"));
+    }
+
+    @Test
+    void registrationPageFiltersPendingRegistrationByVehicleLifecycleWhenRegistrationRecordIsDraft() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (8, 'VIN00000000000008', 'PENDING_REGISTRATION', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_registration (id, vehicle_id, stage_status, drosstech_status, deleted) VALUES (80, 8, 'DRAFT', 'UPLOADED', 0)");
+        RegistrationQueryRequest request = new RegistrationQueryRequest();
+        request.setStageStatus("PENDING_REGISTRATION");
+
+        Page<RegistrationResponse> page = vehRegistrationMapper.selectRegistrationPage(
+                new Page<>(1, 10), request);
+
+        assertEquals(1, page.getRecords().size());
+        RegistrationResponse row = page.getRecords().get(0);
+        assertEquals(80L, row.getId());
+        assertEquals("DRAFT", row.getStageStatus());
+        assertEquals("PENDING_REGISTRATION", forBeanPropertyAccess(row).getPropertyValue("lifecycleStage"));
+    }
+
+    @Test
+    void registrationPageIncludesPendingRegistrationVehiclesWithoutRegistrationRows() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (9, 'VIN00000000000009', 'PENDING_REGISTRATION', 0)");
+        RegistrationQueryRequest request = new RegistrationQueryRequest();
+        request.setStageStatus("PENDING_REGISTRATION");
+
+        Page<RegistrationResponse> page = vehRegistrationMapper.selectRegistrationPage(
+                new Page<>(1, 10), request);
+
+        assertEquals(1, page.getRecords().size());
+        RegistrationResponse row = page.getRecords().get(0);
+        assertEquals(9L, row.getVehicleId());
+        assertEquals("PENDING_REGISTRATION", row.getStageStatus());
+        assertEquals("PENDING_REGISTRATION", forBeanPropertyAccess(row).getPropertyValue("lifecycleStage"));
     }
 
     @Test

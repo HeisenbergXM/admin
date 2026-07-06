@@ -8,6 +8,7 @@
             p.id,
             v.id AS vehicle_id,
             v.vin,
+            v.lifecycle_stage,
             p.stage_status,
             p.payment_date,
             p.credit_full_payment_date,
@@ -41,9 +42,16 @@
         <if test="query.paymentStatus != null and query.paymentStatus != ''">
             AND p.payment_status = #{query.paymentStatus}
         </if>
-        <if test="query.stageStatus != null and query.stageStatus != ''">
-            AND p.stage_status = #{query.stageStatus}
-        </if>
+        <choose>
+            <when test="query.stageStatus == 'PENDING_PAYMENT'">
+                AND v.lifecycle_stage = #{query.stageStatus}
+            </when>
+            <otherwise>
+                <if test="query.stageStatus != null and query.stageStatus != ''">
+                    AND p.stage_status = #{query.stageStatus}
+                </if>
+            </otherwise>
+        </choose>
         <if test="query.hasFormalInvoice != null and query.hasFormalInvoice">
             AND latest.invoice_type = 'INVOICED'
             AND latest.stage_status = 'CONFIRMED'

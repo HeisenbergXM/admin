@@ -25,7 +25,10 @@ public class RegistrationResponse {
     @Schema(description = "经销商名称")
     private String dealerName;
 
-    @Schema(description = "阶段状态")
+    @Schema(description = "当前生命周期阶段")
+    private String lifecycleStage;
+
+    @Schema(description = "上牌记录状态：DRAFT=草稿，CONFIRMED=已确认")
     private String stageStatus;
 
     @Schema(description = "Drosstech 状态")

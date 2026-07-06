@@ -19,7 +19,7 @@ public class AllocationResponse {
     @Schema(description = "VIN")
     private String vin;
 
-    @Schema(description = "阶段状态")
+    @Schema(description = "销售分配记录状态：DRAFT=草稿，CONFIRMED=已确认；未创建记录时可为 PENDING_ALLOCATION")
     private String stageStatus;
 
     @Schema(description = "当前生命周期阶段")

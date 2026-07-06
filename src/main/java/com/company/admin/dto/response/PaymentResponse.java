@@ -19,7 +19,10 @@ public class PaymentResponse {
     @Schema(description = "VIN")
     private String vin;
 
-    @Schema(description = "阶段状态")
+    @Schema(description = "当前生命周期阶段")
+    private String lifecycleStage;
+
+    @Schema(description = "收款记录状态：DRAFT=草稿，CONFIRMED=已确认")
     private String stageStatus;
 
     @Schema(description = "收款日期")

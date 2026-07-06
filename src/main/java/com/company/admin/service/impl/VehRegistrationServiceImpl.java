@@ -113,6 +113,7 @@ public class VehRegistrationServiceImpl implements VehRegistrationService {
         if (vehicleBasicService != null) {
             VehicleBasicInfo basicInfo = vehicleBasicService.getBasicInfo(registration.getVehicleId());
             response.setVin(basicInfo.getVin());
+            response.setLifecycleStage(basicInfo.getLifecycleStage());
             response.setDealerId(basicInfo.getDealerId());
             response.setDealerName(basicInfo.getDealerName());
         }

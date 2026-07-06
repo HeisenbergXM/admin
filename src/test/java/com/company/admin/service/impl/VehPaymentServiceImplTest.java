@@ -3,11 +3,14 @@ package com.company.admin.service.impl;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
 import com.company.admin.dto.request.PaymentSaveRequest;
+import com.company.admin.dto.response.PaymentResponse;
+import com.company.admin.dto.response.VehicleBasicInfo;
 import com.company.admin.entity.VehPayment;
 import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehPaymentMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.VehicleBasicService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -34,6 +37,9 @@ class VehPaymentServiceImplTest {
 
     @Mock
     private LifecycleService lifecycleService;
+
+    @Mock
+    private VehicleBasicService vehicleBasicService;
 
     @InjectMocks
     private VehPaymentServiceImpl service;
@@ -89,6 +95,21 @@ class VehPaymentServiceImplTest {
         verify(vehPaymentMapper).updateById(captor.capture());
         assertEquals(StageStatus.CONFIRMED.name(), captor.getValue().getStageStatus());
         assertNotNull(captor.getValue().getConfirmedAt());
+    }
+
+    @Test
+    void getPaymentIncludesVehicleLifecycleStage() {
+        when(vehPaymentMapper.selectOne(any())).thenReturn(draftPayment());
+        when(lifecycleService.hasValidFormalInvoice(99L)).thenReturn(true);
+        VehicleBasicInfo basicInfo = new VehicleBasicInfo();
+        basicInfo.setVin("VIN00000000000099");
+        basicInfo.setLifecycleStage(LifecycleStage.PENDING_PAYMENT.name());
+        when(vehicleBasicService.getBasicInfo(99L)).thenReturn(basicInfo);
+
+        PaymentResponse response = service.getPayment(99L);
+
+        assertEquals("VIN00000000000099", response.getVin());
+        assertEquals(LifecycleStage.PENDING_PAYMENT.name(), response.getLifecycleStage());
     }
 
     private PaymentSaveRequest saveRequest() {

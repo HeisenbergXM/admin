@@ -15,6 +15,6 @@ public class AllocationQueryRequest extends PageRequest {
     @Schema(description = "经销商 ID")
     private Long dealerId;
 
-    @Schema(description = "阶段状态")
+    @Schema(description = "阶段状态：PENDING_ALLOCATION 按车辆生命周期过滤，DRAFT/CONFIRMED 按销售分配记录状态过滤")
     private String stageStatus;
 }
