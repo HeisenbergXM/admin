@@ -7,6 +7,7 @@ import com.company.admin.dto.response.VehicleBasicInfo;
 import com.company.admin.entity.DispatchList;
 import com.company.admin.entity.WaybillDealer;
 import com.company.admin.entity.WaybillDealerVin;
+import com.company.admin.entity.Waybill;
 import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.OrderStatus;
 import com.company.admin.mapper.DispatchListMapper;
@@ -14,6 +15,7 @@ import com.company.admin.mapper.WaybillDealerMapper;
 import com.company.admin.mapper.WaybillDealerVinMapper;
 import com.company.admin.mapper.WaybillMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.VehicleBasicService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,6 +55,9 @@ class DispatchListServiceImplTest {
 
     @Mock
     private VehicleBasicService vehicleBasicService;
+
+    @Mock
+    private BusinessStatusLabelService statusLabelService;
 
     @InjectMocks
     private DispatchListServiceImpl service;
@@ -112,6 +117,30 @@ class DispatchListServiceImplTest {
         verify(waybillDealerMapper).updateById(captor.capture());
         assertEquals(OrderStatus.CONFIRMED.name(), captor.getValue().getRowStatus());
         assertNotNull(captor.getValue().getConfirmedAt());
+    }
+
+    @Test
+    void getDetailAddsChineseDispatchAndDealerStatusLabels() {
+        DispatchList dispatchList = new DispatchList();
+        dispatchList.setId(15L);
+        dispatchList.setListStatus(OrderStatus.DRAFT.name());
+        WaybillDealer dealer = dealerRow(3L);
+        dealer.setWaybillId(7L);
+        dealer.setDeliveryStatus("IN_TRANSIT");
+        Waybill waybill = new Waybill();
+        waybill.setId(7L);
+        waybill.setDispatchListId(15L);
+        when(dispatchListMapper.selectById(15L)).thenReturn(dispatchList);
+        when(waybillMapper.selectByDispatchListId(15L)).thenReturn(List.of(waybill));
+        when(waybillDealerMapper.selectByDispatchListId(15L)).thenReturn(List.of(dealer));
+        when(waybillDealerVinMapper.selectByDealerRowId(22L)).thenReturn(List.of());
+        when(vehicleBasicService.getBasicInfoByIds(List.of())).thenReturn(List.of());
+        when(statusLabelService.stageStatusLabel("DRAFT")).thenReturn("草稿");
+        when(statusLabelService.dictLabel("delivery_status", "IN_TRANSIT")).thenReturn("运输中");
+
+        var response = service.getDetail(15L);
+
+        assertEquals("草稿", response.getListStatusLabel());
     }
 
     private DispatchListSaveRequest saveRequest() {

@@ -14,6 +14,7 @@ import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehAllocationMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.VehicleBasicService;
 import com.company.admin.service.VehAllocationService;
 import com.company.admin.util.SecurityUtils;
@@ -31,11 +32,13 @@ public class VehAllocationServiceImpl implements VehAllocationService {
     private final VehAllocationMapper vehAllocationMapper;
     private final LifecycleService lifecycleService;
     private final VehicleBasicService vehicleBasicService;
+    private final BusinessStatusLabelService statusLabelService;
 
     @Override
     public PageResult<AllocationResponse> pageAllocations(AllocationQueryRequest request) {
         Page<AllocationResponse> page = vehAllocationMapper.selectAllocationPage(
                 new Page<>(request.getPageNum(), request.getPageSize()), request);
+        page.getRecords().forEach(this::applyLabels);
         return new PageResult<>(page.getRecords(), page.getTotal(), request.getPageNum(), request.getPageSize());
     }
 
@@ -96,6 +99,7 @@ public class VehAllocationServiceImpl implements VehAllocationService {
         response.setVehicleId(vehicleId);
         response.setStageStatus(basicInfo.getLifecycleStage());
         copyBasicInfo(basicInfo, response);
+        applyLabels(response);
         return response;
     }
 
@@ -144,5 +148,12 @@ public class VehAllocationServiceImpl implements VehAllocationService {
         response.setInteriorColorId(basicInfo.getInteriorColorId());
         response.setInteriorColorName(basicInfo.getInteriorColorName());
         response.setDealerName(basicInfo.getDealerName());
+        response.setLifecycleStageLabel(basicInfo.getLifecycleStageLabel());
+    }
+
+    private void applyLabels(AllocationResponse response) {
+        response.setStageStatusLabel(statusLabelService.stageStatusLabel(response.getStageStatus()));
+        response.setLifecycleStageLabel(statusLabelService.lifecycleStageLabel(response.getLifecycleStage()));
+        response.setSalesStatusLabel(statusLabelService.dictLabel("sales_status", response.getSalesStatus()));
     }
 }

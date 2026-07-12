@@ -12,6 +12,7 @@ import com.company.admin.mapper.VehicleMapper;
 import com.company.admin.service.VehicleBasicService;
 import com.company.admin.service.VehicleService;
 import com.company.admin.service.VehProductionService;
+import com.company.admin.service.BusinessStatusLabelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +25,13 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleMapper vehicleMapper;
     private final VehicleBasicService vehicleBasicService;
     private final VehProductionService vehProductionService;
+    private final BusinessStatusLabelService statusLabelService;
 
     @Override
     public PageResult<VehicleListResponse> pageVehicles(VehicleQueryRequest request) {
         Page<VehicleListResponse> page = vehicleMapper.selectVehiclePage(
                 new Page<>(request.getPageNum(), request.getPageSize()), request);
+        page.getRecords().forEach(this::applyLabels);
         return new PageResult<>(page.getRecords(), page.getTotal(),
                 request.getPageNum(), request.getPageSize());
     }
@@ -55,5 +58,10 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     public boolean checkVinAvailable(String vin) {
         return !vehicleBasicService.existsByVin(vin == null ? null : vin.trim().toUpperCase());
+    }
+
+    private void applyLabels(VehicleListResponse response) {
+        response.setLifecycleStageLabel(statusLabelService.lifecycleStageLabel(response.getLifecycleStage()));
+        response.setProductionStatusLabel(statusLabelService.stageStatusLabel(response.getProductionStatus()));
     }
 }

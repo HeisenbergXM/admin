@@ -10,6 +10,7 @@ import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehPaymentMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.VehicleBasicService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,6 +41,9 @@ class VehPaymentServiceImplTest {
 
     @Mock
     private VehicleBasicService vehicleBasicService;
+
+    @Mock
+    private BusinessStatusLabelService statusLabelService;
 
     @InjectMocks
     private VehPaymentServiceImpl service;
@@ -105,11 +109,15 @@ class VehPaymentServiceImplTest {
         basicInfo.setVin("VIN00000000000099");
         basicInfo.setLifecycleStage(LifecycleStage.PENDING_PAYMENT.name());
         when(vehicleBasicService.getBasicInfo(99L)).thenReturn(basicInfo);
+        when(statusLabelService.lifecycleStageLabel("PENDING_PAYMENT")).thenReturn("待收款");
+        when(statusLabelService.stageStatusLabel("DRAFT")).thenReturn("草稿");
 
         PaymentResponse response = service.getPayment(99L);
 
         assertEquals("VIN00000000000099", response.getVin());
         assertEquals(LifecycleStage.PENDING_PAYMENT.name(), response.getLifecycleStage());
+        assertEquals("待收款", response.getLifecycleStageLabel());
+        assertEquals("草稿", response.getStageStatusLabel());
     }
 
     private PaymentSaveRequest saveRequest() {

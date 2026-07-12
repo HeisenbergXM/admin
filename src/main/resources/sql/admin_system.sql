@@ -620,17 +620,17 @@ CREATE TABLE `t_sys_dict_item`  (
 -- ----------------------------
 -- Records of t_sys_dict_item
 -- ----------------------------
-INSERT INTO `t_sys_dict_item` VALUES (27, 13, 'INVOICED', 'Formal Invoice', 1, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_item` VALUES (28, 13, 'PROFORMA_INVOICED', 'Proforma Invoice', 2, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_item` VALUES (29, 14, 'PAID', 'Paid', 1, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_item` VALUES (30, 14, 'PAID_SINOSURE', 'Paid - Sinosure', 2, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_item` VALUES (31, 14, 'UNPAID', 'Unpaid', 3, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_item` VALUES (32, 15, 'DELIVERED', 'Delivered', 1, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_item` VALUES (33, 15, 'IN_TRANSIT', 'In Transit', 2, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_item` VALUES (34, 16, 'UPLOADED', 'Uploaded', 1, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_item` VALUES (35, 16, 'PENDING', 'Pending', 2, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_item` VALUES (36, 17, 'ALLOCATED', 'Allocated', 1, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_item` VALUES (37, 17, 'DELIVERED', 'Delivered', 2, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (27, 13, 'INVOICED', '正式发票', 1, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (28, 13, 'PROFORMA_INVOICED', '形式发票', 2, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (29, 14, 'PAID', '已收款', 1, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (30, 14, 'PAID_SINOSURE', '已收款-中信保', 2, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (31, 14, 'UNPAID', '未收款', 3, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (32, 15, 'DELIVERED', '已配送', 1, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (33, 15, 'IN_TRANSIT', '运输中', 2, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (34, 16, 'UPLOADED', '已上传', 1, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (35, 16, 'PENDING', '待上传', 2, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (36, 17, 'ALLOCATED', '已分配', 1, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_item` VALUES (37, 17, 'DELIVERED', '已交付', 2, 1, NULL, '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
 
 -- ----------------------------
 -- Table structure for t_sys_dict_type
@@ -652,11 +652,11 @@ CREATE TABLE `t_sys_dict_type`  (
 -- ----------------------------
 -- Records of t_sys_dict_type
 -- ----------------------------
-INSERT INTO `t_sys_dict_type` VALUES (13, 'invoice_status', 'Invoice Status', 1, 'Invoice type/status', '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_type` VALUES (14, 'payment_status', 'Payment Status', 1, 'Payment status', '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_type` VALUES (15, 'delivery_status', 'Delivery Status', 1, 'Outbound delivery status', '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_type` VALUES (16, 'drosstech_status', 'Registration Status', 1, 'Registration upload status', '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
-INSERT INTO `t_sys_dict_type` VALUES (17, 'sales_status', 'Sales Status', 1, 'Allocation sales status', '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_type` VALUES (13, 'invoice_status', '发票类型/状态', 1, '发票类型/状态', '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_type` VALUES (14, 'payment_status', '收款状态', 1, '收款状态', '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_type` VALUES (15, 'delivery_status', '配送状态', 1, '仓库到经销商配送状态', '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_type` VALUES (16, 'drosstech_status', '上牌状态', 1, '上牌资料上传状态', '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
+INSERT INTO `t_sys_dict_type` VALUES (17, 'sales_status', '销售状态', 1, '销售分配状态', '2026-07-06 22:01:14', '2026-07-06 22:01:14', 0);
 
 -- ----------------------------
 -- Table structure for t_transport_order

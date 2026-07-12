@@ -17,18 +17,24 @@ public class InvoiceListResponse {
 
     @Schema(description = "当前生命周期阶段")
     private String lifecycleStage;
+    @Schema(description = "当前生命周期阶段中文名称")
+    private String lifecycleStageLabel;
 
     @Schema(description = "最新发票 ID")
     private Long latestInvoiceId;
 
     @Schema(description = "最新发票阶段状态")
     private String latestStageStatus;
+    @Schema(description = "最新发票阶段状态中文名称")
+    private String latestStageStatusLabel;
 
     @Schema(description = "最新发票序号")
     private Integer latestInvoiceSeq;
 
     @Schema(description = "最新发票类型")
     private String latestInvoiceType;
+    @Schema(description = "最新发票类型中文名称")
+    private String latestInvoiceTypeLabel;
 
     @Schema(description = "最新发票号")
     private String latestInvoiceNo;

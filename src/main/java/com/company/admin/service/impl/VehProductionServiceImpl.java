@@ -12,6 +12,7 @@ import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehicleMapper;
 import com.company.admin.mapper.VehProductionMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.VehProductionService;
 import com.company.admin.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class VehProductionServiceImpl implements VehProductionService {
     private final VehicleMapper vehicleMapper;
     private final VehProductionMapper vehProductionMapper;
     private final LifecycleService lifecycleService;
+    private final BusinessStatusLabelService statusLabelService;
 
     @Override
     @Transactional
@@ -117,6 +119,7 @@ public class VehProductionServiceImpl implements VehProductionService {
     private ProductionResponse toResponse(VehProduction production) {
         ProductionResponse response = new ProductionResponse();
         BeanUtils.copyProperties(production, response);
+        response.setStageStatusLabel(statusLabelService.stageStatusLabel(response.getStageStatus()));
         return response;
     }
 

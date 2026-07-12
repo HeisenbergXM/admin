@@ -27,12 +27,18 @@ public class RegistrationResponse {
 
     @Schema(description = "当前生命周期阶段")
     private String lifecycleStage;
+    @Schema(description = "当前生命周期阶段中文名称")
+    private String lifecycleStageLabel;
 
     @Schema(description = "上牌记录状态：DRAFT=草稿，CONFIRMED=已确认")
     private String stageStatus;
+    @Schema(description = "上牌记录状态中文名称")
+    private String stageStatusLabel;
 
     @Schema(description = "Drosstech 状态")
     private String drosstechStatus;
+    @Schema(description = "Drosstech 状态中文名称")
+    private String drosstechStatusLabel;
 
     @Schema(description = "上传日期")
     private LocalDate uploadDate;

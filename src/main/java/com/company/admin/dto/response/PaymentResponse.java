@@ -21,9 +21,13 @@ public class PaymentResponse {
 
     @Schema(description = "当前生命周期阶段")
     private String lifecycleStage;
+    @Schema(description = "当前生命周期阶段中文名称")
+    private String lifecycleStageLabel;
 
     @Schema(description = "收款记录状态：DRAFT=草稿，CONFIRMED=已确认")
     private String stageStatus;
+    @Schema(description = "收款记录状态中文名称")
+    private String stageStatusLabel;
 
     @Schema(description = "收款日期")
     private LocalDate paymentDate;
@@ -33,6 +37,8 @@ public class PaymentResponse {
 
     @Schema(description = "收款状态")
     private String paymentStatus;
+    @Schema(description = "收款状态中文名称")
+    private String paymentStatusLabel;
 
     @Schema(description = "备注5")
     private String remark5;

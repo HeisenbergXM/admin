@@ -25,6 +25,7 @@ import com.company.admin.mapper.WaybillDealerMapper;
 import com.company.admin.mapper.WaybillDealerVinMapper;
 import com.company.admin.mapper.WaybillMapper;
 import com.company.admin.service.DispatchListService;
+import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.LifecycleService;
 import com.company.admin.service.VehicleBasicService;
 import com.company.admin.util.SecurityUtils;
@@ -49,11 +50,14 @@ public class DispatchListServiceImpl implements DispatchListService {
     private final WaybillDealerVinMapper waybillDealerVinMapper;
     private final LifecycleService lifecycleService;
     private final VehicleBasicService vehicleBasicService;
+    private final BusinessStatusLabelService statusLabelService;
 
     @Override
     public PageResult<DispatchListResponse> pageDispatchLists(DispatchListQueryRequest request) {
         Page<DispatchListResponse> page = dispatchListMapper.selectDispatchPage(
                 new Page<>(request.getPageNum(), request.getPageSize()), request);
+        page.getRecords().forEach(response -> response.setListStatusLabel(
+                statusLabelService.stageStatusLabel(response.getListStatus())));
         return new PageResult<>(page.getRecords(), page.getTotal(), request.getPageNum(), request.getPageSize());
     }
 
@@ -84,6 +88,7 @@ public class DispatchListServiceImpl implements DispatchListService {
                     .stream().map(this::toDealerResponse).collect(Collectors.toList()));
             return waybillResponse;
         }).collect(Collectors.toList()));
+        response.setListStatusLabel(statusLabelService.stageStatusLabel(response.getListStatus()));
         return response;
     }
 
@@ -272,6 +277,8 @@ public class DispatchListServiceImpl implements DispatchListService {
         Map<Long, VehicleBasicInfo> vehicleMap = vehicleBasicService.getBasicInfoByIds(vehicleIds).stream()
                 .collect(Collectors.toMap(VehicleBasicInfo::getId, Function.identity(), (a, b) -> a));
         response.setVins(vehicleIds.stream().map(vehicleMap::get).collect(Collectors.toList()));
+        response.setDeliveryStatusLabel(statusLabelService.dictLabel("delivery_status", response.getDeliveryStatus()));
+        response.setRowStatusLabel(statusLabelService.stageStatusLabel(response.getRowStatus()));
         return response;
     }
 }

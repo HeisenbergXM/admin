@@ -19,6 +19,8 @@ public class VehicleListResponse {
     private String vin;
     @Schema(description = "当前生命周期阶段")
     private String lifecycleStage;
+    @Schema(description = "当前生命周期阶段中文名称")
+    private String lifecycleStageLabel;
     @Schema(description = "车型 ID")
     private Long modelId;
     @Schema(description = "车型名称")
@@ -45,6 +47,8 @@ public class VehicleListResponse {
     private String dealerName;
     @Schema(description = "生产阶段记录状态")
     private String productionStatus;
+    @Schema(description = "生产阶段记录状态中文名称")
+    private String productionStatusLabel;
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
     @Schema(description = "更新时间")

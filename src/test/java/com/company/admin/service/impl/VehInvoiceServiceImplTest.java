@@ -4,11 +4,13 @@ import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
 import com.company.admin.dto.request.InvoiceConvertRequest;
 import com.company.admin.dto.request.InvoiceCreateRequest;
+import com.company.admin.dto.response.InvoiceResponse;
 import com.company.admin.entity.VehInvoice;
 import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehInvoiceMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -35,6 +37,9 @@ class VehInvoiceServiceImplTest {
 
     @Mock
     private LifecycleService lifecycleService;
+
+    @Mock
+    private BusinessStatusLabelService statusLabelService;
 
     @InjectMocks
     private VehInvoiceServiceImpl service;
@@ -109,6 +114,19 @@ class VehInvoiceServiceImplTest {
         ArgumentCaptor<VehInvoice> captor = ArgumentCaptor.forClass(VehInvoice.class);
         verify(vehInvoiceMapper).updateById(captor.capture());
         assertEquals(StageStatus.CONFIRMED.name(), captor.getValue().getStageStatus());
+    }
+
+    @Test
+    void getInvoicesAddsChineseStageAndInvoiceTypeLabels() {
+        when(vehInvoiceMapper.selectList(any())).thenReturn(List.of(invoice(1, "INVOICED")));
+        when(statusLabelService.stageStatusLabel("CONFIRMED")).thenReturn("已确认");
+        when(statusLabelService.dictLabel("invoice_status", "INVOICED")).thenReturn("正式发票");
+
+        List<InvoiceResponse> responses = service.getInvoices(99L);
+
+        assertEquals("CONFIRMED", responses.get(0).getStageStatus());
+        assertEquals("已确认", responses.get(0).getStageStatusLabel());
+        assertEquals("正式发票", responses.get(0).getInvoiceTypeLabel());
     }
 
     private InvoiceCreateRequest createRequest(String invoiceType) {

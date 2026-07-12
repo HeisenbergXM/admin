@@ -20,6 +20,8 @@ public class ProductionResponse {
     private Long vehicleId;
     @Schema(description = "阶段记录状态：DRAFT=草稿，CONFIRMED=已确认")
     private String stageStatus;
+    @Schema(description = "阶段记录状态中文名称")
+    private String stageStatusLabel;
     @Schema(description = "车型 ID")
     private Long modelId;
     @Schema(description = "外饰颜色 ID")

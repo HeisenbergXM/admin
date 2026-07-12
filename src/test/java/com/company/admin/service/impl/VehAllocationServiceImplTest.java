@@ -10,6 +10,7 @@ import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehAllocationMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.VehicleBasicService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +42,9 @@ class VehAllocationServiceImplTest {
 
     @Mock
     private VehicleBasicService vehicleBasicService;
+
+    @Mock
+    private BusinessStatusLabelService statusLabelService;
 
     @InjectMocks
     private VehAllocationServiceImpl service;
@@ -112,6 +116,8 @@ class VehAllocationServiceImplTest {
         basicInfo.setExteriorColorName("Moon White");
         basicInfo.setYearMake("2026");
         when(vehicleBasicService.getBasicInfo(99L)).thenReturn(basicInfo);
+        when(statusLabelService.lifecycleStageLabel("PENDING_ALLOCATION")).thenReturn("待分配");
+        when(statusLabelService.stageStatusLabel("PENDING_ALLOCATION")).thenReturn("待分配");
 
         AllocationResponse response = service.getAllocation(99L);
 
@@ -119,6 +125,8 @@ class VehAllocationServiceImplTest {
         assertEquals("VIN00000000000099", response.getVin());
         assertEquals(LifecycleStage.PENDING_ALLOCATION.name(), response.getStageStatus());
         assertEquals(LifecycleStage.PENDING_ALLOCATION.name(), response.getLifecycleStage());
+        assertEquals("待分配", response.getStageStatusLabel());
+        assertEquals("待分配", response.getLifecycleStageLabel());
         assertEquals("MG4 EV", response.getModelName());
         assertEquals("Moon White", response.getExteriorColorName());
         assertEquals("2026", response.getYearMake());

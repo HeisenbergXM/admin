@@ -7,6 +7,7 @@ import com.company.admin.dto.response.VehicleBasicInfo;
 import com.company.admin.entity.Vehicle;
 import com.company.admin.mapper.VehicleMapper;
 import com.company.admin.service.VehicleBasicService;
+import com.company.admin.service.BusinessStatusLabelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,7 @@ import java.util.List;
 public class VehicleBasicServiceImpl implements VehicleBasicService {
 
     private final VehicleMapper vehicleMapper;
+    private final BusinessStatusLabelService statusLabelService;
 
     @Override
     public Vehicle getById(Long vehicleId) {
@@ -34,6 +36,7 @@ public class VehicleBasicServiceImpl implements VehicleBasicService {
         if (info == null) {
             throw new BusinessException(ErrorCode.VEHICLE_NOT_FOUND);
         }
+        applyLabels(info);
         return info;
     }
 
@@ -42,7 +45,9 @@ public class VehicleBasicServiceImpl implements VehicleBasicService {
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();
         }
-        return vehicleMapper.selectBasicInfoByIds(ids);
+        List<VehicleBasicInfo> infos = vehicleMapper.selectBasicInfoByIds(ids);
+        infos.forEach(this::applyLabels);
+        return infos;
     }
 
     @Override
@@ -56,6 +61,12 @@ public class VehicleBasicServiceImpl implements VehicleBasicService {
 
     @Override
     public List<VehicleBasicInfo> getCandidates(String stage, String vinPattern) {
-        return vehicleMapper.selectCandidates(stage, vinPattern);
+        List<VehicleBasicInfo> infos = vehicleMapper.selectCandidates(stage, vinPattern);
+        infos.forEach(this::applyLabels);
+        return infos;
+    }
+
+    private void applyLabels(VehicleBasicInfo info) {
+        info.setLifecycleStageLabel(statusLabelService.lifecycleStageLabel(info.getLifecycleStage()));
     }
 }

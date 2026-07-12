@@ -14,6 +14,7 @@ import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehPaymentMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.VehicleBasicService;
 import com.company.admin.service.VehPaymentService;
 import com.company.admin.util.SecurityUtils;
@@ -31,11 +32,13 @@ public class VehPaymentServiceImpl implements VehPaymentService {
     private final VehPaymentMapper vehPaymentMapper;
     private final LifecycleService lifecycleService;
     private final VehicleBasicService vehicleBasicService;
+    private final BusinessStatusLabelService statusLabelService;
 
     @Override
     public PageResult<PaymentResponse> pagePayments(PaymentQueryRequest request) {
         Page<PaymentResponse> page = vehPaymentMapper.selectPaymentPage(
                 new Page<>(request.getPageNum(), request.getPageSize()), request);
+        page.getRecords().forEach(this::applyLabels);
         return new PageResult<>(page.getRecords(), page.getTotal(), request.getPageNum(), request.getPageSize());
     }
 
@@ -118,6 +121,13 @@ public class VehPaymentServiceImpl implements VehPaymentService {
             response.setVin(basicInfo.getVin());
             response.setLifecycleStage(basicInfo.getLifecycleStage());
         }
+        applyLabels(response);
         return response;
+    }
+
+    private void applyLabels(PaymentResponse response) {
+        response.setLifecycleStageLabel(statusLabelService.lifecycleStageLabel(response.getLifecycleStage()));
+        response.setStageStatusLabel(statusLabelService.stageStatusLabel(response.getStageStatus()));
+        response.setPaymentStatusLabel(statusLabelService.dictLabel("payment_status", response.getPaymentStatus()));
     }
 }

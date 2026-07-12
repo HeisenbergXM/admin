@@ -15,6 +15,7 @@ import com.company.admin.enums.StageStatus;
 import com.company.admin.entity.VehInvoice;
 import com.company.admin.mapper.VehInvoiceMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.VehInvoiceService;
 import com.company.admin.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -35,11 +36,13 @@ public class VehInvoiceServiceImpl implements VehInvoiceService {
 
     private final VehInvoiceMapper vehInvoiceMapper;
     private final LifecycleService lifecycleService;
+    private final BusinessStatusLabelService statusLabelService;
 
     @Override
     public PageResult<InvoiceListResponse> pageInvoices(InvoiceQueryRequest request) {
         Page<InvoiceListResponse> page = vehInvoiceMapper.selectInvoicePage(
                 new Page<>(request.getPageNum(), request.getPageSize()), request);
+        page.getRecords().forEach(this::applyLabels);
         return new PageResult<>(page.getRecords(), page.getTotal(), request.getPageNum(), request.getPageSize());
     }
 
@@ -164,6 +167,14 @@ public class VehInvoiceServiceImpl implements VehInvoiceService {
     private InvoiceResponse toResponse(VehInvoice invoice) {
         InvoiceResponse response = new InvoiceResponse();
         BeanUtils.copyProperties(invoice, response);
+        response.setStageStatusLabel(statusLabelService.stageStatusLabel(response.getStageStatus()));
+        response.setInvoiceTypeLabel(statusLabelService.dictLabel("invoice_status", response.getInvoiceType()));
         return response;
+    }
+
+    private void applyLabels(InvoiceListResponse response) {
+        response.setLifecycleStageLabel(statusLabelService.lifecycleStageLabel(response.getLifecycleStage()));
+        response.setLatestStageStatusLabel(statusLabelService.stageStatusLabel(response.getLatestStageStatus()));
+        response.setLatestInvoiceTypeLabel(statusLabelService.dictLabel("invoice_status", response.getLatestInvoiceType()));
     }
 }

@@ -14,6 +14,7 @@ import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehRegistrationMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.VehicleBasicService;
 import com.company.admin.service.VehRegistrationService;
 import com.company.admin.util.SecurityUtils;
@@ -31,11 +32,13 @@ public class VehRegistrationServiceImpl implements VehRegistrationService {
     private final VehRegistrationMapper vehRegistrationMapper;
     private final LifecycleService lifecycleService;
     private final VehicleBasicService vehicleBasicService;
+    private final BusinessStatusLabelService statusLabelService;
 
     @Override
     public PageResult<RegistrationResponse> pageRegistrations(RegistrationQueryRequest request) {
         Page<RegistrationResponse> page = vehRegistrationMapper.selectRegistrationPage(
                 new Page<>(request.getPageNum(), request.getPageSize()), request);
+        page.getRecords().forEach(this::applyLabels);
         return new PageResult<>(page.getRecords(), page.getTotal(), request.getPageNum(), request.getPageSize());
     }
 
@@ -117,6 +120,13 @@ public class VehRegistrationServiceImpl implements VehRegistrationService {
             response.setDealerId(basicInfo.getDealerId());
             response.setDealerName(basicInfo.getDealerName());
         }
+        applyLabels(response);
         return response;
+    }
+
+    private void applyLabels(RegistrationResponse response) {
+        response.setLifecycleStageLabel(statusLabelService.lifecycleStageLabel(response.getLifecycleStage()));
+        response.setStageStatusLabel(statusLabelService.stageStatusLabel(response.getStageStatus()));
+        response.setDrosstechStatusLabel(statusLabelService.dictLabel("drosstech_status", response.getDrosstechStatus()));
     }
 }

@@ -3,6 +3,7 @@ package com.company.admin.service.impl;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
 import com.company.admin.dto.request.ProductionSaveRequest;
+import com.company.admin.dto.response.ProductionResponse;
 import com.company.admin.entity.Vehicle;
 import com.company.admin.entity.VehProduction;
 import com.company.admin.enums.LifecycleStage;
@@ -10,6 +11,7 @@ import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehicleMapper;
 import com.company.admin.mapper.VehProductionMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -40,6 +42,9 @@ class VehProductionServiceImplTest {
 
     @Mock
     private LifecycleService lifecycleService;
+
+    @Mock
+    private BusinessStatusLabelService statusLabelService;
 
     @InjectMocks
     private VehProductionServiceImpl service;
@@ -108,6 +113,20 @@ class VehProductionServiceImplTest {
         verify(vehProductionMapper).updateById(captor.capture());
         assertEquals(StageStatus.CONFIRMED.name(), captor.getValue().getStageStatus());
         assertNotNull(captor.getValue().getConfirmedAt());
+    }
+
+    @Test
+    void getProductionAddsChineseStageStatusLabel() {
+        VehProduction production = new VehProduction();
+        production.setVehicleId(99L);
+        production.setStageStatus(StageStatus.DRAFT.name());
+        when(vehProductionMapper.selectOne(any())).thenReturn(production);
+        when(statusLabelService.stageStatusLabel("DRAFT")).thenReturn("草稿");
+
+        ProductionResponse response = service.getProduction(99L);
+
+        assertEquals("DRAFT", response.getStageStatus());
+        assertEquals("草稿", response.getStageStatusLabel());
     }
 
     private ProductionSaveRequest sampleRequest() {

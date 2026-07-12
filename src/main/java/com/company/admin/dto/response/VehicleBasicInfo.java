@@ -18,6 +18,8 @@ public class VehicleBasicInfo {
     private String vin;
     @Schema(description = "当前生命周期阶段")
     private String lifecycleStage;
+    @Schema(description = "当前生命周期阶段中文名称")
+    private String lifecycleStageLabel;
 
     // 来自 t_md_model
     @Schema(description = "车型 ID")

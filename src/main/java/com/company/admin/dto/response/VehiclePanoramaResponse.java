@@ -43,6 +43,8 @@ public class VehiclePanoramaResponse {
     public static class TimelineNode {
         @Schema(description = "阶段")
         private String stage;
+        @Schema(description = "阶段中文名称")
+        private String stageLabel;
         @Schema(description = "阶段名称")
         private String name;
         @Schema(description = "确认人")

@@ -11,6 +11,8 @@ import com.company.admin.enums.OrderStatus;
 import com.company.admin.mapper.TransportOrderItemMapper;
 import com.company.admin.mapper.TransportOrderMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
+import com.company.admin.service.VehicleBasicService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -41,6 +43,12 @@ class TransportOrderServiceImplTest {
 
     @Mock
     private LifecycleService lifecycleService;
+
+    @Mock
+    private VehicleBasicService vehicleBasicService;
+
+    @Mock
+    private BusinessStatusLabelService statusLabelService;
 
     @InjectMocks
     private TransportOrderServiceImpl service;
@@ -98,6 +106,18 @@ class TransportOrderServiceImplTest {
         verify(transportOrderMapper).updateById(captor.capture());
         assertEquals(OrderStatus.CONFIRMED.name(), captor.getValue().getOrderStatus());
         assertNotNull(captor.getValue().getConfirmedAt());
+    }
+
+    @Test
+    void getDetailAddsChineseOrderStatusLabel() {
+        when(transportOrderMapper.selectById(10L)).thenReturn(draftOrder());
+        when(transportOrderItemMapper.selectByOrderId(10L)).thenReturn(List.of());
+        when(statusLabelService.orderStatusLabel("DRAFT")).thenReturn("草稿");
+
+        var response = service.getDetail(10L);
+
+        assertEquals("DRAFT", response.getOrderStatus());
+        assertEquals("草稿", response.getOrderStatusLabel());
     }
 
     private TransportOrderSaveRequest saveRequest() {

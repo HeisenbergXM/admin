@@ -21,9 +21,13 @@ public class AllocationResponse {
 
     @Schema(description = "销售分配记录状态：DRAFT=草稿，CONFIRMED=已确认；未创建记录时可为 PENDING_ALLOCATION")
     private String stageStatus;
+    @Schema(description = "销售分配记录状态中文名称")
+    private String stageStatusLabel;
 
     @Schema(description = "当前生命周期阶段")
     private String lifecycleStage;
+    @Schema(description = "当前生命周期阶段中文名称")
+    private String lifecycleStageLabel;
 
     @Schema(description = "车型 ID")
     private Long modelId;
@@ -66,6 +70,8 @@ public class AllocationResponse {
 
     @Schema(description = "销售状态")
     private String salesStatus;
+    @Schema(description = "销售状态中文名称")
+    private String salesStatusLabel;
 
     @Schema(description = "备注3")
     private String remark3;

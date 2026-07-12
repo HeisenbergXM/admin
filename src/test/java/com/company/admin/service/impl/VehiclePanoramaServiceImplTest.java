@@ -22,6 +22,7 @@ import com.company.admin.mapper.VehicleMapper;
 import com.company.admin.mapper.WaybillDealerMapper;
 import com.company.admin.mapper.WaybillDealerVinMapper;
 import com.company.admin.mapper.WaybillMapper;
+import com.company.admin.service.BusinessStatusLabelService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -51,6 +52,7 @@ class VehiclePanoramaServiceImplTest {
     @Mock private WaybillDealerMapper waybillDealerMapper;
     @Mock private WaybillDealerVinMapper waybillDealerVinMapper;
     @Mock private VehRegistrationMapper vehRegistrationMapper;
+    @Mock private BusinessStatusLabelService statusLabelService;
 
     @InjectMocks
     private VehiclePanoramaServiceImpl service;
@@ -74,6 +76,7 @@ class VehiclePanoramaServiceImplTest {
         VehicleBasicInfo basicInfo = new VehicleBasicInfo();
         basicInfo.setId(99L);
         basicInfo.setVin(vehicle.getVin());
+        basicInfo.setLifecycleStage(vehicle.getLifecycleStage());
         VehProduction production = new VehProduction();
         production.setVehicleId(99L);
         production.setStageStatus(StageStatus.CONFIRMED.name());
@@ -82,12 +85,15 @@ class VehiclePanoramaServiceImplTest {
         when(vehicleMapper.selectBasicInfoById(99L)).thenReturn(basicInfo);
         when(vehProductionMapper.selectOne(any())).thenReturn(production);
         when(vehInvoiceMapper.selectList(any())).thenReturn(List.of(invoice(1), invoice(2)));
+        when(statusLabelService.lifecycleStageLabel("PENDING_PAYMENT")).thenReturn("待收款");
+        when(statusLabelService.lifecycleStageLabel("PENDING_INBOUND")).thenReturn("待入库");
 
         VehiclePanoramaResponse response = service.getPanorama(vehicle.getVin());
 
         assertEquals("LSJW56U95RG000001", response.getVehicle().getVin());
         assertEquals(2, response.getInvoices().size());
         assertEquals("PENDING_INBOUND", response.getTimeline().get(0).getStage());
+        assertEquals("待入库", response.getTimeline().get(0).getStageLabel());
     }
 
     @Test

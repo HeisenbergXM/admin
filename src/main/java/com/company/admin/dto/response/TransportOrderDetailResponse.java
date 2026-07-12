@@ -26,6 +26,8 @@ public class TransportOrderDetailResponse {
 
     @Schema(description = "单据状态")
     private String orderStatus;
+    @Schema(description = "单据状态中文名称")
+    private String orderStatusLabel;
 
     @Schema(description = "确认人")
     private String confirmedBy;

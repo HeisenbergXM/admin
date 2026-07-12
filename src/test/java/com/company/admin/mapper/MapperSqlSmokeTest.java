@@ -255,4 +255,19 @@ class MapperSqlSmokeTest {
 
         assertTrue(sql.contains("'vlm:invoice:confirm'"));
     }
+
+    @Test
+    void adminSystemSeedUsesChineseBusinessDictionaryLabels() throws IOException {
+        String sql = new String(
+                getClass().getResourceAsStream("/sql/admin_system.sql").readAllBytes(),
+                StandardCharsets.UTF_8);
+
+        assertTrue(sql.contains("'invoice_status', '发票类型/状态'"));
+        assertTrue(sql.contains("'INVOICED', '正式发票'"));
+        assertTrue(sql.contains("'PROFORMA_INVOICED', '形式发票'"));
+        assertTrue(sql.contains("'UNPAID', '未收款'"));
+        assertTrue(sql.contains("'IN_TRANSIT', '运输中'"));
+        assertTrue(sql.contains("'PENDING', '待上传'"));
+        assertTrue(sql.contains("'ALLOCATED', '已分配'"));
+    }
 }

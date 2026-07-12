@@ -1,11 +1,15 @@
 package com.company.admin.service.impl;
 
 import com.company.admin.dto.request.RegistrationSaveRequest;
+import com.company.admin.dto.response.RegistrationResponse;
+import com.company.admin.dto.response.VehicleBasicInfo;
 import com.company.admin.entity.VehRegistration;
 import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.StageStatus;
 import com.company.admin.mapper.VehRegistrationMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
+import com.company.admin.service.VehicleBasicService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -31,6 +35,12 @@ class VehRegistrationServiceImplTest {
 
     @Mock
     private LifecycleService lifecycleService;
+
+    @Mock
+    private VehicleBasicService vehicleBasicService;
+
+    @Mock
+    private BusinessStatusLabelService statusLabelService;
 
     @InjectMocks
     private VehRegistrationServiceImpl service;
@@ -74,6 +84,26 @@ class VehRegistrationServiceImplTest {
         verify(vehRegistrationMapper).updateById(captor.capture());
         assertEquals(StageStatus.CONFIRMED.name(), captor.getValue().getStageStatus());
         assertNotNull(captor.getValue().getConfirmedAt());
+    }
+
+    @Test
+    void getRegistrationAddsChineseStageAndDrosstechLabels() {
+        VehRegistration registration = draftRegistration();
+        registration.setDrosstechStatus("UPLOADED");
+        when(vehRegistrationMapper.selectOne(any())).thenReturn(registration);
+        VehicleBasicInfo basicInfo = new VehicleBasicInfo();
+        basicInfo.setVin("VIN00000000000099");
+        basicInfo.setLifecycleStage("PENDING_REGISTRATION");
+        when(vehicleBasicService.getBasicInfo(99L)).thenReturn(basicInfo);
+        when(statusLabelService.lifecycleStageLabel("PENDING_REGISTRATION")).thenReturn("待上牌");
+        when(statusLabelService.stageStatusLabel("DRAFT")).thenReturn("草稿");
+        when(statusLabelService.dictLabel("drosstech_status", "UPLOADED")).thenReturn("已上传");
+
+        RegistrationResponse response = service.getRegistration(99L);
+
+        assertEquals("待上牌", response.getLifecycleStageLabel());
+        assertEquals("草稿", response.getStageStatusLabel());
+        assertEquals("已上传", response.getDrosstechStatusLabel());
     }
 
     private RegistrationSaveRequest saveRequest() {

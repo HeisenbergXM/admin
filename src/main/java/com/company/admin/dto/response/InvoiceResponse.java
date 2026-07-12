@@ -21,12 +21,16 @@ public class InvoiceResponse {
 
     @Schema(description = "阶段状态")
     private String stageStatus;
+    @Schema(description = "阶段状态中文名称")
+    private String stageStatusLabel;
 
     @Schema(description = "发票序号")
     private Integer invoiceSeq;
 
     @Schema(description = "发票类型")
     private String invoiceType;
+    @Schema(description = "发票类型中文名称")
+    private String invoiceTypeLabel;
 
     @Schema(description = "发票号")
     private String invoiceNo;

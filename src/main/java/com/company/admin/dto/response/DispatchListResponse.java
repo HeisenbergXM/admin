@@ -19,6 +19,8 @@ public class DispatchListResponse {
 
     @Schema(description = "清单状态")
     private String listStatus;
+    @Schema(description = "清单状态中文名称")
+    private String listStatusLabel;
 
     @Schema(description = "已签收经销商行数")
     private Integer confirmedDealerRows;

@@ -21,6 +21,8 @@ public class TransportOrderListResponse {
 
     @Schema(description = "单据状态")
     private String orderStatus;
+    @Schema(description = "单据状态中文名称")
+    private String orderStatusLabel;
 
     @Schema(description = "VIN 数量")
     private Integer itemCount;

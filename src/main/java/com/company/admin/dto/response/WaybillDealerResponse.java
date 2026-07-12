@@ -32,12 +32,16 @@ public class WaybillDealerResponse {
 
     @Schema(description = "配送状态")
     private String deliveryStatus;
+    @Schema(description = "配送状态中文名称")
+    private String deliveryStatusLabel;
 
     @Schema(description = "备注7")
     private String remark7;
 
     @Schema(description = "行状态")
     private String rowStatus;
+    @Schema(description = "行状态中文名称")
+    private String rowStatusLabel;
 
     @Schema(description = "确认人")
     private String confirmedBy;

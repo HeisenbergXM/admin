@@ -18,6 +18,7 @@ import com.company.admin.enums.OrderStatus;
 import com.company.admin.mapper.TransportOrderItemMapper;
 import com.company.admin.mapper.TransportOrderMapper;
 import com.company.admin.service.LifecycleService;
+import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.TransportOrderService;
 import com.company.admin.service.VehicleBasicService;
 import com.company.admin.util.SecurityUtils;
@@ -40,11 +41,14 @@ public class TransportOrderServiceImpl implements TransportOrderService {
     private final TransportOrderItemMapper transportOrderItemMapper;
     private final LifecycleService lifecycleService;
     private final VehicleBasicService vehicleBasicService;
+    private final BusinessStatusLabelService statusLabelService;
 
     @Override
     public PageResult<TransportOrderListResponse> pageOrders(TransportOrderQueryRequest request) {
         Page<TransportOrderListResponse> page = transportOrderMapper.selectOrderPage(
                 new Page<>(request.getPageNum(), request.getPageSize()), request);
+        page.getRecords().forEach(response -> response.setOrderStatusLabel(
+                statusLabelService.orderStatusLabel(response.getOrderStatus())));
         return new PageResult<>(page.getRecords(), page.getTotal(), request.getPageNum(), request.getPageSize());
     }
 
@@ -149,6 +153,7 @@ public class TransportOrderServiceImpl implements TransportOrderService {
             dto.setVehicle(vehicleMap.get(item.getVehicleId()));
             return dto;
         }).collect(Collectors.toList()));
+        response.setOrderStatusLabel(statusLabelService.orderStatusLabel(response.getOrderStatus()));
         return response;
     }
 

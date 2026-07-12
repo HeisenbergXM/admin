@@ -44,6 +44,7 @@ import com.company.admin.mapper.WaybillDealerMapper;
 import com.company.admin.mapper.WaybillDealerVinMapper;
 import com.company.admin.mapper.WaybillMapper;
 import com.company.admin.service.VehiclePanoramaService;
+import com.company.admin.service.BusinessStatusLabelService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
@@ -69,6 +70,7 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
     private final WaybillDealerMapper waybillDealerMapper;
     private final WaybillDealerVinMapper waybillDealerVinMapper;
     private final VehRegistrationMapper vehRegistrationMapper;
+    private final BusinessStatusLabelService statusLabelService;
 
     @Override
     public VehiclePanoramaResponse getPanorama(String vin) {
@@ -95,6 +97,7 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
         fillPayment(vehicle.getId(), vehicle.getVin(), response);
         fillDispatch(vehicle.getId(), basicInfo, response);
         fillRegistration(vehicle.getId(), basicInfo, response);
+        applyLabels(response);
         return response;
     }
 
@@ -269,21 +272,21 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
     private List<ExportRow> toExportRows(VehiclePanoramaResponse panorama) {
         List<ExportRow> rows = new ArrayList<>();
         addRow(rows, "vehicle", "vin", panorama.getVehicle().getVin());
-        addRow(rows, "vehicle", "lifecycleStage", panorama.getVehicle().getLifecycleStage());
+        addRow(rows, "vehicle", "lifecycleStage", panorama.getVehicle().getLifecycleStageLabel());
         if (panorama.getProduction() != null) {
-            addRow(rows, "production", "stageStatus", panorama.getProduction().getStageStatus());
+            addRow(rows, "production", "stageStatus", panorama.getProduction().getStageStatusLabel());
         }
         if (panorama.getAllocation() != null) {
             addRow(rows, "allocation", "dealerId", String.valueOf(panorama.getAllocation().getDealerId()));
         }
         if (panorama.getPayment() != null) {
-            addRow(rows, "payment", "paymentStatus", panorama.getPayment().getPaymentStatus());
+            addRow(rows, "payment", "paymentStatus", panorama.getPayment().getPaymentStatusLabel());
         }
         if (panorama.getRegistration() != null) {
             addRow(rows, "registration", "registrationDate", String.valueOf(panorama.getRegistration().getRegistrationDate()));
         }
         for (InvoiceResponse invoice : panorama.getInvoices()) {
-            addRow(rows, "invoice-" + invoice.getInvoiceSeq(), "invoiceType", invoice.getInvoiceType());
+            addRow(rows, "invoice-" + invoice.getInvoiceSeq(), "invoiceType", invoice.getInvoiceTypeLabel());
             addRow(rows, "invoice-" + invoice.getInvoiceSeq(), "invoiceNo", invoice.getInvoiceNo());
         }
         return rows;
@@ -295,6 +298,69 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
         row.setField(field);
         row.setValue(value);
         rows.add(row);
+    }
+
+    private void applyLabels(VehiclePanoramaResponse response) {
+        applyLabels(response.getVehicle());
+        if (response.getProduction() != null) {
+            response.getProduction().setStageStatusLabel(
+                    statusLabelService.stageStatusLabel(response.getProduction().getStageStatus()));
+        }
+        if (response.getTransportOrder() != null) {
+            response.getTransportOrder().setOrderStatusLabel(
+                    statusLabelService.orderStatusLabel(response.getTransportOrder().getOrderStatus()));
+            if (response.getTransportOrder().getItems() != null) {
+                response.getTransportOrder().getItems().forEach(item -> applyLabels(item.getVehicle()));
+            }
+        }
+        if (response.getAllocation() != null) {
+            response.getAllocation().setStageStatusLabel(
+                    statusLabelService.stageStatusLabel(response.getAllocation().getStageStatus()));
+            applyLabels(response.getAllocation().getLifecycleStage(), response.getAllocation());
+        }
+        response.getInvoices().forEach(invoice -> {
+            invoice.setStageStatusLabel(statusLabelService.stageStatusLabel(invoice.getStageStatus()));
+            invoice.setInvoiceTypeLabel(statusLabelService.dictLabel("invoice_status", invoice.getInvoiceType()));
+        });
+        if (response.getPayment() != null) {
+            response.getPayment().setLifecycleStageLabel(
+                    statusLabelService.lifecycleStageLabel(response.getPayment().getLifecycleStage()));
+            response.getPayment().setStageStatusLabel(
+                    statusLabelService.stageStatusLabel(response.getPayment().getStageStatus()));
+            response.getPayment().setPaymentStatusLabel(
+                    statusLabelService.dictLabel("payment_status", response.getPayment().getPaymentStatus()));
+        }
+        if (response.getDispatch() != null) {
+            response.getDispatch().setListStatusLabel(
+                    statusLabelService.stageStatusLabel(response.getDispatch().getListStatus()));
+            response.getDispatch().getWaybills().forEach(waybill -> waybill.getDealers().forEach(dealer -> {
+                dealer.setDeliveryStatusLabel(
+                        statusLabelService.dictLabel("delivery_status", dealer.getDeliveryStatus()));
+                dealer.setRowStatusLabel(statusLabelService.stageStatusLabel(dealer.getRowStatus()));
+                dealer.getVins().forEach(this::applyLabels);
+            }));
+        }
+        if (response.getRegistration() != null) {
+            response.getRegistration().setLifecycleStageLabel(
+                    statusLabelService.lifecycleStageLabel(response.getRegistration().getLifecycleStage()));
+            response.getRegistration().setStageStatusLabel(
+                    statusLabelService.stageStatusLabel(response.getRegistration().getStageStatus()));
+            response.getRegistration().setDrosstechStatusLabel(
+                    statusLabelService.dictLabel("drosstech_status", response.getRegistration().getDrosstechStatus()));
+        }
+        response.getTimeline().forEach(node -> node.setStageLabel(
+                statusLabelService.lifecycleStageLabel(node.getStage())));
+    }
+
+    private void applyLabels(VehicleBasicInfo info) {
+        if (info != null) {
+            info.setLifecycleStageLabel(statusLabelService.lifecycleStageLabel(info.getLifecycleStage()));
+        }
+    }
+
+    private void applyLabels(String lifecycleStage, AllocationResponse response) {
+        response.setLifecycleStageLabel(statusLabelService.lifecycleStageLabel(lifecycleStage));
+        response.setSalesStatusLabel(statusLabelService.dictLabel("sales_status", response.getSalesStatus()));
     }
 
     @Data
