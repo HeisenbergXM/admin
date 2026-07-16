@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS sys_role_menu;
 DROP TABLE IF EXISTS sys_menu;
 DROP TABLE IF EXISTS sys_role;
 DROP TABLE IF EXISTS t_veh_inbound;
+DROP TABLE IF EXISTS t_veh_delivery;
 DROP TABLE IF EXISTS t_veh_payment;
 DROP TABLE IF EXISTS t_veh_registration;
 DROP TABLE IF EXISTS t_veh_invoice;
@@ -28,6 +29,22 @@ CREATE TABLE t_veh_inbound (
     saic_buy_off_date DATE,
     date_to_storage_yard DATE,
     remark2 VARCHAR(500),
+    confirmed_by VARCHAR(50),
+    confirmed_at TIMESTAMP,
+    deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE t_veh_delivery (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    vehicle_id BIGINT NOT NULL UNIQUE,
+    stage_status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+    etd_to_dealer DATE,
+    eta_to_dealer DATE,
+    trolly_type VARCHAR(20),
+    fully_load TINYINT,
+    received_date DATE,
+    delivery_status VARCHAR(50),
+    remark7 VARCHAR(500),
     confirmed_by VARCHAR(50),
     confirmed_at TIMESTAMP,
     deleted TINYINT NOT NULL DEFAULT 0
@@ -118,6 +135,7 @@ CREATE TABLE t_veh_allocation (
 
 CREATE TABLE t_md_dealer (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    dealer_code VARCHAR(50),
     dealer_name VARCHAR(100),
     deleted TINYINT NOT NULL DEFAULT 0
 );

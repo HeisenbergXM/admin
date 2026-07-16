@@ -2,11 +2,13 @@ package com.company.admin.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.dto.request.AllocationQueryRequest;
+import com.company.admin.dto.request.DeliveryQueryRequest;
 import com.company.admin.dto.request.InboundQueryRequest;
 import com.company.admin.dto.request.InvoiceQueryRequest;
 import com.company.admin.dto.request.PaymentQueryRequest;
 import com.company.admin.dto.request.RegistrationQueryRequest;
 import com.company.admin.dto.response.AllocationResponse;
+import com.company.admin.dto.response.DeliveryResponse;
 import com.company.admin.dto.response.InboundResponse;
 import com.company.admin.dto.response.InvoiceListResponse;
 import com.company.admin.dto.response.PaymentResponse;
@@ -40,6 +42,8 @@ class MapperSqlSmokeTest {
     @Autowired
     private VehAllocationMapper vehAllocationMapper;
     @Autowired
+    private VehDeliveryMapper vehDeliveryMapper;
+    @Autowired
     private VehInboundMapper vehInboundMapper;
     @Autowired
     private VehInvoiceMapper vehInvoiceMapper;
@@ -51,6 +55,71 @@ class MapperSqlSmokeTest {
     private UserMapper userMapper;
     @Autowired
     private MenuMapper menuMapper;
+
+    @Test
+    void deliveryDefaultPageIncludesPendingVehicleWithoutDraft() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (40, 'VIN00000000000040', 'PENDING_DELIVERY', 0)");
+
+        Page<DeliveryResponse> page = vehDeliveryMapper.selectDeliveryPage(
+                new Page<>(1, 10), new DeliveryQueryRequest());
+
+        assertEquals(1, page.getRecords().size());
+        DeliveryResponse row = page.getRecords().get(0);
+        assertNull(row.getId());
+        assertEquals(40L, row.getVehicleId());
+        assertEquals("PENDING_DELIVERY", row.getStageStatus());
+    }
+
+    @Test
+    void deliveryByVehicleIdExposesSavedDraftFields() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (41, 'VIN00000000000041', 'PENDING_DELIVERY', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_delivery (id, vehicle_id, stage_status, etd_to_dealer, eta_to_dealer, trolly_type, fully_load, received_date, delivery_status, remark7, deleted) VALUES (410, 41, 'DRAFT', '2026-07-17', '2026-07-18', 'OPEN', 1, '2026-07-19', 'DELIVERED', 'draft delivery', 0)");
+
+        DeliveryResponse row = vehDeliveryMapper.selectDeliveryByVehicleId(41L);
+
+        assertEquals(410L, row.getId());
+        assertEquals("DRAFT", row.getStageStatus());
+        assertEquals(LocalDate.of(2026, 7, 17), row.getEtdToDealer());
+        assertEquals(LocalDate.of(2026, 7, 18), row.getEtaToDealer());
+        assertEquals("OPEN", row.getTrollyType());
+        assertTrue(row.getFullyLoad());
+        assertEquals(LocalDate.of(2026, 7, 19), row.getReceivedDate());
+        assertEquals("DELIVERED", row.getDeliveryStatus());
+        assertEquals("draft delivery", row.getRemark7());
+    }
+
+    @Test
+    void deliveryPageReadsDealerFromConfirmedAllocation() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (42, 'VIN00000000000042', 'PENDING_DELIVERY', 0)");
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (43, 'VIN00000000000043', 'PENDING_DELIVERY', 0)");
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (44, 'VIN00000000000044', 'PENDING_DELIVERY', 0)");
+        jdbcTemplate.update("INSERT INTO t_md_dealer (id, dealer_code, dealer_name, deleted) VALUES (400, 'D400', 'Phoenix Dealer', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_allocation (vehicle_id, stage_status, dealer_id, deleted) VALUES (42, 'CONFIRMED', 400, 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_allocation (vehicle_id, stage_status, dealer_id, deleted) VALUES (43, 'DRAFT', 400, 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_allocation (vehicle_id, stage_status, dealer_id, deleted) VALUES (44, 'CONFIRMED', 400, 1)");
+        DeliveryQueryRequest request = new DeliveryQueryRequest();
+        request.setDealerId(400L);
+
+        Page<DeliveryResponse> page = vehDeliveryMapper.selectDeliveryPage(new Page<>(1, 10), request);
+
+        assertEquals(List.of(42L), page.getRecords().stream().map(DeliveryResponse::getVehicleId).toList());
+        assertEquals(400L, page.getRecords().get(0).getDealerId());
+        assertEquals("D400", page.getRecords().get(0).getDealerCode());
+        assertEquals("Phoenix Dealer", page.getRecords().get(0).getDealerName());
+    }
+
+    @Test
+    void deliveryConfirmedFilterFindsAdvancedVehicle() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (45, 'VIN00000000000045', 'PENDING_REGISTRATION', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_delivery (vehicle_id, stage_status, delivery_status, deleted) VALUES (45, 'CONFIRMED', 'DELIVERED', 0)");
+        DeliveryQueryRequest request = new DeliveryQueryRequest();
+        request.setStageStatus("CONFIRMED");
+
+        Page<DeliveryResponse> page = vehDeliveryMapper.selectDeliveryPage(new Page<>(1, 10), request);
+
+        assertEquals(List.of(45L), page.getRecords().stream().map(DeliveryResponse::getVehicleId).toList());
+        assertEquals("DELIVERED", page.getRecords().get(0).getDeliveryStatus());
+    }
 
     @Test
     void inboundDefaultPageIncludesPendingVehicleWithoutDraft() {

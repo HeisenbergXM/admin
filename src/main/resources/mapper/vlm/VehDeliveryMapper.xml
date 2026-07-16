@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.admin.mapper.VehDeliveryMapper">
+
+    <sql id="DeliveryColumns">
+        dv.id,
+        v.id AS vehicle_id,
+        v.vin,
+        v.lifecycle_stage,
+        COALESCE(dv.stage_status, v.lifecycle_stage) AS stage_status,
+        p.model_id,
+        m.model_name,
+        m.series,
+        m.spec,
+        m.model_code,
+        p.year_make,
+        p.exterior_color_id,
+        ec.color_name AS exterior_color_name,
+        p.interior_color_id,
+        ic.color_name AS interior_color_name,
+        a.dealer_id,
+        d.dealer_code,
+        d.dealer_name,
+        dv.etd_to_dealer,
+        dv.eta_to_dealer,
+        dv.trolly_type,
+        dv.fully_load,
+        dv.received_date,
+        dv.delivery_status,
+        dv.remark7,
+        dv.confirmed_by,
+        dv.confirmed_at
+    </sql>
+
+    <sql id="DeliveryJoins">
+        FROM t_vehicle v
+        LEFT JOIN t_veh_delivery dv ON dv.vehicle_id = v.id AND dv.deleted = 0
+        LEFT JOIN t_veh_production p ON p.vehicle_id = v.id AND p.deleted = 0
+        LEFT JOIN t_md_model m ON m.id = p.model_id AND m.deleted = 0
+        LEFT JOIN t_md_exterior_color ec ON ec.id = p.exterior_color_id AND ec.deleted = 0
+        LEFT JOIN t_md_interior_color ic ON ic.id = p.interior_color_id AND ic.deleted = 0
+        LEFT JOIN t_veh_allocation a
+          ON a.vehicle_id = v.id
+         AND a.deleted = 0
+         AND a.stage_status = 'CONFIRMED'
+        LEFT JOIN t_md_dealer d ON d.id = a.dealer_id AND d.deleted = 0
+    </sql>
+
+    <select id="selectDeliveryPage" resultType="com.company.admin.dto.response.DeliveryResponse">
+        SELECT
+        <include refid="DeliveryColumns"/>
+        <include refid="DeliveryJoins"/>
+        WHERE v.deleted = 0
+        <if test="query.vin != null and query.vin != ''">
+            AND v.vin LIKE CONCAT('%', #{query.vin}, '%')
+        </if>
+        <if test="query.modelId != null">
+            AND p.model_id = #{query.modelId}
+        </if>
+        <if test="query.dealerId != null">
+            AND a.dealer_id = #{query.dealerId}
+        </if>
+        <choose>
+            <when test="query.stageStatus == null or query.stageStatus == '' or query.stageStatus == 'PENDING_DELIVERY'">
+                AND v.lifecycle_stage = 'PENDING_DELIVERY'
+            </when>
+            <when test="query.stageStatus == 'DRAFT' or query.stageStatus == 'CONFIRMED'">
+                AND dv.stage_status = #{query.stageStatus}
+            </when>
+            <otherwise>
+                AND 1 = 0
+            </otherwise>
+        </choose>
+        ORDER BY v.id DESC
+    </select>
+
+    <select id="selectDeliveryByVehicleId" resultType="com.company.admin.dto.response.DeliveryResponse">
+        SELECT
+        <include refid="DeliveryColumns"/>
+        <include refid="DeliveryJoins"/>
+        WHERE v.id = #{vehicleId}
+          AND v.deleted = 0
+    </select>
+</mapper>
