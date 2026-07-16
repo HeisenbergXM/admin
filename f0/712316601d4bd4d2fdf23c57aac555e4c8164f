@@ -1,0 +1,64 @@
+src/test/java/com/company/admin/sql/VlmMenuSeedDataTest.java
+  s_e7919551a71f83::t_0a7d217fbac5e5 44
+  s_e7919551a71f83::t_19daf41f54a494 8-12,39-40,42-43,45-48,139-145,153-179,294,296,298-302,307-323,354-357,379-380
+  s_e7919551a71f83::t_a60bc219e852d2 381
+src/test/java/com/company/admin/sql/VinLogisticsSchemaSqlTest.java
+  s_e7919551a71f83::t_19daf41f54a494 50-71,85-86,110-116
+  s_e7919551a71f83::t_cd0cf447454da6 72-84
+  s_e7919551a71f83::t_25c9cf2e2fcb1e 7
+  s_e7919551a71f83::t_3539af79bc3be7 117
+src/main/resources/sql/d00003_vin_logistics_migration.sql
+  s_e7919551a71f83::t_3be92523d479c8 99-100
+  s_e7919551a71f83::t_685c8ee656315b 93-94
+  s_e7919551a71f83::t_55ccbcffa274a0 95-96
+  s_e7919551a71f83::t_0bbfe269cff886 118-119
+  s_e7919551a71f83::t_bc6b6a4a1ced78 109-110
+  s_e7919551a71f83::t_6d809856f1e893 116-117
+  s_e7919551a71f83::t_f233db57fdfeb1 103-104
+  s_e7919551a71f83::t_2e9a7798b1b0cb 107-108
+  s_e7919551a71f83::t_4165fa7eef7318 105-106
+  s_e7919551a71f83::t_0710a37f4fbff3 120-121
+  s_e7919551a71f83::t_284ff21451bb6e 128-129
+  s_e7919551a71f83::t_fb2057378b4b79 137-138
+  s_e7919551a71f83::t_272b31112d6773 112-113
+  s_e7919551a71f83::t_63611112a2d3e7 122-123
+  s_e7919551a71f83::t_01c2e6fe84765a 91-92
+  s_e7919551a71f83::t_b409199b2b818a 124-125
+  s_e7919551a71f83::t_b3fe31ff963838 130-131
+  s_e7919551a71f83::t_47e4dadf2628aa 139-140
+  s_e7919551a71f83::t_f96db25ce88183 135-136
+  s_e7919551a71f83::t_e973132a9d1559 101-102
+  s_e7919551a71f83::t_fbc2be49851408 114-115
+  s_e7919551a71f83::t_5bb40e3555b67e 97-98
+  s_e7919551a71f83::t_a816888eedbff2 46-61
+  s_e7919551a71f83::t_869e75f73a29e0 126-127
+  s_e7919551a71f83::t_b5ca0bffe48ffe 133-134
+src/main/resources/sql/admin_system.sql
+  s_6f899119caaa79::t_da31105d428ab1 1007-1008
+src/test/resources/sql/h2-mapper-smoke-schema.sql
+  s_6f899119caaa79::t_d38cf7cd3d2113 24
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f0712316601d4bd4d2fdf23c57aac555e4c8164f",
+  "prompts": {},
+  "sessions": {
+    "s_6f899119caaa79": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6c13-eb63-78e3-b976-f7ee7af0ff02",
+        "model": "unknown"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    },
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
