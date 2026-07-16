@@ -1,0 +1,21 @@
+src/test/java/com/company/admin/service/impl/VehDeliveryServiceImplTest.java
+  s_e7919551a71f83::t_afd34340d9152e 4,21-22,39,151-155
+  s_e7919551a71f83::t_442c1954b2c4cd 3,5,316-317
+  s_e7919551a71f83::t_a89ede8a6702ac 32-33,35,37-38,43,49,149-150,156-157,279-315,318-336,371-414,485-493
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "1608f371dfcbf9ad04dc57f19f3fc60b7d7337ec",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
