@@ -86,7 +86,7 @@ CREATE TABLE `sys_menu`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1092 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '菜单/权限表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1114 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '菜单/权限表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_menu
@@ -119,8 +119,10 @@ INSERT INTO `sys_menu` VALUES (114, 110, '经销商维护', 2, '/master-data/dea
 INSERT INTO `sys_menu` VALUES (120, 0, '生产管理', 1, '/production', NULL, 'production', 110, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
 INSERT INTO `sys_menu` VALUES (121, 120, '车辆录入', 2, '/production/vehicle', 'sys:vehicle:list', 'vehicle', 111, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
 INSERT INTO `sys_menu` VALUES (130, 0, '运输管理', 1, '/transport', NULL, 'transport', 120, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
-INSERT INTO `sys_menu` VALUES (131, 130, '车厂到仓库', 2, '/transport/inbound', 'vlm:transport:list', 'inbound', 121, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
-INSERT INTO `sys_menu` VALUES (132, 130, '仓库到经销商', 2, '/transport/outbound', 'vlm:dispatch:list', 'outbound', 122, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
+INSERT INTO `sys_menu` VALUES (131, 130, '车厂到仓库', 2, '/transport/inbound', 'vlm:transport:list', 'inbound', 121, 0, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
+INSERT INTO `sys_menu` VALUES (132, 130, '仓库到经销商', 2, '/transport/outbound', 'vlm:dispatch:list', 'outbound', 122, 0, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
+INSERT INTO `sys_menu` VALUES (133, 130, '中转运输', 2, '/transport/vin-inbound', 'vlm:inbound:list', 'inbound', 123, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (134, 130, '发车清单', 2, '/transport/vin-delivery', 'vlm:delivery:list', 'outbound', 124, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
 INSERT INTO `sys_menu` VALUES (140, 0, '销售管理', 1, '/sales', NULL, 'sales', 130, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
 INSERT INTO `sys_menu` VALUES (141, 140, '车辆销售', 2, '/sales/allocation', 'vlm:allocation:list', 'allocation', 131, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
 INSERT INTO `sys_menu` VALUES (142, 140, '车辆上牌', 2, '/sales/registration', 'vlm:registration:list', 'registration', 132, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
@@ -167,6 +169,14 @@ INSERT INTO `sys_menu` VALUES (1082, 152, '收款编辑', 3, NULL, 'vlm:payment:
 INSERT INTO `sys_menu` VALUES (1083, 152, '收款确认', 3, NULL, 'vlm:payment:confirm', NULL, 1083, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
 INSERT INTO `sys_menu` VALUES (1090, 160, '全景查看', 3, NULL, 'vlm:panorama:view', NULL, 1090, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
 INSERT INTO `sys_menu` VALUES (1091, 160, '全景导出', 3, NULL, 'vlm:panorama:export', NULL, 1091, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
+INSERT INTO `sys_menu` VALUES (1100, 133, '入库查询', 3, NULL, 'vlm:inbound:list', NULL, 1100, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (1101, 133, '入库新增', 3, NULL, 'vlm:inbound:add', NULL, 1101, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (1102, 133, '入库编辑', 3, NULL, 'vlm:inbound:edit', NULL, 1102, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (1103, 133, '入库确认', 3, NULL, 'vlm:inbound:confirm', NULL, 1103, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (1110, 134, '配送查询', 3, NULL, 'vlm:delivery:list', NULL, 1110, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (1111, 134, '配送新增', 3, NULL, 'vlm:delivery:add', NULL, 1111, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (1112, 134, '配送编辑', 3, NULL, 'vlm:delivery:edit', NULL, 1112, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (1113, 134, '配送确认', 3, NULL, 'vlm:delivery:confirm', NULL, 1113, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
 
 -- ----------------------------
 -- Table structure for sys_operation_log
@@ -239,7 +249,7 @@ CREATE TABLE `sys_role_menu`  (
   `role_id` bigint NOT NULL COMMENT '角色ID',
   `menu_id` bigint NOT NULL COMMENT '菜单ID',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 266 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色-菜单关联表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 291 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色-菜单关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_role_menu
@@ -431,6 +441,30 @@ INSERT INTO `sys_role_menu` VALUES (262, 105, 1082);
 INSERT INTO `sys_role_menu` VALUES (263, 105, 1083);
 INSERT INTO `sys_role_menu` VALUES (264, 105, 1090);
 INSERT INTO `sys_role_menu` VALUES (265, 105, 1091);
+INSERT INTO `sys_role_menu` VALUES (267, 1, 133);
+INSERT INTO `sys_role_menu` VALUES (268, 1, 134);
+INSERT INTO `sys_role_menu` VALUES (269, 1, 1100);
+INSERT INTO `sys_role_menu` VALUES (270, 1, 1101);
+INSERT INTO `sys_role_menu` VALUES (271, 1, 1102);
+INSERT INTO `sys_role_menu` VALUES (272, 1, 1103);
+INSERT INTO `sys_role_menu` VALUES (273, 1, 1110);
+INSERT INTO `sys_role_menu` VALUES (274, 1, 1111);
+INSERT INTO `sys_role_menu` VALUES (275, 1, 1112);
+INSERT INTO `sys_role_menu` VALUES (276, 1, 1113);
+INSERT INTO `sys_role_menu` VALUES (277, 101, 133);
+INSERT INTO `sys_role_menu` VALUES (278, 101, 134);
+INSERT INTO `sys_role_menu` VALUES (279, 101, 1100);
+INSERT INTO `sys_role_menu` VALUES (280, 101, 1101);
+INSERT INTO `sys_role_menu` VALUES (281, 101, 1102);
+INSERT INTO `sys_role_menu` VALUES (282, 101, 1103);
+INSERT INTO `sys_role_menu` VALUES (283, 101, 1110);
+INSERT INTO `sys_role_menu` VALUES (284, 101, 1111);
+INSERT INTO `sys_role_menu` VALUES (285, 101, 1112);
+INSERT INTO `sys_role_menu` VALUES (286, 101, 1113);
+INSERT INTO `sys_role_menu` VALUES (287, 105, 133);
+INSERT INTO `sys_role_menu` VALUES (288, 105, 134);
+INSERT INTO `sys_role_menu` VALUES (289, 105, 1100);
+INSERT INTO `sys_role_menu` VALUES (290, 105, 1110);
 
 -- ----------------------------
 -- Table structure for sys_user
