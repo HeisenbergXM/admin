@@ -22,7 +22,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.Collections;
 
@@ -34,6 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -96,6 +99,7 @@ class VehInboundServiceImplTest {
         verify(lifecycleService).assertStage(30L, LifecycleStage.PENDING_INBOUND);
         ArgumentCaptor<VehInbound> captor = ArgumentCaptor.forClass(VehInbound.class);
         verify(vehInboundMapper).insert(captor.capture());
+        assertEquals(30L, captor.getValue().getVehicleId());
         assertEquals(StageStatus.DRAFT.name(), captor.getValue().getStageStatus());
         assertEquals(LocalDate.of(2026, 7, 14), captor.getValue().getSaicBuyOffDate());
         assertEquals(LocalDate.of(2026, 7, 15), captor.getValue().getDateToStorageYard());
@@ -142,7 +146,46 @@ class VehInboundServiceImplTest {
         verify(lifecycleService).assertNotConfirmed(StageStatus.DRAFT.name());
         verify(lifecycleService).assertStage(30L, LifecycleStage.PENDING_INBOUND);
         verify(vehInboundMapper).updateById(inbound);
+        assertEquals(30L, inbound.getVehicleId());
         assertEquals("updated", inbound.getRemark2());
+    }
+
+    @Test
+    void updateInboundRejectsConfirmedRecordWithoutPersisting() {
+        VehInbound inbound = draftInbound();
+        inbound.setStageStatus(StageStatus.CONFIRMED.name());
+        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        doThrow(new BusinessException(ErrorCode.STAGE_ALREADY_CONFIRMED))
+                .when(lifecycleService).assertNotConfirmed(StageStatus.CONFIRMED.name());
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.updateInbound(30L, completeRequest()));
+
+        assertEquals(ErrorCode.STAGE_ALREADY_CONFIRMED.getCode(), ex.getCode());
+        verify(vehInboundMapper, never()).updateById(any(VehInbound.class));
+    }
+
+    @Test
+    void updateInboundRejectsLifecycleStageMismatchWithoutPersisting() {
+        VehInbound inbound = draftInbound();
+        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        doThrow(new BusinessException(ErrorCode.LIFECYCLE_STAGE_MISMATCH))
+                .when(lifecycleService).assertStage(30L, LifecycleStage.PENDING_INBOUND);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.updateInbound(30L, completeRequest()));
+
+        assertEquals(ErrorCode.LIFECYCLE_STAGE_MISMATCH.getCode(), ex.getCode());
+        verify(vehInboundMapper, never()).updateById(any(VehInbound.class));
+    }
+
+    @Test
+    void updateInboundRejectsMissingRecordWithoutPersisting() {
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.updateInbound(30L, completeRequest()));
+
+        assertEquals(ErrorCode.STAGE_DATA_NOT_FOUND.getCode(), ex.getCode());
+        verify(vehInboundMapper, never()).updateById(any(VehInbound.class));
     }
 
     @Test
@@ -169,6 +212,65 @@ class VehInboundServiceImplTest {
 
         assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
         verify(lifecycleService, never()).confirmAndAdvance(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void confirmInboundRejectsRepeatedConfirmationWithoutAdvancing() {
+        VehInbound inbound = completeInbound();
+        inbound.setStageStatus(StageStatus.CONFIRMED.name());
+        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        doThrow(new BusinessException(ErrorCode.STAGE_ALREADY_CONFIRMED))
+                .when(lifecycleService).assertNotConfirmed(StageStatus.CONFIRMED.name());
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.confirmInbound(30L));
+
+        assertEquals(ErrorCode.STAGE_ALREADY_CONFIRMED.getCode(), ex.getCode());
+        verify(lifecycleService, never()).confirmAndAdvance(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void confirmInboundPropagatesLifecycleStageMismatch() {
+        VehInbound inbound = completeInbound();
+        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        doThrow(new BusinessException(ErrorCode.LIFECYCLE_STAGE_MISMATCH))
+                .when(lifecycleService).confirmAndAdvance(
+                        eq(30L), eq(StageStatus.DRAFT.name()), eq(LifecycleStage.PENDING_INBOUND),
+                        eq(LifecycleStage.PENDING_ALLOCATION), any(Runnable.class));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.confirmInbound(30L));
+
+        assertEquals(ErrorCode.LIFECYCLE_STAGE_MISMATCH.getCode(), ex.getCode());
+        verify(vehInboundMapper, never()).updateById(any(VehInbound.class));
+    }
+
+    @Test
+    void confirmInboundPropagatesAdvanceFailureAfterLockAction() {
+        VehInbound inbound = completeInbound();
+        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        doAnswer(invocation -> {
+            invocation.<Runnable>getArgument(4).run();
+            throw new BusinessException(ErrorCode.LIFECYCLE_STAGE_MISMATCH);
+        }).when(lifecycleService).confirmAndAdvance(
+                eq(30L), eq(StageStatus.DRAFT.name()), eq(LifecycleStage.PENDING_INBOUND),
+                eq(LifecycleStage.PENDING_ALLOCATION), any(Runnable.class));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.confirmInbound(30L));
+
+        assertEquals(ErrorCode.LIFECYCLE_STAGE_MISMATCH.getCode(), ex.getCode());
+        assertEquals(StageStatus.CONFIRMED.name(), inbound.getStageStatus());
+        verify(vehInboundMapper).updateById(inbound);
+    }
+
+    @Test
+    void confirmInboundDeclaresTransactionalBoundary() throws NoSuchMethodException {
+        Method method = VehInboundServiceImpl.class.getMethod("confirmInbound", Long.class);
+
+        Transactional transactional = method.getAnnotation(Transactional.class);
+
+        assertNotNull(transactional);
     }
 
     @Test
@@ -243,6 +345,13 @@ class VehInboundServiceImplTest {
         inbound.setId(31L);
         inbound.setVehicleId(30L);
         inbound.setStageStatus(StageStatus.DRAFT.name());
+        return inbound;
+    }
+
+    private VehInbound completeInbound() {
+        VehInbound inbound = draftInbound();
+        inbound.setSaicBuyOffDate(LocalDate.of(2026, 7, 14));
+        inbound.setDateToStorageYard(LocalDate.of(2026, 7, 15));
         return inbound;
     }
 }
