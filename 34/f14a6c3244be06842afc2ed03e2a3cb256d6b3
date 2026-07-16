@@ -1,0 +1,47 @@
+src/test/java/com/company/admin/service/impl/VehInboundServiceImplTest.java
+  s_e7919551a71f83::t_0805a51378a061 25,138-148,152,162,171,185,209,222,235,249,265,297,312
+  s_e7919551a71f83::t_a91846ac13a4ac 160,310
+src/test/java/com/company/admin/mapper/MapperSqlSmokeTest.java
+  s_e7919551a71f83::t_b56aa8d9836677 20-24,29-30,38-40,93-95,97-101,103-107,109,111-113,120-123,130-132,142-146,148,152-154,161-164,172-173
+  s_e7919551a71f83::t_7441e9f8f9f35e 19,41-43,48,60-65,82-92,96,102,108,110,114-119,124-129,133-141,149,151,155-156,160,167
+  s_e7919551a71f83::t_d5accf189bdcf6 147
+  s_e7919551a71f83::t_26b2f26f767a7c 150
+  s_e7919551a71f83::t_dd3bebc0320c08 157-159
+  s_e7919551a71f83::t_be27189327ce02 165-166
+  s_e7919551a71f83::t_b227533ae3c28d 168-171
+  s_e7919551a71f83::t_3126a4eefb7e46 174
+  s_e7919551a71f83::t_c2128b66ffbef5 10-11
+src/test/java/com/company/admin/service/impl/VehDeliveryServiceImplTest.java
+  s_e7919551a71f83::t_a91846ac13a4ac 217,413
+  s_e7919551a71f83::t_b56aa8d9836677 267-297
+  s_e7919551a71f83::t_0805a51378a061 32,170-180,209,219,227,241,256,300,314,328,344,363,399,415,433
+src/main/java/com/company/admin/mapper/VehInboundMapper.java
+  s_e7919551a71f83::t_8ad78768b6ad01 18-19
+src/main/java/com/company/admin/mapper/VehDeliveryMapper.java
+  s_e7919551a71f83::t_8ad78768b6ad01 18-19
+src/main/resources/mapper/vlm/VehInboundMapper.xml
+  s_e7919551a71f83::t_8ad78768b6ad01 76-82
+src/main/resources/mapper/vlm/VehDeliveryMapper.xml
+  s_e7919551a71f83::t_8ad78768b6ad01 85-91
+src/main/java/com/company/admin/service/impl/VehDeliveryServiceImpl.java
+  s_e7919551a71f83::t_0b69ffba037d4b 26,133-137,140
+  s_e7919551a71f83::t_16affef57e3c34 22,58-62,69,80,82,124-125
+src/main/java/com/company/admin/service/impl/VehInboundServiceImpl.java
+  s_e7919551a71f83::t_28581bdeef3ee7 20,53-57,64,74,110-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "34f14a6c3244be06842afc2ed03e2a3cb256d6b3",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
