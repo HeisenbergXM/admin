@@ -1,0 +1,21 @@
+src/test/java/com/company/admin/sql/VlmMenuSeedDataTest.java
+  s_e7919551a71f83::t_9d18de8ae10422 22-25,37-44,46,120,122-123,125,132-134,184-186,189,191-220,314-316
+  s_e7919551a71f83::t_9af1103869116a 45
+  s_e7919551a71f83::t_50bd26015ebbd9 187-188,190
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "903181ded28a8a73988465a157577448f6358880",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
