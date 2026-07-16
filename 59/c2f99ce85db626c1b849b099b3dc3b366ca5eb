@@ -1,0 +1,20 @@
+docs/superpowers/specs/2026-07-16-vin-logistics-backend-design.md
+  s_e7919551a71f83::t_a53652814c58c2 1-2,7-264
+  s_e7919551a71f83::t_573e1149e78155 3-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "59c2f99ce85db626c1b849b099b3dc3b366ca5eb",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
