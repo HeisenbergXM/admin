@@ -1,0 +1,19 @@
+src/test/java/com/company/admin/service/impl/VehiclePanoramaServiceImplTest.java
+  s_e7919551a71f83::t_43c028afe4ecf0 30,175-178,182-189,194-215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "df60e86b589b23e938691b812eaa03bb3fb0393c",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "unknown"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
