@@ -41,4 +41,4 @@ CREATE TABLE IF NOT EXISTS `t_veh_delivery` (
   KEY `idx_stage_status` (`stage_status`),
   KEY `idx_eta_to_dealer` (`eta_to_dealer`),
   KEY `idx_received_date` (`received_date`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='按 VIN 配送阶段';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT = '按 VIN 配送阶段';
