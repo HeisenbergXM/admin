@@ -1,0 +1,23 @@
+src/main/resources/sql/d00003_vin_logistics_migration.sql
+  s_e7919551a71f83::t_679dc4e191aa78 45-124
+src/test/java/com/company/admin/sql/VlmMenuSeedDataTest.java
+  s_e7919551a71f83::t_c8e62f298ecee2 1-91
+src/main/resources/sql/admin_system.sql
+  s_e7919551a71f83::t_db7d4e9138a3b7 89,122-125,172-179,252,444-467
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "2e7ab80067f61c5a17fc0b57a32d0251f0d77ea4",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
