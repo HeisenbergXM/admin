@@ -1,0 +1,36 @@
+src/test/java/com/company/admin/service/impl/VehiclePanoramaServiceImplTest.java
+  s_e7919551a71f83::t_9720b8b09231ec 95-113,144,146-153,167,171,173-174,176-177
+  s_e7919551a71f83::t_704f2e1cf2e4fb 45,116-132,154-158,160
+  s_e7919551a71f83::t_6fdd32724d3f3d 46
+  s_e7919551a71f83::t_aa1fa632c9b4ea 114-115
+  s_e7919551a71f83::t_ab67abc48ce5fc 133-135,141-143
+  s_e7919551a71f83::t_28b3bffb71b965 145
+  s_e7919551a71f83::t_c49d8ef59c448c 159
+  s_e7919551a71f83::t_0eb460f1dde025 161-166
+  s_e7919551a71f83::t_77ae53941fb25f 168-170
+  s_e7919551a71f83::t_675cbb9f801c33 172
+  s_e7919551a71f83::t_06cbcee81cc22c 175
+  s_e7919551a71f83::t_bef4332eb3a029 178-180
+  s_e7919551a71f83::t_a17c29a48fdcca 5-6,16,18,34,36,136-140,181-185
+src/main/java/com/company/admin/service/impl/VehiclePanoramaServiceImpl.java
+  s_e7919551a71f83::t_c85e1cb3d67487 27,29,51-52,78,82,111-113,116-118
+  s_e7919551a71f83::t_596945cd632f95 9-10,171-173,176,178,220,227-232,239-248,273-278,303-310
+src/main/java/com/company/admin/dto/response/VehiclePanoramaResponse.java
+  s_e7919551a71f83::t_ad7fdfbcee3a6a 23-27,39-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ae80d54dda2892f5f9a1b02e3696a698825a3479",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
