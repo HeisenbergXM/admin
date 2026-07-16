@@ -27,13 +27,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -172,15 +172,47 @@ class VehiclePanoramaServiceImplTest {
         panorama.setVehicle(vehicle);
         InboundResponse inbound = new InboundResponse();
         inbound.setId(61L);
+        inbound.setSaicBuyOffDate(LocalDate.of(2026, 7, 10));
+        inbound.setDateToStorageYard(LocalDate.of(2026, 7, 11));
+        inbound.setConfirmedBy("inbound-user");
+        inbound.setConfirmedAt(LocalDateTime.of(2026, 7, 14, 10, 15));
         panorama.setInbound(inbound);
         DeliveryResponse delivery = new DeliveryResponse();
         delivery.setId(62L);
+        delivery.setEtdToDealer(LocalDate.of(2026, 7, 15));
+        delivery.setEtaToDealer(LocalDate.of(2026, 7, 16));
+        delivery.setTrollyType("FLATBED");
+        delivery.setFullyLoad(true);
+        delivery.setReceivedDate(LocalDate.of(2026, 7, 17));
+        delivery.setDeliveryStatusLabel("已交付");
+        delivery.setConfirmedBy("delivery-user");
+        delivery.setConfirmedAt(LocalDateTime.of(2026, 7, 16, 10, 30));
         panorama.setDelivery(delivery);
 
         List<VehiclePanoramaServiceImpl.ExportRow> rows = service.toExportRows(panorama);
 
-        assertTrue(rows.stream().anyMatch(row -> "inbound".equals(row.getSection())));
-        assertTrue(rows.stream().anyMatch(row -> "delivery".equals(row.getSection())));
+        List<VehiclePanoramaServiceImpl.ExportRow> inboundRows = rows.stream()
+                .filter(row -> "inbound".equals(row.getSection()))
+                .toList();
+        assertEquals(List.of("inbound", "inbound", "inbound", "inbound"),
+                inboundRows.stream().map(VehiclePanoramaServiceImpl.ExportRow::getSection).toList());
+        assertEquals(List.of("saicBuyOffDate", "dateToStorageYard", "confirmedBy", "confirmedAt"),
+                inboundRows.stream().map(VehiclePanoramaServiceImpl.ExportRow::getField).toList());
+        assertEquals(List.of("2026-07-10", "2026-07-11", "inbound-user", "2026-07-14T10:15"),
+                inboundRows.stream().map(VehiclePanoramaServiceImpl.ExportRow::getValue).toList());
+
+        List<VehiclePanoramaServiceImpl.ExportRow> deliveryRows = rows.stream()
+                .filter(row -> "delivery".equals(row.getSection()))
+                .toList();
+        assertEquals(List.of("delivery", "delivery", "delivery", "delivery",
+                        "delivery", "delivery", "delivery", "delivery"),
+                deliveryRows.stream().map(VehiclePanoramaServiceImpl.ExportRow::getSection).toList());
+        assertEquals(List.of("etdToDealer", "etaToDealer", "trollyType", "fullyLoad",
+                        "receivedDate", "deliveryStatus", "confirmedBy", "confirmedAt"),
+                deliveryRows.stream().map(VehiclePanoramaServiceImpl.ExportRow::getField).toList());
+        assertEquals(List.of("2026-07-15", "2026-07-16", "FLATBED", "true",
+                        "2026-07-17", "已交付", "delivery-user", "2026-07-16T10:30"),
+                deliveryRows.stream().map(VehiclePanoramaServiceImpl.ExportRow::getValue).toList());
     }
 
     @Test
