@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.company.admin.mapper.VehInboundMapper">
+
+    <sql id="InboundColumns">
+        i.id,
+        v.id AS vehicle_id,
+        v.vin,
+        v.lifecycle_stage,
+        COALESCE(i.stage_status, v.lifecycle_stage) AS stage_status,
+        p.model_id,
+        m.model_name,
+        m.series,
+        m.spec,
+        m.model_code,
+        p.year_make,
+        p.exterior_color_id,
+        ec.color_name AS exterior_color_name,
+        p.interior_color_id,
+        ic.color_name AS interior_color_name,
+        i.saic_buy_off_date,
+        i.date_to_storage_yard,
+        i.remark2,
+        i.confirmed_by,
+        i.confirmed_at
+    </sql>
+
+    <sql id="InboundJoins">
+        FROM t_vehicle v
+        LEFT JOIN t_veh_inbound i ON i.vehicle_id = v.id AND i.deleted = 0
+        LEFT JOIN t_veh_production p ON p.vehicle_id = v.id AND p.deleted = 0
+        LEFT JOIN t_md_model m ON m.id = p.model_id AND m.deleted = 0
+        LEFT JOIN t_md_exterior_color ec ON ec.id = p.exterior_color_id AND ec.deleted = 0
+        LEFT JOIN t_md_interior_color ic ON ic.id = p.interior_color_id AND ic.deleted = 0
+    </sql>
+
+    <select id="selectInboundPage" resultType="com.company.admin.dto.response.InboundResponse">
+        SELECT
+        <include refid="InboundColumns"/>
+        <include refid="InboundJoins"/>
+        WHERE v.deleted = 0
+        <if test="query.vin != null and query.vin != ''">
+            AND v.vin LIKE CONCAT('%', #{query.vin}, '%')
+        </if>
+        <if test="query.modelId != null">
+            AND p.model_id = #{query.modelId}
+        </if>
+        <if test="query.storageStartDate != null">
+            AND i.date_to_storage_yard &gt;= #{query.storageStartDate}
+        </if>
+        <if test="query.storageEndDate != null">
+            AND i.date_to_storage_yard &lt;= #{query.storageEndDate}
+        </if>
+        <choose>
+            <when test="query.stageStatus == null or query.stageStatus == '' or query.stageStatus == 'PENDING_INBOUND'">
+                AND v.lifecycle_stage = 'PENDING_INBOUND'
+            </when>
+            <when test="query.stageStatus == 'DRAFT' or query.stageStatus == 'CONFIRMED'">
+                AND i.stage_status = #{query.stageStatus}
+            </when>
+            <otherwise>
+                AND 1 = 0
+            </otherwise>
+        </choose>
+        ORDER BY v.id DESC
+    </select>
+
+    <select id="selectInboundByVehicleId" resultType="com.company.admin.dto.response.InboundResponse">
+        SELECT
+        <include refid="InboundColumns"/>
+        <include refid="InboundJoins"/>
+        WHERE v.id = #{vehicleId}
+          AND v.deleted = 0
+    </select>
+</mapper>

@@ -2,10 +2,12 @@ package com.company.admin.mapper;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.dto.request.AllocationQueryRequest;
+import com.company.admin.dto.request.InboundQueryRequest;
 import com.company.admin.dto.request.InvoiceQueryRequest;
 import com.company.admin.dto.request.PaymentQueryRequest;
 import com.company.admin.dto.request.RegistrationQueryRequest;
 import com.company.admin.dto.response.AllocationResponse;
+import com.company.admin.dto.response.InboundResponse;
 import com.company.admin.dto.response.InvoiceListResponse;
 import com.company.admin.dto.response.PaymentResponse;
 import com.company.admin.dto.response.RegistrationResponse;
@@ -19,6 +21,7 @@ import org.springframework.test.context.jdbc.Sql;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,6 +39,8 @@ class MapperSqlSmokeTest {
     @Autowired
     private VehAllocationMapper vehAllocationMapper;
     @Autowired
+    private VehInboundMapper vehInboundMapper;
+    @Autowired
     private VehInvoiceMapper vehInvoiceMapper;
     @Autowired
     private VehPaymentMapper vehPaymentMapper;
@@ -45,6 +50,46 @@ class MapperSqlSmokeTest {
     private UserMapper userMapper;
     @Autowired
     private MenuMapper menuMapper;
+
+    @Test
+    void inboundDefaultPageIncludesPendingVehicleWithoutDraft() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (20, 'VIN00000000000020', 'PENDING_INBOUND', 0)");
+        InboundQueryRequest request = new InboundQueryRequest();
+
+        Page<InboundResponse> page = vehInboundMapper.selectInboundPage(new Page<>(1, 10), request);
+
+        assertEquals(1, page.getRecords().size());
+        assertEquals("PENDING_INBOUND", page.getRecords().get(0).getStageStatus());
+    }
+
+    @Test
+    void inboundPendingPageExposesSavedDraftAndVehicleMasterData() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (21, 'VIN00000000000021', 'PENDING_INBOUND', 0)");
+        jdbcTemplate.update("INSERT INTO t_md_model (id, model_name, deleted) VALUES (210, 'MG4 EV', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_production (vehicle_id, stage_status, model_id, year_make, deleted) VALUES (21, 'CONFIRMED', 210, '2026', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_inbound (id, vehicle_id, stage_status, date_to_storage_yard, deleted) VALUES (211, 21, 'DRAFT', '2026-07-15', 0)");
+
+        Page<InboundResponse> page = vehInboundMapper.selectInboundPage(new Page<>(1, 10), new InboundQueryRequest());
+
+        InboundResponse row = page.getRecords().get(0);
+        assertEquals("DRAFT", row.getStageStatus());
+        assertEquals("MG4 EV", row.getModelName());
+        assertEquals("2026", row.getYearMake());
+    }
+
+    @Test
+    void inboundConfirmedFilterFindsAdvancedVehicleByStorageDate() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (22, 'VIN00000000000022', 'PENDING_ALLOCATION', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_inbound (vehicle_id, stage_status, date_to_storage_yard, deleted) VALUES (22, 'CONFIRMED', '2026-07-14', 0)");
+        InboundQueryRequest request = new InboundQueryRequest();
+        request.setStageStatus("CONFIRMED");
+        request.setStorageStartDate(LocalDate.of(2026, 7, 14));
+        request.setStorageEndDate(LocalDate.of(2026, 7, 14));
+
+        Page<InboundResponse> page = vehInboundMapper.selectInboundPage(new Page<>(1, 10), request);
+
+        assertEquals(List.of(22L), page.getRecords().stream().map(InboundResponse::getVehicleId).toList());
+    }
 
     @Test
     void allocationPageIncludesPendingAllocationVehiclesWithoutAllocationRows() {
