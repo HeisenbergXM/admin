@@ -1,0 +1,37 @@
+src/main/java/com/company/admin/entity/VehInbound.java
+  s_e7919551a71f83::t_25a07b08652cb6 1-64
+src/test/java/com/company/admin/mapper/MapperSqlSmokeTest.java
+  s_e7919551a71f83::t_2bc0da560737a8 54-55,65,80
+  s_e7919551a71f83::t_c4620fda41acdd 56-58,62-64
+  s_e7919551a71f83::t_9f9d51b4310c0c 66-68,77-79
+  s_e7919551a71f83::t_8029529c2c1c26 81-83
+  s_e7919551a71f83::t_e509f1cd51ea00 5,10,24,42-43,59-61,69-76,84-93
+src/main/java/com/company/admin/mapper/VehInboundMapper.java
+  s_e7919551a71f83::t_25a07b08652cb6 1-18
+src/main/resources/mapper/vlm/VehInboundMapper.xml
+  s_e7919551a71f83::t_25a07b08652cb6 1-76
+src/main/java/com/company/admin/dto/request/InboundSaveRequest.java
+  s_e7919551a71f83::t_25a07b08652cb6 1-22
+src/main/java/com/company/admin/dto/response/InboundResponse.java
+  s_e7919551a71f83::t_25a07b08652cb6 1-78
+src/main/java/com/company/admin/dto/request/InboundQueryRequest.java
+  s_e7919551a71f83::t_25a07b08652cb6 1-28
+src/test/resources/sql/h2-mapper-smoke-schema.sql
+  s_e7919551a71f83::t_570f4c776eee91 5,24-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d020ca77b69eecac6f71446014c36f17032e0042",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
