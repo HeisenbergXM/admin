@@ -1,0 +1,20 @@
+src/test/java/com/company/admin/mapper/MapperSqlSmokeTest.java
+  s_e7919551a71f83::t_ef469ac5e9b40a 29
+  s_e7919551a71f83::t_ce20ec05dd0aab 63-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "40d8e2963bcb29ec1c3fa4072a413b9ff98edce9",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
