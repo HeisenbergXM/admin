@@ -752,6 +752,59 @@ INSERT INTO `t_veh_allocation` VALUES (19, 21, 'CONFIRMED', '2026-06-09', 8, 'AL
 INSERT INTO `t_veh_allocation` VALUES (20, 22, 'CONFIRMED', '2026-06-10', 9, 'ALLOCATED', 'Allocated sample DL003 pending invoice', 'sales_admin', '2026-06-09 14:00:00', 'test_seed', '2026-07-06 22:01:14', 'test_seed', '2026-07-06 22:01:14', 0);
 
 -- ----------------------------
+-- Table structure for t_veh_delivery
+-- ----------------------------
+DROP TABLE IF EXISTS `t_veh_delivery`;
+CREATE TABLE `t_veh_delivery` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `vehicle_id` bigint NOT NULL COMMENT 'FK t_vehicle',
+  `stage_status` varchar(20) NOT NULL DEFAULT 'DRAFT',
+  `etd_to_dealer` date NULL DEFAULT NULL,
+  `eta_to_dealer` date NULL DEFAULT NULL,
+  `trolly_type` varchar(20) NULL DEFAULT NULL,
+  `fully_load` tinyint NULL DEFAULT NULL,
+  `received_date` date NULL DEFAULT NULL,
+  `delivery_status` varchar(50) NULL DEFAULT NULL,
+  `remark7` varchar(500) NULL DEFAULT NULL,
+  `confirmed_by` varchar(50) NULL DEFAULT NULL,
+  `confirmed_at` datetime NULL DEFAULT NULL,
+  `created_by` varchar(50) NULL DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_by` varchar(50) NULL DEFAULT NULL,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_vehicle_id` (`vehicle_id`),
+  KEY `idx_stage_status` (`stage_status`),
+  KEY `idx_eta_to_dealer` (`eta_to_dealer`),
+  KEY `idx_received_date` (`received_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='按 VIN 配送阶段';
+
+-- ----------------------------
+-- Table structure for t_veh_inbound
+-- ----------------------------
+DROP TABLE IF EXISTS `t_veh_inbound`;
+CREATE TABLE `t_veh_inbound` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `vehicle_id` bigint NOT NULL COMMENT 'FK t_vehicle',
+  `stage_status` varchar(20) NOT NULL DEFAULT 'DRAFT',
+  `saic_buy_off_date` date NULL DEFAULT NULL,
+  `date_to_storage_yard` date NULL DEFAULT NULL,
+  `remark2` varchar(500) NULL DEFAULT NULL,
+  `confirmed_by` varchar(50) NULL DEFAULT NULL,
+  `confirmed_at` datetime NULL DEFAULT NULL,
+  `created_by` varchar(50) NULL DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_by` varchar(50) NULL DEFAULT NULL,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `deleted` tinyint NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_vehicle_id` (`vehicle_id`),
+  KEY `idx_stage_status` (`stage_status`),
+  KEY `idx_storage_date` (`date_to_storage_yard`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='按 VIN 入库阶段';
+
+-- ----------------------------
 -- Table structure for t_veh_invoice
 -- ----------------------------
 DROP TABLE IF EXISTS `t_veh_invoice`;
