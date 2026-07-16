@@ -17,6 +17,7 @@ import com.company.admin.service.LifecycleService;
 import com.company.admin.service.VehInboundService;
 import com.company.admin.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,14 +50,18 @@ public class VehInboundServiceImpl implements VehInboundService {
         copyFields(request, inbound);
         inbound.setVehicleId(vehicleId);
         inbound.setStageStatus(StageStatus.DRAFT.name());
-        vehInboundMapper.insert(inbound);
+        try {
+            vehInboundMapper.insert(inbound);
+        } catch (DuplicateKeyException ex) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "车辆已存在入库记录");
+        }
         return inbound.getId();
     }
 
     @Override
     @Transactional
     public void updateInbound(Long vehicleId, InboundSaveRequest request) {
-        VehInbound inbound = getInboundEntity(vehicleId);
+        VehInbound inbound = getInboundEntityForUpdate(vehicleId);
         lifecycleService.assertNotConfirmed(inbound.getStageStatus());
         lifecycleService.assertStage(vehicleId, LifecycleStage.PENDING_INBOUND);
         copyFields(request, inbound);
@@ -66,7 +71,7 @@ public class VehInboundServiceImpl implements VehInboundService {
     @Override
     @Transactional
     public void confirmInbound(Long vehicleId) {
-        VehInbound inbound = getInboundEntity(vehicleId);
+        VehInbound inbound = getInboundEntityForUpdate(vehicleId);
         lifecycleService.assertNotConfirmed(inbound.getStageStatus());
         if (inbound.getSaicBuyOffDate() == null || inbound.getDateToStorageYard() == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(),
@@ -102,8 +107,8 @@ public class VehInboundServiceImpl implements VehInboundService {
                 .eq(VehInbound::getDeleted, 0));
     }
 
-    private VehInbound getInboundEntity(Long vehicleId) {
-        VehInbound inbound = findInbound(vehicleId);
+    private VehInbound getInboundEntityForUpdate(Long vehicleId) {
+        VehInbound inbound = vehInboundMapper.selectByVehicleIdForUpdate(vehicleId);
         if (inbound == null) {
             throw new BusinessException(ErrorCode.STAGE_DATA_NOT_FOUND);
         }

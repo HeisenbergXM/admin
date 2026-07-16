@@ -73,4 +73,11 @@
         WHERE v.id = #{vehicleId}
           AND v.deleted = 0
     </select>
+    <select id="selectByVehicleIdForUpdate" resultType="com.company.admin.entity.VehInbound">
+        SELECT i.*
+        FROM t_veh_inbound i
+        WHERE i.vehicle_id = #{vehicleId}
+          AND i.deleted = 0
+        FOR UPDATE
+    </select>
 </mapper>

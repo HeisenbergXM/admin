@@ -29,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -167,6 +168,17 @@ class VehDeliveryServiceImplTest {
     }
 
     @Test
+    void createDeliveryMapsUniqueKeyRaceToBadRequest() {
+        when(vehDeliveryMapper.insert(any(VehDelivery.class)))
+                .thenThrow(new DuplicateKeyException("uk_vehicle_id"));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.createDelivery(50L, completeRequest()));
+
+        assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+    }
+
+    @Test
     void saveRejectsEtaBeforeEtd() {
         DeliverySaveRequest request = new DeliverySaveRequest();
         request.setEtdToDealer(LocalDate.of(2026, 7, 16));
@@ -194,7 +206,7 @@ class VehDeliveryServiceImplTest {
     @Test
     void updateDeliveryChecksDraftStatusAndCurrentLifecycleStage() {
         VehDelivery delivery = draftDelivery();
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(delivery);
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(delivery);
         DeliverySaveRequest request = completeRequest();
         request.setRemark7("updated");
 
@@ -202,7 +214,9 @@ class VehDeliveryServiceImplTest {
 
         verify(lifecycleService).assertNotConfirmed(StageStatus.DRAFT.name());
         verify(lifecycleService).assertStage(50L, LifecycleStage.PENDING_DELIVERY);
+        verify(vehDeliveryMapper).selectByVehicleIdForUpdate(50L);
         verify(vehDeliveryMapper).updateById(delivery);
+        verify(vehDeliveryMapper, never()).selectOne(any());
         assertEquals("updated", delivery.getRemark7());
     }
 
@@ -210,7 +224,7 @@ class VehDeliveryServiceImplTest {
     void updateDeliveryRejectsConfirmedRecordBeforeCheckingLifecycle() {
         VehDelivery delivery = draftDelivery();
         delivery.setStageStatus(StageStatus.CONFIRMED.name());
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(delivery);
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(delivery);
         doThrow(new BusinessException(ErrorCode.STAGE_ALREADY_CONFIRMED))
                 .when(lifecycleService).assertNotConfirmed(StageStatus.CONFIRMED.name());
 
@@ -224,7 +238,7 @@ class VehDeliveryServiceImplTest {
 
     @Test
     void updateDeliveryRejectsLifecycleStageMismatch() {
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(draftDelivery());
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(draftDelivery());
         doThrow(new BusinessException(ErrorCode.LIFECYCLE_STAGE_MISMATCH))
                 .when(lifecycleService).assertStage(50L, LifecycleStage.PENDING_DELIVERY);
 
@@ -239,7 +253,7 @@ class VehDeliveryServiceImplTest {
     void confirmRejectsMissingReceivedDate() {
         VehDelivery delivery = draftDelivery();
         delivery.setReceivedDate(null);
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(delivery);
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(delivery);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> service.confirmDelivery(50L));
@@ -251,8 +265,39 @@ class VehDeliveryServiceImplTest {
     }
 
     @Test
+    void confirmRejectsPersistedEtaBeforeEtdBeforeAllocationLookup() {
+        VehDelivery delivery = draftDelivery();
+        delivery.setEtdToDealer(LocalDate.of(2026, 7, 16));
+        delivery.setEtaToDealer(LocalDate.of(2026, 7, 15));
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(delivery);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.confirmDelivery(50L));
+
+        assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+        verify(vehAllocationMapper, never()).selectOne(any());
+        verify(lifecycleService, never()).confirmAndAdvance(any(), any(), any(), any(), any());
+        verify(vehDeliveryMapper, never()).updateById(any(VehDelivery.class));
+    }
+
+    @Test
+    void confirmRejectsPersistedUnsupportedTrollyTypeBeforeAllocationLookup() {
+        VehDelivery delivery = draftDelivery();
+        delivery.setTrollyType("8 units");
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(delivery);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.confirmDelivery(50L));
+
+        assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+        verify(vehAllocationMapper, never()).selectOne(any());
+        verify(lifecycleService, never()).confirmAndAdvance(any(), any(), any(), any(), any());
+        verify(vehDeliveryMapper, never()).updateById(any(VehDelivery.class));
+    }
+
+    @Test
     void confirmRejectsVehicleWithoutConfirmedDealerAllocation() {
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(draftDelivery());
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(draftDelivery());
         when(vehAllocationMapper.selectOne(any())).thenReturn(null);
 
         BusinessException ex = assertThrows(BusinessException.class,
@@ -266,7 +311,7 @@ class VehDeliveryServiceImplTest {
     void confirmRejectsAllocationWithoutDealer() {
         VehAllocation allocation = new VehAllocation();
         allocation.setStageStatus(StageStatus.CONFIRMED.name());
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(draftDelivery());
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(draftDelivery());
         when(vehAllocationMapper.selectOne(any())).thenReturn(allocation);
 
         BusinessException ex = assertThrows(BusinessException.class,
@@ -280,7 +325,7 @@ class VehDeliveryServiceImplTest {
     void confirmRejectsRepeatedConfirmationWithoutAdvancing() {
         VehDelivery delivery = draftDelivery();
         delivery.setStageStatus(StageStatus.CONFIRMED.name());
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(delivery);
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(delivery);
         doThrow(new BusinessException(ErrorCode.STAGE_ALREADY_CONFIRMED))
                 .when(lifecycleService).assertNotConfirmed(StageStatus.CONFIRMED.name());
 
@@ -296,7 +341,7 @@ class VehDeliveryServiceImplTest {
     void confirmPropagatesLifecycleStageMismatchWithoutLockingDelivery() {
         VehDelivery delivery = draftDelivery();
         VehAllocation allocation = confirmedAllocation();
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(delivery);
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(delivery);
         when(vehAllocationMapper.selectOne(any())).thenReturn(allocation);
         doThrow(new BusinessException(ErrorCode.LIFECYCLE_STAGE_MISMATCH))
                 .when(lifecycleService).confirmAndAdvance(
@@ -315,7 +360,7 @@ class VehDeliveryServiceImplTest {
     void confirmQueriesConfirmedUndeletedAllocationForVehicle() {
         TableInfoHelper.initTableInfo(
                 new MapperBuilderAssistant(new MybatisConfiguration(), ""), VehAllocation.class);
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(draftDelivery());
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(draftDelivery());
         when(vehAllocationMapper.selectOne(any())).thenReturn(confirmedAllocation());
 
         service.confirmDelivery(50L);
@@ -351,7 +396,7 @@ class VehDeliveryServiceImplTest {
         allocation.setStageStatus(StageStatus.CONFIRMED.name());
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("delivery-operator", null, Collections.emptyList()));
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(delivery);
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(delivery);
         when(vehAllocationMapper.selectOne(any())).thenReturn(allocation);
         doAnswer(invocation -> {
             invocation.<Runnable>getArgument(4).run();
@@ -365,7 +410,9 @@ class VehDeliveryServiceImplTest {
         assertEquals(StageStatus.CONFIRMED.name(), delivery.getStageStatus());
         assertEquals("delivery-operator", delivery.getConfirmedBy());
         assertNotNull(delivery.getConfirmedAt());
+        verify(vehDeliveryMapper).selectByVehicleIdForUpdate(50L);
         verify(vehDeliveryMapper).updateById(delivery);
+        verify(vehDeliveryMapper, never()).selectOne(any());
     }
 
     @Test
@@ -383,7 +430,7 @@ class VehDeliveryServiceImplTest {
                 50L, LifecycleStage.PENDING_DELIVERY.name());
 
         VehDelivery delivery = draftDelivery();
-        when(vehDeliveryMapper.selectOne(any())).thenReturn(delivery);
+        when(vehDeliveryMapper.selectByVehicleIdForUpdate(50L)).thenReturn(delivery);
         when(vehAllocationMapper.selectOne(any())).thenReturn(confirmedAllocation());
         when(vehDeliveryMapper.updateById(any(VehDelivery.class))).thenAnswer(invocation -> {
             VehDelivery updated = invocation.getArgument(0);

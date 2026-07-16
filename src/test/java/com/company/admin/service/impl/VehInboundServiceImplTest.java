@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
@@ -135,9 +136,20 @@ class VehInboundServiceImplTest {
     }
 
     @Test
+    void createInboundMapsUniqueKeyRaceToBadRequest() {
+        when(vehInboundMapper.insert(any(VehInbound.class)))
+                .thenThrow(new DuplicateKeyException("uk_vehicle_id"));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.createInbound(30L, completeRequest()));
+
+        assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+    }
+
+    @Test
     void updateInboundChecksStageAndDraftStatus() {
         VehInbound inbound = draftInbound();
-        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        when(vehInboundMapper.selectByVehicleIdForUpdate(30L)).thenReturn(inbound);
         InboundSaveRequest request = completeRequest();
         request.setRemark2("updated");
 
@@ -145,7 +157,9 @@ class VehInboundServiceImplTest {
 
         verify(lifecycleService).assertNotConfirmed(StageStatus.DRAFT.name());
         verify(lifecycleService).assertStage(30L, LifecycleStage.PENDING_INBOUND);
+        verify(vehInboundMapper).selectByVehicleIdForUpdate(30L);
         verify(vehInboundMapper).updateById(inbound);
+        verify(vehInboundMapper, never()).selectOne(any());
         assertEquals(30L, inbound.getVehicleId());
         assertEquals("updated", inbound.getRemark2());
     }
@@ -154,7 +168,7 @@ class VehInboundServiceImplTest {
     void updateInboundRejectsConfirmedRecordWithoutPersisting() {
         VehInbound inbound = draftInbound();
         inbound.setStageStatus(StageStatus.CONFIRMED.name());
-        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        when(vehInboundMapper.selectByVehicleIdForUpdate(30L)).thenReturn(inbound);
         doThrow(new BusinessException(ErrorCode.STAGE_ALREADY_CONFIRMED))
                 .when(lifecycleService).assertNotConfirmed(StageStatus.CONFIRMED.name());
 
@@ -168,7 +182,7 @@ class VehInboundServiceImplTest {
     @Test
     void updateInboundRejectsLifecycleStageMismatchWithoutPersisting() {
         VehInbound inbound = draftInbound();
-        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        when(vehInboundMapper.selectByVehicleIdForUpdate(30L)).thenReturn(inbound);
         doThrow(new BusinessException(ErrorCode.LIFECYCLE_STAGE_MISMATCH))
                 .when(lifecycleService).assertStage(30L, LifecycleStage.PENDING_INBOUND);
 
@@ -192,7 +206,7 @@ class VehInboundServiceImplTest {
     void confirmInboundRejectsMissingSaicBuyOffDate() {
         VehInbound inbound = draftInbound();
         inbound.setDateToStorageYard(LocalDate.of(2026, 7, 15));
-        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        when(vehInboundMapper.selectByVehicleIdForUpdate(30L)).thenReturn(inbound);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> service.confirmInbound(30L));
@@ -205,7 +219,7 @@ class VehInboundServiceImplTest {
     void confirmInboundRejectsMissingStorageYardDate() {
         VehInbound inbound = draftInbound();
         inbound.setSaicBuyOffDate(LocalDate.of(2026, 7, 14));
-        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        when(vehInboundMapper.selectByVehicleIdForUpdate(30L)).thenReturn(inbound);
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> service.confirmInbound(30L));
@@ -218,7 +232,7 @@ class VehInboundServiceImplTest {
     void confirmInboundRejectsRepeatedConfirmationWithoutAdvancing() {
         VehInbound inbound = completeInbound();
         inbound.setStageStatus(StageStatus.CONFIRMED.name());
-        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        when(vehInboundMapper.selectByVehicleIdForUpdate(30L)).thenReturn(inbound);
         doThrow(new BusinessException(ErrorCode.STAGE_ALREADY_CONFIRMED))
                 .when(lifecycleService).assertNotConfirmed(StageStatus.CONFIRMED.name());
 
@@ -232,7 +246,7 @@ class VehInboundServiceImplTest {
     @Test
     void confirmInboundPropagatesLifecycleStageMismatch() {
         VehInbound inbound = completeInbound();
-        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        when(vehInboundMapper.selectByVehicleIdForUpdate(30L)).thenReturn(inbound);
         doThrow(new BusinessException(ErrorCode.LIFECYCLE_STAGE_MISMATCH))
                 .when(lifecycleService).confirmAndAdvance(
                         eq(30L), eq(StageStatus.DRAFT.name()), eq(LifecycleStage.PENDING_INBOUND),
@@ -248,7 +262,7 @@ class VehInboundServiceImplTest {
     @Test
     void confirmInboundPropagatesAdvanceFailureAfterLockAction() {
         VehInbound inbound = completeInbound();
-        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        when(vehInboundMapper.selectByVehicleIdForUpdate(30L)).thenReturn(inbound);
         doAnswer(invocation -> {
             invocation.<Runnable>getArgument(4).run();
             throw new BusinessException(ErrorCode.LIFECYCLE_STAGE_MISMATCH);
@@ -280,7 +294,7 @@ class VehInboundServiceImplTest {
         inbound.setDateToStorageYard(LocalDate.of(2026, 7, 15));
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("inbound-operator", null, Collections.emptyList()));
-        when(vehInboundMapper.selectOne(any())).thenReturn(inbound);
+        when(vehInboundMapper.selectByVehicleIdForUpdate(30L)).thenReturn(inbound);
         doAnswer(invocation -> {
             invocation.<Runnable>getArgument(4).run();
             return null;
@@ -293,7 +307,9 @@ class VehInboundServiceImplTest {
         assertEquals(StageStatus.CONFIRMED.name(), inbound.getStageStatus());
         assertEquals("inbound-operator", inbound.getConfirmedBy());
         assertNotNull(inbound.getConfirmedAt());
+        verify(vehInboundMapper).selectByVehicleIdForUpdate(30L);
         verify(vehInboundMapper).updateById(inbound);
+        verify(vehInboundMapper, never()).selectOne(any());
     }
 
     @Test

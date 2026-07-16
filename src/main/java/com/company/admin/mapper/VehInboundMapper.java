@@ -15,4 +15,6 @@ public interface VehInboundMapper extends BaseMapper<VehInbound> {
                                             @Param("query") InboundQueryRequest query);
 
     InboundResponse selectInboundByVehicleId(@Param("vehicleId") Long vehicleId);
+
+    VehInbound selectByVehicleIdForUpdate(@Param("vehicleId") Long vehicleId);
 }

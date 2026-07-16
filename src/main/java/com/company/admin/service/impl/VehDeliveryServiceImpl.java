@@ -19,9 +19,11 @@ import com.company.admin.service.LifecycleService;
 import com.company.admin.service.VehDeliveryService;
 import com.company.admin.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
@@ -53,14 +55,18 @@ public class VehDeliveryServiceImpl implements VehDeliveryService {
         copyFields(request, delivery);
         delivery.setVehicleId(vehicleId);
         delivery.setStageStatus(StageStatus.DRAFT.name());
-        vehDeliveryMapper.insert(delivery);
+        try {
+            vehDeliveryMapper.insert(delivery);
+        } catch (DuplicateKeyException ex) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "车辆已存在配送记录");
+        }
         return delivery.getId();
     }
 
     @Override
     @Transactional
     public void updateDelivery(Long vehicleId, DeliverySaveRequest request) {
-        VehDelivery delivery = getDeliveryEntity(vehicleId);
+        VehDelivery delivery = getDeliveryEntityForUpdate(vehicleId);
         lifecycleService.assertNotConfirmed(delivery.getStageStatus());
         lifecycleService.assertStage(vehicleId, LifecycleStage.PENDING_DELIVERY);
         validateDraft(request);
@@ -71,8 +77,9 @@ public class VehDeliveryServiceImpl implements VehDeliveryService {
     @Override
     @Transactional
     public void confirmDelivery(Long vehicleId) {
-        VehDelivery delivery = getDeliveryEntity(vehicleId);
+        VehDelivery delivery = getDeliveryEntityForUpdate(vehicleId);
         lifecycleService.assertNotConfirmed(delivery.getStageStatus());
+        validateDelivery(delivery.getEtdToDealer(), delivery.getEtaToDealer(), delivery.getTrollyType());
         if (delivery.getReceivedDate() == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "经销商签收日期不能为空");
         }
@@ -114,8 +121,8 @@ public class VehDeliveryServiceImpl implements VehDeliveryService {
                 .eq(VehDelivery::getDeleted, 0));
     }
 
-    private VehDelivery getDeliveryEntity(Long vehicleId) {
-        VehDelivery delivery = findDelivery(vehicleId);
+    private VehDelivery getDeliveryEntityForUpdate(Long vehicleId) {
+        VehDelivery delivery = vehDeliveryMapper.selectByVehicleIdForUpdate(vehicleId);
         if (delivery == null) {
             throw new BusinessException(ErrorCode.STAGE_DATA_NOT_FOUND);
         }
@@ -123,13 +130,14 @@ public class VehDeliveryServiceImpl implements VehDeliveryService {
     }
 
     private void validateDraft(DeliverySaveRequest request) {
-        if (request.getEtdToDealer() != null && request.getEtaToDealer() != null
-                && request.getEtaToDealer().isBefore(request.getEtdToDealer())) {
+        validateDelivery(request.getEtdToDealer(), request.getEtaToDealer(), request.getTrollyType());
+    }
+
+    private void validateDelivery(LocalDate etdToDealer, LocalDate etaToDealer, String trollyType) {
+        if (etdToDealer != null && etaToDealer != null && etaToDealer.isBefore(etdToDealer)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "预计到达日期不能早于发车日期");
         }
-        if (request.getTrollyType() != null
-                && !"4 units".equals(request.getTrollyType())
-                && !"6 units".equals(request.getTrollyType())) {
+        if (trollyType != null && !"4 units".equals(trollyType) && !"6 units".equals(trollyType)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST.getCode(), "轿运车类型只能为4 units或6 units");
         }
     }

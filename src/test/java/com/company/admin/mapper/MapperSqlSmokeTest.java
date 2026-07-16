@@ -7,6 +7,8 @@ import com.company.admin.dto.request.InboundQueryRequest;
 import com.company.admin.dto.request.InvoiceQueryRequest;
 import com.company.admin.dto.request.PaymentQueryRequest;
 import com.company.admin.dto.request.RegistrationQueryRequest;
+import com.company.admin.dto.request.DeliverySaveRequest;
+import com.company.admin.dto.request.InboundSaveRequest;
 import com.company.admin.dto.response.AllocationResponse;
 import com.company.admin.dto.response.DeliveryResponse;
 import com.company.admin.dto.response.InboundResponse;
@@ -14,10 +16,18 @@ import com.company.admin.dto.response.InvoiceListResponse;
 import com.company.admin.dto.response.PaymentResponse;
 import com.company.admin.dto.response.RegistrationResponse;
 import com.company.admin.entity.Menu;
+import com.company.admin.entity.VehDelivery;
+import com.company.admin.entity.VehInbound;
+import com.company.admin.common.BusinessException;
+import com.company.admin.common.ErrorCode;
+import com.company.admin.service.VehDeliveryService;
+import com.company.admin.service.VehInboundService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 
@@ -25,10 +35,17 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.beans.PropertyAccessorFactory.forBeanPropertyAccess;
 
@@ -39,6 +56,12 @@ class MapperSqlSmokeTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+    @Autowired
+    private VehDeliveryService vehDeliveryService;
+    @Autowired
+    private VehInboundService vehInboundService;
     @Autowired
     private VehAllocationMapper vehAllocationMapper;
     @Autowired
@@ -55,6 +78,99 @@ class MapperSqlSmokeTest {
     private UserMapper userMapper;
     @Autowired
     private MenuMapper menuMapper;
+
+    @Test
+    void inboundUpdateWaitsForLockThenRejectsConfirmedRowWithoutOverwriting() throws Exception {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (28, 'VIN00000000000028', 'PENDING_INBOUND', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_inbound (id, vehicle_id, stage_status, saic_buy_off_date, date_to_storage_yard, deleted) VALUES (280, 28, 'DRAFT', '2026-07-14', '2026-07-15', 0)");
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        CountDownLatch firstHasLock = new CountDownLatch(1);
+        CountDownLatch releaseFirst = new CountDownLatch(1);
+        CountDownLatch secondStarted = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> first = executor.submit(() -> transaction.executeWithoutResult(status -> {
+                VehInbound locked = vehInboundMapper.selectByVehicleIdForUpdate(28L);
+                assertEquals("DRAFT", locked.getStageStatus());
+                jdbcTemplate.update("UPDATE t_veh_inbound SET stage_status = 'CONFIRMED' WHERE vehicle_id = 28");
+                firstHasLock.countDown();
+                awaitRelease(releaseFirst);
+            }));
+            assertTrue(firstHasLock.await(5, TimeUnit.SECONDS));
+            InboundSaveRequest staleUpdate = new InboundSaveRequest();
+            staleUpdate.setSaicBuyOffDate(LocalDate.of(2026, 8, 1));
+            staleUpdate.setDateToStorageYard(LocalDate.of(2026, 8, 2));
+            Future<BusinessException> second = executor.submit(() -> {
+                secondStarted.countDown();
+                return assertThrows(BusinessException.class,
+                        () -> vehInboundService.updateInbound(28L, staleUpdate));
+            });
+            assertTrue(secondStarted.await(5, TimeUnit.SECONDS));
+
+            assertThrows(TimeoutException.class, () -> second.get(200, TimeUnit.MILLISECONDS));
+            releaseFirst.countDown();
+            first.get(5, TimeUnit.SECONDS);
+            assertEquals(ErrorCode.STAGE_ALREADY_CONFIRMED.getCode(),
+                    second.get(5, TimeUnit.SECONDS).getCode());
+            assertEquals("CONFIRMED", jdbcTemplate.queryForObject(
+                    "SELECT stage_status FROM t_veh_inbound WHERE vehicle_id = 28", String.class));
+            assertEquals(LocalDate.of(2026, 7, 14), jdbcTemplate.queryForObject(
+                    "SELECT saic_buy_off_date FROM t_veh_inbound WHERE vehicle_id = 28", LocalDate.class));
+        } finally {
+            releaseFirst.countDown();
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void deliveryConfirmWaitsForLockThenReturnsAlreadyConfirmed() throws Exception {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (48, 'VIN00000000000048', 'PENDING_DELIVERY', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_delivery (id, vehicle_id, stage_status, deleted) VALUES (480, 48, 'DRAFT', 0)");
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        CountDownLatch firstHasLock = new CountDownLatch(1);
+        CountDownLatch releaseFirst = new CountDownLatch(1);
+        CountDownLatch secondStarted = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> first = executor.submit(() -> transaction.executeWithoutResult(status -> {
+                VehDelivery locked = vehDeliveryMapper.selectByVehicleIdForUpdate(48L);
+                assertEquals("DRAFT", locked.getStageStatus());
+                jdbcTemplate.update("UPDATE t_veh_delivery SET stage_status = 'CONFIRMED', confirmed_by = 'first-request' WHERE vehicle_id = 48");
+                firstHasLock.countDown();
+                awaitRelease(releaseFirst);
+            }));
+            assertTrue(firstHasLock.await(5, TimeUnit.SECONDS));
+
+            Future<BusinessException> second = executor.submit(() -> {
+                secondStarted.countDown();
+                return assertThrows(BusinessException.class,
+                        () -> vehDeliveryService.confirmDelivery(48L));
+            });
+            assertTrue(secondStarted.await(5, TimeUnit.SECONDS));
+
+            assertThrows(TimeoutException.class, () -> second.get(200, TimeUnit.MILLISECONDS));
+            releaseFirst.countDown();
+            first.get(5, TimeUnit.SECONDS);
+            assertEquals(ErrorCode.STAGE_ALREADY_CONFIRMED.getCode(),
+                    second.get(5, TimeUnit.SECONDS).getCode());
+            assertEquals("CONFIRMED", jdbcTemplate.queryForObject(
+                    "SELECT stage_status FROM t_veh_delivery WHERE vehicle_id = 48", String.class));
+            assertEquals("first-request", jdbcTemplate.queryForObject(
+                    "SELECT confirmed_by FROM t_veh_delivery WHERE vehicle_id = 48", String.class));
+        } finally {
+            releaseFirst.countDown();
+            executor.shutdownNow();
+        }
+    }
+
+    private void awaitRelease(CountDownLatch releaseFirst) {
+        try {
+            assertTrue(releaseFirst.await(5, TimeUnit.SECONDS));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
+        }
+    }
 
     @Test
     void deliveryDefaultPageIncludesPendingVehicleWithoutDraft() {
