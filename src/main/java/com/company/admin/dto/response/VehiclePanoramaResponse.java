@@ -20,7 +20,11 @@ public class VehiclePanoramaResponse {
     @Schema(description = "生产阶段")
     private ProductionResponse production;
 
-    @Schema(description = "车厂到仓库运输单")
+    @Schema(description = "按 VIN 入库阶段")
+    private InboundResponse inbound;
+
+    @Deprecated
+    @Schema(description = "车厂到仓库运输单；兼容字段，新流程不再填充")
     private TransportOrderDetailResponse transportOrder;
 
     @Schema(description = "销售分配")
@@ -32,7 +36,11 @@ public class VehiclePanoramaResponse {
     @Schema(description = "收款记录")
     private PaymentResponse payment;
 
-    @Schema(description = "仓库到经销商配送")
+    @Schema(description = "按 VIN 配送阶段")
+    private DeliveryResponse delivery;
+
+    @Deprecated
+    @Schema(description = "仓库到经销商配送；兼容字段，新流程不再填充")
     private DispatchListResponse dispatch;
 
     @Schema(description = "上牌记录")

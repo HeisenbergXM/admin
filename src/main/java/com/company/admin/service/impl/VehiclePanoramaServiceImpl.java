@@ -6,43 +6,31 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
 import com.company.admin.dto.response.AllocationResponse;
-import com.company.admin.dto.response.DispatchListResponse;
+import com.company.admin.dto.response.DeliveryResponse;
+import com.company.admin.dto.response.InboundResponse;
 import com.company.admin.dto.response.InvoiceResponse;
 import com.company.admin.dto.response.PaymentResponse;
 import com.company.admin.dto.response.ProductionResponse;
 import com.company.admin.dto.response.RegistrationResponse;
-import com.company.admin.dto.response.TransportOrderDetailResponse;
 import com.company.admin.dto.response.VehicleBasicInfo;
 import com.company.admin.dto.response.VehiclePanoramaResponse;
-import com.company.admin.dto.response.WaybillDealerResponse;
-import com.company.admin.dto.response.WaybillResponse;
-import com.company.admin.entity.DispatchList;
-import com.company.admin.entity.TransportOrder;
-import com.company.admin.entity.TransportOrderItem;
 import com.company.admin.entity.Vehicle;
 import com.company.admin.entity.VehAllocation;
 import com.company.admin.entity.VehInvoice;
 import com.company.admin.entity.VehPayment;
 import com.company.admin.entity.VehProduction;
 import com.company.admin.entity.VehRegistration;
-import com.company.admin.entity.Waybill;
-import com.company.admin.entity.WaybillDealer;
-import com.company.admin.entity.WaybillDealerVin;
 import com.company.admin.enums.LifecycleStage;
 import com.company.admin.enums.OrderStatus;
 import com.company.admin.enums.StageStatus;
-import com.company.admin.mapper.DispatchListMapper;
-import com.company.admin.mapper.TransportOrderItemMapper;
-import com.company.admin.mapper.TransportOrderMapper;
 import com.company.admin.mapper.VehAllocationMapper;
+import com.company.admin.mapper.VehDeliveryMapper;
 import com.company.admin.mapper.VehInvoiceMapper;
+import com.company.admin.mapper.VehInboundMapper;
 import com.company.admin.mapper.VehPaymentMapper;
 import com.company.admin.mapper.VehProductionMapper;
 import com.company.admin.mapper.VehRegistrationMapper;
 import com.company.admin.mapper.VehicleMapper;
-import com.company.admin.mapper.WaybillDealerMapper;
-import com.company.admin.mapper.WaybillDealerVinMapper;
-import com.company.admin.mapper.WaybillMapper;
 import com.company.admin.service.VehiclePanoramaService;
 import com.company.admin.service.BusinessStatusLabelService;
 import lombok.Data;
@@ -60,15 +48,11 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
 
     private final VehicleMapper vehicleMapper;
     private final VehProductionMapper vehProductionMapper;
-    private final TransportOrderMapper transportOrderMapper;
-    private final TransportOrderItemMapper transportOrderItemMapper;
+    private final VehInboundMapper vehInboundMapper;
+    private final VehDeliveryMapper vehDeliveryMapper;
     private final VehAllocationMapper vehAllocationMapper;
     private final VehInvoiceMapper vehInvoiceMapper;
     private final VehPaymentMapper vehPaymentMapper;
-    private final DispatchListMapper dispatchListMapper;
-    private final WaybillMapper waybillMapper;
-    private final WaybillDealerMapper waybillDealerMapper;
-    private final WaybillDealerVinMapper waybillDealerVinMapper;
     private final VehRegistrationMapper vehRegistrationMapper;
     private final BusinessStatusLabelService statusLabelService;
 
@@ -91,11 +75,11 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
         }
         response.setVehicle(basicInfo);
         fillProduction(vehicle.getId(), response);
-        fillTransport(vehicle.getId(), basicInfo, response);
+        fillInbound(vehicle.getId(), response);
         fillAllocation(vehicle.getId(), basicInfo, response);
         fillInvoices(vehicle.getId(), vehicle.getVin(), response);
         fillPayment(vehicle.getId(), vehicle.getVin(), response);
-        fillDispatch(vehicle.getId(), basicInfo, response);
+        fillDelivery(vehicle.getId(), response);
         fillRegistration(vehicle.getId(), basicInfo, response);
         applyLabels(response);
         return response;
@@ -124,27 +108,14 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
                 production.getStageStatus(), production.getConfirmedBy(), production.getConfirmedAt());
     }
 
-    private void fillTransport(Long vehicleId, VehicleBasicInfo basicInfo, VehiclePanoramaResponse response) {
-        TransportOrderItem item = transportOrderItemMapper.selectOne(new LambdaQueryWrapper<TransportOrderItem>()
-                .eq(TransportOrderItem::getVehicleId, vehicleId));
-        if (item == null) {
+    private void fillInbound(Long vehicleId, VehiclePanoramaResponse response) {
+        InboundResponse inbound = vehInboundMapper.selectInboundByVehicleId(vehicleId);
+        if (inbound == null || inbound.getId() == null) {
             return;
         }
-        TransportOrder order = transportOrderMapper.selectById(item.getTransportOrderId());
-        if (order == null) {
-            return;
-        }
-        TransportOrderDetailResponse dto = new TransportOrderDetailResponse();
-        BeanUtils.copyProperties(order, dto);
-        TransportOrderDetailResponse.Item itemDto = new TransportOrderDetailResponse.Item();
-        itemDto.setId(item.getId());
-        itemDto.setVehicleId(vehicleId);
-        itemDto.setSaicBuyOffDate(item.getSaicBuyOffDate());
-        itemDto.setVehicle(basicInfo);
-        dto.setItems(List.of(itemDto));
-        response.setTransportOrder(dto);
-        addTimeline(response, LifecycleStage.PENDING_ALLOCATION.name(), "车厂到仓库",
-                order.getOrderStatus(), order.getConfirmedBy(), order.getConfirmedAt());
+        response.setInbound(inbound);
+        addTimeline(response, LifecycleStage.PENDING_ALLOCATION.name(), "车厂到中转仓库",
+                inbound.getStageStatus(), inbound.getConfirmedBy(), inbound.getConfirmedAt());
     }
 
     private void fillAllocation(Long vehicleId, VehicleBasicInfo basicInfo, VehiclePanoramaResponse response) {
@@ -197,37 +168,14 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
                 payment.getStageStatus(), payment.getConfirmedBy(), payment.getConfirmedAt());
     }
 
-    private void fillDispatch(Long vehicleId, VehicleBasicInfo basicInfo, VehiclePanoramaResponse response) {
-        WaybillDealerVin vin = waybillDealerVinMapper.selectOne(new LambdaQueryWrapper<WaybillDealerVin>()
-                .eq(WaybillDealerVin::getVehicleId, vehicleId));
-        if (vin == null) {
+    private void fillDelivery(Long vehicleId, VehiclePanoramaResponse response) {
+        DeliveryResponse delivery = vehDeliveryMapper.selectDeliveryByVehicleId(vehicleId);
+        if (delivery == null || delivery.getId() == null) {
             return;
         }
-        WaybillDealer dealer = waybillDealerMapper.selectById(vin.getWaybillDealerId());
-        if (dealer == null) {
-            return;
-        }
-        Waybill waybill = waybillMapper.selectById(dealer.getWaybillId());
-        if (waybill == null) {
-            return;
-        }
-        DispatchList dispatchList = dispatchListMapper.selectById(waybill.getDispatchListId());
-        if (dispatchList == null) {
-            return;
-        }
-
-        DispatchListResponse dispatchResponse = new DispatchListResponse();
-        BeanUtils.copyProperties(dispatchList, dispatchResponse);
-        WaybillResponse waybillResponse = new WaybillResponse();
-        BeanUtils.copyProperties(waybill, waybillResponse);
-        WaybillDealerResponse dealerResponse = new WaybillDealerResponse();
-        BeanUtils.copyProperties(dealer, dealerResponse);
-        dealerResponse.setVins(List.of(basicInfo));
-        waybillResponse.setDealers(List.of(dealerResponse));
-        dispatchResponse.setWaybills(List.of(waybillResponse));
-        response.setDispatch(dispatchResponse);
+        response.setDelivery(delivery);
         addTimeline(response, LifecycleStage.PENDING_REGISTRATION.name(), "配送签收",
-                dealer.getRowStatus(), dealer.getConfirmedBy(), dealer.getConfirmedAt());
+                delivery.getStageStatus(), delivery.getConfirmedBy(), delivery.getConfirmedAt());
     }
 
     private void fillRegistration(Long vehicleId, VehicleBasicInfo basicInfo, VehiclePanoramaResponse response) {
@@ -269,18 +217,34 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
                 && StageStatus.CONFIRMED.name().equals(latest.getStageStatus());
     }
 
-    private List<ExportRow> toExportRows(VehiclePanoramaResponse panorama) {
+    List<ExportRow> toExportRows(VehiclePanoramaResponse panorama) {
         List<ExportRow> rows = new ArrayList<>();
         addRow(rows, "vehicle", "vin", panorama.getVehicle().getVin());
         addRow(rows, "vehicle", "lifecycleStage", panorama.getVehicle().getLifecycleStageLabel());
         if (panorama.getProduction() != null) {
             addRow(rows, "production", "stageStatus", panorama.getProduction().getStageStatusLabel());
         }
+        if (panorama.getInbound() != null) {
+            addRow(rows, "inbound", "saicBuyOffDate", String.valueOf(panorama.getInbound().getSaicBuyOffDate()));
+            addRow(rows, "inbound", "dateToStorageYard", String.valueOf(panorama.getInbound().getDateToStorageYard()));
+            addRow(rows, "inbound", "confirmedBy", panorama.getInbound().getConfirmedBy());
+            addRow(rows, "inbound", "confirmedAt", String.valueOf(panorama.getInbound().getConfirmedAt()));
+        }
         if (panorama.getAllocation() != null) {
             addRow(rows, "allocation", "dealerId", String.valueOf(panorama.getAllocation().getDealerId()));
         }
         if (panorama.getPayment() != null) {
             addRow(rows, "payment", "paymentStatus", panorama.getPayment().getPaymentStatusLabel());
+        }
+        if (panorama.getDelivery() != null) {
+            addRow(rows, "delivery", "etdToDealer", String.valueOf(panorama.getDelivery().getEtdToDealer()));
+            addRow(rows, "delivery", "etaToDealer", String.valueOf(panorama.getDelivery().getEtaToDealer()));
+            addRow(rows, "delivery", "trollyType", panorama.getDelivery().getTrollyType());
+            addRow(rows, "delivery", "fullyLoad", String.valueOf(panorama.getDelivery().getFullyLoad()));
+            addRow(rows, "delivery", "receivedDate", String.valueOf(panorama.getDelivery().getReceivedDate()));
+            addRow(rows, "delivery", "deliveryStatus", panorama.getDelivery().getDeliveryStatusLabel());
+            addRow(rows, "delivery", "confirmedBy", panorama.getDelivery().getConfirmedBy());
+            addRow(rows, "delivery", "confirmedAt", String.valueOf(panorama.getDelivery().getConfirmedAt()));
         }
         if (panorama.getRegistration() != null) {
             addRow(rows, "registration", "registrationDate", String.valueOf(panorama.getRegistration().getRegistrationDate()));
@@ -306,6 +270,12 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
             response.getProduction().setStageStatusLabel(
                     statusLabelService.stageStatusLabel(response.getProduction().getStageStatus()));
         }
+        if (response.getInbound() != null) {
+            response.getInbound().setStageStatusLabel(
+                    statusLabelService.stageStatusLabel(response.getInbound().getStageStatus()));
+            response.getInbound().setLifecycleStageLabel(
+                    statusLabelService.lifecycleStageLabel(response.getInbound().getLifecycleStage()));
+        }
         if (response.getTransportOrder() != null) {
             response.getTransportOrder().setOrderStatusLabel(
                     statusLabelService.orderStatusLabel(response.getTransportOrder().getOrderStatus()));
@@ -329,6 +299,14 @@ public class VehiclePanoramaServiceImpl implements VehiclePanoramaService {
                     statusLabelService.stageStatusLabel(response.getPayment().getStageStatus()));
             response.getPayment().setPaymentStatusLabel(
                     statusLabelService.dictLabel("payment_status", response.getPayment().getPaymentStatus()));
+        }
+        if (response.getDelivery() != null) {
+            response.getDelivery().setStageStatusLabel(
+                    statusLabelService.stageStatusLabel(response.getDelivery().getStageStatus()));
+            response.getDelivery().setLifecycleStageLabel(
+                    statusLabelService.lifecycleStageLabel(response.getDelivery().getLifecycleStage()));
+            response.getDelivery().setDeliveryStatusLabel(
+                    statusLabelService.dictLabel("delivery_status", response.getDelivery().getDeliveryStatus()));
         }
         if (response.getDispatch() != null) {
             response.getDispatch().setListStatusLabel(
