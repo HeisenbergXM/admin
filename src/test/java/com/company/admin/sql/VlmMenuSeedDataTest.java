@@ -19,6 +19,10 @@ class VlmMenuSeedDataTest {
 
     private static final List<Integer> NEW_MENU_IDS =
             List.of(133, 134, 1100, 1101, 1102, 1103, 1110, 1111, 1112, 1113);
+    private static final List<Integer> LEGACY_PERMISSION_IDS =
+            List.of(1030, 1031, 1032, 1033, 1040, 1041, 1042, 1043);
+    private static final List<String> REQUIRED_UPSERT_COLUMNS =
+            List.of("parent_id", "menu_name", "menu_type", "path", "permission", "icon", "sort_order", "status");
     private static final Pattern MENU_ROW = Pattern.compile(
             "\\((\\d+),\\s*(\\d+),\\s*'([^']+)',\\s*(\\d+),\\s*(NULL|'[^']*'),"
                     + "\\s*(NULL|'[^']*'),\\s*(NULL|'[^']*'),\\s*(\\d+),\\s*(\\d+),",
@@ -30,6 +34,16 @@ class VlmMenuSeedDataTest {
             "SELECT\\s+(\\d+),\\s*(\\d+),\\s*(\\d+)\\s+WHERE NOT EXISTS\\s*"
                     + "\\(SELECT 1 FROM `sys_role_menu` WHERE `role_id` = (\\d+) AND `menu_id` = (\\d+)\\);",
             Pattern.MULTILINE);
+    private static final Pattern MENU_UPSERT = Pattern.compile(
+            "INSERT\\s+INTO\\s+`?sys_menu`?\\b(.*?)ON\\s+DUPLICATE\\s+KEY\\s+UPDATE\\s+(.*?);",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern LEGACY_PERMISSION_RESTORE = Pattern.compile(
+            "UPDATE\\s+`?sys_menu`?\\s+SET\\s+`?status`?\\s*=\\s*1\\s+"
+                    + "WHERE\\s+`?id`?\\s+IN\\s*\\(([^)]*)\\)\\s*;",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern ROLE_MENU_DELETE = Pattern.compile(
+            "\\bDELETE\\s+FROM\\s+`?sys_role_menu`?(?=\\s|;|$)",
+            Pattern.CASE_INSENSITIVE);
 
     @Test
     void pageMenusHavePermissionCodes() throws IOException {
@@ -103,20 +117,21 @@ class VlmMenuSeedDataTest {
         String migration = migrationSql();
         List<MenuRow> expectedMenus = expectedNewMenuRows();
         List<RoleMenuRow> expectedMappings = expectedRoleMenuRows();
+        MenuUpsert upsert = menuUpsert(migration);
 
-        assertMenuRowsExactly(migration, expectedMenus);
-        assertEquals(menuRowsForIds(seed, NEW_MENU_IDS), menuRowsForIds(migration, NEW_MENU_IDS),
+        assertMenuRowsExactly(upsert.insertClause(), expectedMenus);
+        assertEquals(menuRowsForIds(seed, NEW_MENU_IDS), menuRowsForIds(upsert.insertClause(), NEW_MENU_IDS),
                 "Migration and full seed must define identical VIN menu business fields");
+        assertUpsertCopiesRequiredColumns(upsert.updateClause());
 
         List<RoleMenuRow> migrationMappings = migrationRoleMenuRows(migration);
         assertEquals(expectedMappings, migrationMappings,
                 "Migration must use the same fixed role-menu IDs as the full seed");
         assertEquals(24, countOccurrences(migration, "WHERE NOT EXISTS"));
-        assertTrue(migration.contains("ON DUPLICATE KEY UPDATE"));
         assertTrue(migration.contains("UPDATE `sys_menu` SET `status` = 0 WHERE `id` IN (131, 132);"));
-        assertTrue(migration.contains("WHERE `id` IN (1030,1031,1032,1033,1040,1041,1042,1043);"));
-        assertFalse(Pattern.compile("DELETE\\s+FROM\\s+`sys_role_menu`", Pattern.CASE_INSENSITIVE)
-                .matcher(migration).find(), "Migration must not delete legacy role-menu mappings");
+        assertLegacyApiPermissionsRestored(migration);
+        assertFalse(ROLE_MENU_DELETE.matcher(migration).find(),
+                "Migration must not delete legacy role-menu mappings");
     }
 
     private List<MenuRow> expectedNewMenuRows() {
@@ -164,6 +179,43 @@ class VlmMenuSeedDataTest {
 
     private List<MenuRow> menuRowsForIds(String sql, List<Integer> ids) {
         return menuRows(sql).stream().filter(row -> ids.contains(row.id())).toList();
+    }
+
+    private MenuUpsert menuUpsert(String sql) {
+        Matcher matcher = MENU_UPSERT.matcher(sql);
+        assertTrue(matcher.find(), "Migration must upsert the VIN menu rows");
+        String insertClause = matcher.group(1);
+        String updateClause = matcher.group(2);
+        assertFalse(matcher.find(), "Migration must have one canonical sys_menu upsert block");
+        return new MenuUpsert(insertClause, updateClause);
+    }
+
+    private void assertUpsertCopiesRequiredColumns(String updateClause) {
+        for (String column : REQUIRED_UPSERT_COLUMNS) {
+            String identifier = "`?" + Pattern.quote(column) + "`?";
+            Pattern copyAssignment = Pattern.compile(
+                    "(?:^|,)\\s*" + identifier + "\\s*=\\s*VALUES\\s*\\(\\s*" + identifier + "\\s*\\)",
+                    Pattern.CASE_INSENSITIVE | Pattern.MULTILINE);
+            assertTrue(copyAssignment.matcher(updateClause).find(),
+                    "Menu upsert must copy " + column + " from VALUES(" + column + ")");
+        }
+    }
+
+    private void assertLegacyApiPermissionsRestored(String migration) {
+        Matcher matcher = LEGACY_PERMISSION_RESTORE.matcher(migration);
+        assertTrue(matcher.find(), "Migration must restore all legacy API permissions to status=1");
+        assertEquals(LEGACY_PERMISSION_IDS, integerList(matcher.group(1)),
+                "Legacy permission restore must contain the complete ID set exactly once");
+        assertFalse(matcher.find(), "Migration must have one canonical legacy permission restore statement");
+    }
+
+    private List<Integer> integerList(String value) {
+        Matcher matcher = Pattern.compile("\\d+").matcher(value);
+        List<Integer> values = new ArrayList<>();
+        while (matcher.find()) {
+            values.add(Integer.parseInt(matcher.group()));
+        }
+        return values;
     }
 
     private List<MenuRow> menuRows(String sql) {
@@ -258,5 +310,8 @@ class VlmMenuSeedDataTest {
     }
 
     private record RoleMenuRow(int id, int roleId, int menuId) {
+    }
+
+    private record MenuUpsert(String insertClause, String updateClause) {
     }
 }
