@@ -1,0 +1,23 @@
+src/main/resources/sql/d00003_vin_logistics_migration.sql
+  s_e7919551a71f83::t_14c5bb7dff9b1a 1-44
+src/test/java/com/company/admin/sql/VinLogisticsSchemaSqlTest.java
+  s_e7919551a71f83::t_f479ad945f2126 1-51
+src/main/resources/sql/admin_system.sql
+  s_e7919551a71f83::t_8a68705342bc1f 754-806
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "de92876e6dac6552acb5ce9e7f535ac1be740eb1",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
