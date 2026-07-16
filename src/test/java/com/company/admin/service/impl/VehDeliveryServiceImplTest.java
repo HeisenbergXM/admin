@@ -1,5 +1,8 @@
 package com.company.admin.service.impl;
 
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
@@ -15,6 +18,8 @@ import com.company.admin.mapper.VehAllocationMapper;
 import com.company.admin.mapper.VehDeliveryMapper;
 import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.LifecycleService;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
+import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,16 +29,24 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
@@ -131,6 +144,15 @@ class VehDeliveryServiceImplTest {
         verify(vehDeliveryMapper).insert(captor.capture());
         assertEquals(StageStatus.DRAFT.name(), captor.getValue().getStageStatus());
         assertNull(captor.getValue().getReceivedDate());
+    }
+
+    @Test
+    void emptyDeliveryDraftPassesBeanValidation() {
+        try (ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory()) {
+            Validator validator = validatorFactory.getValidator();
+
+            assertTrue(validator.validate(new DeliverySaveRequest()).isEmpty());
+        }
     }
 
     @Test
@@ -255,6 +277,64 @@ class VehDeliveryServiceImplTest {
     }
 
     @Test
+    void confirmRejectsRepeatedConfirmationWithoutAdvancing() {
+        VehDelivery delivery = draftDelivery();
+        delivery.setStageStatus(StageStatus.CONFIRMED.name());
+        when(vehDeliveryMapper.selectOne(any())).thenReturn(delivery);
+        doThrow(new BusinessException(ErrorCode.STAGE_ALREADY_CONFIRMED))
+                .when(lifecycleService).assertNotConfirmed(StageStatus.CONFIRMED.name());
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.confirmDelivery(50L));
+
+        assertEquals(ErrorCode.STAGE_ALREADY_CONFIRMED.getCode(), ex.getCode());
+        verify(vehAllocationMapper, never()).selectOne(any());
+        verify(lifecycleService, never()).confirmAndAdvance(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void confirmPropagatesLifecycleStageMismatchWithoutLockingDelivery() {
+        VehDelivery delivery = draftDelivery();
+        VehAllocation allocation = confirmedAllocation();
+        when(vehDeliveryMapper.selectOne(any())).thenReturn(delivery);
+        when(vehAllocationMapper.selectOne(any())).thenReturn(allocation);
+        doThrow(new BusinessException(ErrorCode.LIFECYCLE_STAGE_MISMATCH))
+                .when(lifecycleService).confirmAndAdvance(
+                        eq(50L), eq(StageStatus.DRAFT.name()), eq(LifecycleStage.PENDING_DELIVERY),
+                        eq(LifecycleStage.PENDING_REGISTRATION), any(Runnable.class));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.confirmDelivery(50L));
+
+        assertEquals(ErrorCode.LIFECYCLE_STAGE_MISMATCH.getCode(), ex.getCode());
+        assertEquals(StageStatus.DRAFT.name(), delivery.getStageStatus());
+        verify(vehDeliveryMapper, never()).updateById(any(VehDelivery.class));
+    }
+
+    @Test
+    void confirmQueriesConfirmedUndeletedAllocationForVehicle() {
+        TableInfoHelper.initTableInfo(
+                new MapperBuilderAssistant(new MybatisConfiguration(), ""), VehAllocation.class);
+        when(vehDeliveryMapper.selectOne(any())).thenReturn(draftDelivery());
+        when(vehAllocationMapper.selectOne(any())).thenReturn(confirmedAllocation());
+
+        service.confirmDelivery(50L);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<LambdaQueryWrapper<VehAllocation>> captor =
+                ArgumentCaptor.forClass(LambdaQueryWrapper.class);
+        verify(vehAllocationMapper).selectOne(captor.capture());
+        LambdaQueryWrapper<VehAllocation> wrapper = captor.getValue();
+        String sql = wrapper.getSqlSegment().toLowerCase(Locale.ROOT);
+        assertTrue(sql.contains("vehicle_id"));
+        assertTrue(sql.contains("stage_status"));
+        assertTrue(sql.contains("deleted"));
+        assertTrue(wrapper.getParamNameValuePairs().containsValue(50L));
+        assertTrue(wrapper.getParamNameValuePairs().containsValue(StageStatus.CONFIRMED.name()));
+        assertTrue(wrapper.getParamNameValuePairs().containsValue(0));
+    }
+
+    @Test
     void confirmDeliveryDeclaresTransactionalBoundary() throws NoSuchMethodException {
         Method method = VehDeliveryServiceImpl.class.getMethod("confirmDelivery", Long.class);
 
@@ -286,6 +366,50 @@ class VehDeliveryServiceImplTest {
         assertEquals("delivery-operator", delivery.getConfirmedBy());
         assertNotNull(delivery.getConfirmedAt());
         verify(vehDeliveryMapper).updateById(delivery);
+    }
+
+    @Test
+    void confirmDeliveryRollsBackDeliveryAndLifecycleRowsWhenAdvanceFails() {
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setURL("jdbc:h2:mem:delivery_tx_" + System.nanoTime()
+                + ";MODE=MySQL;DB_CLOSE_DELAY=-1");
+        dataSource.setUser("sa");
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        jdbcTemplate.execute("CREATE TABLE t_veh_delivery (vehicle_id BIGINT PRIMARY KEY, stage_status VARCHAR(32))");
+        jdbcTemplate.execute("CREATE TABLE t_vehicle (id BIGINT PRIMARY KEY, lifecycle_stage VARCHAR(64))");
+        jdbcTemplate.update("INSERT INTO t_veh_delivery (vehicle_id, stage_status) VALUES (?, ?)",
+                50L, StageStatus.DRAFT.name());
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, lifecycle_stage) VALUES (?, ?)",
+                50L, LifecycleStage.PENDING_DELIVERY.name());
+
+        VehDelivery delivery = draftDelivery();
+        when(vehDeliveryMapper.selectOne(any())).thenReturn(delivery);
+        when(vehAllocationMapper.selectOne(any())).thenReturn(confirmedAllocation());
+        when(vehDeliveryMapper.updateById(any(VehDelivery.class))).thenAnswer(invocation -> {
+            VehDelivery updated = invocation.getArgument(0);
+            return jdbcTemplate.update(
+                    "UPDATE t_veh_delivery SET stage_status = ? WHERE vehicle_id = ?",
+                    updated.getStageStatus(), updated.getVehicleId());
+        });
+        doAnswer(invocation -> {
+            invocation.<Runnable>getArgument(4).run();
+            jdbcTemplate.update("UPDATE t_vehicle SET lifecycle_stage = ? WHERE id = ?",
+                    LifecycleStage.PENDING_REGISTRATION.name(), 50L);
+            throw new RuntimeException("simulated lifecycle advance failure");
+        }).when(lifecycleService).confirmAndAdvance(
+                eq(50L), eq(StageStatus.DRAFT.name()), eq(LifecycleStage.PENDING_DELIVERY),
+                eq(LifecycleStage.PENDING_REGISTRATION), any(Runnable.class));
+        TransactionTemplate transactionTemplate = new TransactionTemplate(
+                new DataSourceTransactionManager(dataSource));
+
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> transactionTemplate.executeWithoutResult(status -> service.confirmDelivery(50L)));
+
+        assertEquals("simulated lifecycle advance failure", ex.getMessage());
+        assertEquals(StageStatus.DRAFT.name(), jdbcTemplate.queryForObject(
+                "SELECT stage_status FROM t_veh_delivery WHERE vehicle_id = 50", String.class));
+        assertEquals(LifecycleStage.PENDING_DELIVERY.name(), jdbcTemplate.queryForObject(
+                "SELECT lifecycle_stage FROM t_vehicle WHERE id = 50", String.class));
     }
 
     @Test
@@ -357,5 +481,14 @@ class VehDeliveryServiceImplTest {
         delivery.setStageStatus(StageStatus.DRAFT.name());
         delivery.setReceivedDate(LocalDate.of(2026, 7, 16));
         return delivery;
+    }
+
+    private VehAllocation confirmedAllocation() {
+        VehAllocation allocation = new VehAllocation();
+        allocation.setVehicleId(50L);
+        allocation.setDealerId(500L);
+        allocation.setStageStatus(StageStatus.CONFIRMED.name());
+        allocation.setDeleted(0);
+        return allocation;
     }
 }
