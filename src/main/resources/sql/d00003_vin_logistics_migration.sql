@@ -43,6 +43,22 @@ CREATE TABLE IF NOT EXISTS `t_veh_delivery` (
   KEY `idx_received_date` (`received_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT = '按 VIN 配送阶段';
 
+SET @vlm_vehicle_todo_index_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE()
+    AND table_name = 't_vehicle'
+    AND index_name = 'idx_lifecycle_deleted_id'
+);
+SET @vlm_vehicle_todo_index_sql = IF(
+  @vlm_vehicle_todo_index_exists = 0,
+  'ALTER TABLE `t_vehicle` ADD INDEX `idx_lifecycle_deleted_id` (`lifecycle_stage`, `deleted`, `id`)',
+  'SELECT 1'
+);
+PREPARE vlm_vehicle_todo_index_stmt FROM @vlm_vehicle_todo_index_sql;
+EXECUTE vlm_vehicle_todo_index_stmt;
+DEALLOCATE PREPARE vlm_vehicle_todo_index_stmt;
+
 INSERT INTO `sys_menu`
   (`id`, `parent_id`, `menu_name`, `menu_type`, `path`, `permission`, `icon`, `sort_order`, `status`, `create_time`, `update_time`, `deleted`)
 VALUES
@@ -72,53 +88,53 @@ UPDATE `sys_menu` SET `status` = 0 WHERE `id` IN (131, 132);
 UPDATE `sys_menu` SET `status` = 1
 WHERE `id` IN (1030,1031,1032,1033,1040,1041,1042,1043);
 
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 267, 1, 133 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 133);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 268, 1, 134 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 134);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 269, 1, 1100 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1100);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 270, 1, 1101 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1101);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 271, 1, 1102 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1102);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 272, 1, 1103 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1103);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 273, 1, 1110 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1110);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 274, 1, 1111 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1111);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 275, 1, 1112 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1112);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 276, 1, 1113 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1113);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 133 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 133);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 134 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 134);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1100 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1100);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1101 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1101);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1102 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1102);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1103 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1103);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1110 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1110);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1111 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1111);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1112 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1112);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1113 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1113);
 
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 277, 101, 133 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 133);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 278, 101, 134 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 134);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 279, 101, 1100 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1100);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 280, 101, 1101 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1101);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 281, 101, 1102 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1102);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 282, 101, 1103 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1103);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 283, 101, 1110 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1110);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 284, 101, 1111 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1111);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 285, 101, 1112 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1112);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 286, 101, 1113 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1113);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 101, 133 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 133);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 101, 134 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 134);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 101, 1100 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1100);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 101, 1101 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1101);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 101, 1102 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1102);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 101, 1103 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1103);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 101, 1110 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1110);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 101, 1111 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1111);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 101, 1112 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1112);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 101, 1113 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 101 AND `menu_id` = 1113);
 
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 287, 105, 133 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 105 AND `menu_id` = 133);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 288, 105, 134 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 105 AND `menu_id` = 134);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 289, 105, 1100 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 105 AND `menu_id` = 1100);
-INSERT INTO `sys_role_menu` (`id`, `role_id`, `menu_id`)
-SELECT 290, 105, 1110 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 105 AND `menu_id` = 1110);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 105, 133 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 105 AND `menu_id` = 133);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 105, 134 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 105 AND `menu_id` = 134);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 105, 1100 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 105 AND `menu_id` = 1100);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 105, 1110 WHERE NOT EXISTS (SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 105 AND `menu_id` = 1110);

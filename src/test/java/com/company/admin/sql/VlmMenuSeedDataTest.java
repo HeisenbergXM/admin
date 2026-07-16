@@ -5,6 +5,11 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -31,9 +36,16 @@ class VlmMenuSeedDataTest {
             "INSERT INTO `sys_role_menu` VALUES \\((\\d+),\\s*(\\d+),\\s*(\\d+)\\);",
             Pattern.MULTILINE);
     private static final Pattern MIGRATION_ROLE_MENU_ROW = Pattern.compile(
-            "SELECT\\s+(\\d+),\\s*(\\d+),\\s*(\\d+)\\s+WHERE NOT EXISTS\\s*"
+            "INSERT\\s+INTO\\s+`sys_role_menu`\\s*\\(\\s*`role_id`\\s*,\\s*`menu_id`\\s*\\)\\s*"
+                    + "SELECT\\s+(\\d+),\\s*(\\d+)\\s+WHERE NOT EXISTS\\s*"
                     + "\\(SELECT 1 FROM `sys_role_menu` WHERE `role_id` = (\\d+) AND `menu_id` = (\\d+)\\);",
-            Pattern.MULTILINE);
+            Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+    private static final Pattern MIGRATION_ROLE_MENU_WITH_EXPLICIT_ID = Pattern.compile(
+            "INSERT\\s+INTO\\s+`?sys_role_menu`?\\s*\\([^)]*(?:`id`|\\bid\\b)\\s*(?:,|\\))",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern MIGRATION_ROLE_MENU_WITH_FIXED_ID_SELECT = Pattern.compile(
+            "INSERT\\s+INTO\\s+`?sys_role_menu`?.*?SELECT\\s+(?:26[7-9]|27\\d|28\\d|290)\\s*,",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern MENU_UPSERT = Pattern.compile(
             "INSERT\\s+INTO\\s+`?sys_menu`?\\b(.*?)ON\\s+DUPLICATE\\s+KEY\\s+UPDATE\\s+(.*?);",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
@@ -124,14 +136,45 @@ class VlmMenuSeedDataTest {
                 "Migration and full seed must define identical VIN menu business fields");
         assertUpsertCopiesRequiredColumns(upsert.updateClause());
 
-        List<RoleMenuRow> migrationMappings = migrationRoleMenuRows(migration);
-        assertEquals(expectedMappings, migrationMappings,
-                "Migration must use the same fixed role-menu IDs as the full seed");
+        List<RoleMenuMapping> migrationMappings = migrationRoleMenuRows(migration);
+        assertEquals(expectedMappings.stream().map(row -> mapping(row.roleId(), row.menuId())).toList(),
+                migrationMappings, "Migration must define the same role-menu combinations as the full seed");
+        assertFalse(MIGRATION_ROLE_MENU_WITH_EXPLICIT_ID.matcher(migration).find(),
+                "Migration role-menu inserts must let the database allocate the primary key");
+        assertFalse(MIGRATION_ROLE_MENU_WITH_FIXED_ID_SELECT.matcher(migration).find(),
+                "Migration role-menu inserts must not SELECT fixed seed primary keys");
         assertEquals(24, countOccurrences(migration, "WHERE NOT EXISTS"));
         assertTrue(migration.contains("UPDATE `sys_menu` SET `status` = 0 WHERE `id` IN (131, 132);"));
         assertLegacyApiPermissionsRestored(migration);
         assertFalse(ROLE_MENU_DELETE.matcher(migration).find(),
                 "Migration must not delete legacy role-menu mappings");
+    }
+
+    @Test
+    void migrationRoleMenuInsertsIgnorePreoccupiedSeedIdAndRemainIdempotent() throws Exception {
+        String migration = migrationSql();
+        List<String> inserts = migrationRoleMenuStatements(migration);
+        assertEquals(24, inserts.size(), "Migration must contain exactly 24 executable role-menu inserts");
+
+        try (Connection connection = DriverManager.getConnection(
+                "jdbc:h2:mem:vlm_role_menu_" + System.nanoTime() + ";MODE=MySQL;DATABASE_TO_LOWER=TRUE")) {
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("CREATE TABLE sys_role_menu ("
+                        + "id BIGINT AUTO_INCREMENT PRIMARY KEY, role_id BIGINT NOT NULL, menu_id BIGINT NOT NULL)");
+                statement.executeUpdate("INSERT INTO sys_role_menu (id, role_id, menu_id) VALUES (267, 999, 999)");
+                for (int run = 0; run < 2; run++) {
+                    for (String insert : inserts) {
+                        statement.executeUpdate(insert);
+                    }
+                }
+                assertEquals(1, rowCount(statement, 999, 999), "Preoccupied primary key row must be preserved");
+                for (RoleMenuRow expected : expectedRoleMenuRows()) {
+                    assertEquals(1, rowCount(statement, expected.roleId(), expected.menuId()),
+                            "Expected one mapping after two runs for role=" + expected.roleId()
+                                    + ", menu=" + expected.menuId());
+                }
+            }
+        }
     }
 
     private List<MenuRow> expectedNewMenuRows() {
@@ -248,17 +291,34 @@ class VlmMenuSeedDataTest {
         return rows;
     }
 
-    private List<RoleMenuRow> migrationRoleMenuRows(String sql) {
+    private List<RoleMenuMapping> migrationRoleMenuRows(String sql) {
         Matcher matcher = MIGRATION_ROLE_MENU_ROW.matcher(sql);
-        List<RoleMenuRow> rows = new ArrayList<>();
+        List<RoleMenuMapping> rows = new ArrayList<>();
         while (matcher.find()) {
-            int roleId = Integer.parseInt(matcher.group(2));
-            int menuId = Integer.parseInt(matcher.group(3));
-            assertEquals(roleId, Integer.parseInt(matcher.group(4)), "WHERE NOT EXISTS role must match SELECT");
-            assertEquals(menuId, Integer.parseInt(matcher.group(5)), "WHERE NOT EXISTS menu must match SELECT");
-            rows.add(roleMenu(Integer.parseInt(matcher.group(1)), roleId, menuId));
+            int roleId = Integer.parseInt(matcher.group(1));
+            int menuId = Integer.parseInt(matcher.group(2));
+            assertEquals(roleId, Integer.parseInt(matcher.group(3)), "WHERE NOT EXISTS role must match SELECT");
+            assertEquals(menuId, Integer.parseInt(matcher.group(4)), "WHERE NOT EXISTS menu must match SELECT");
+            rows.add(mapping(roleId, menuId));
         }
         return rows;
+    }
+
+    private List<String> migrationRoleMenuStatements(String sql) {
+        Matcher matcher = MIGRATION_ROLE_MENU_ROW.matcher(sql);
+        List<String> statements = new ArrayList<>();
+        while (matcher.find()) {
+            statements.add(matcher.group());
+        }
+        return statements;
+    }
+
+    private int rowCount(Statement statement, int roleId, int menuId) throws SQLException {
+        try (ResultSet result = statement.executeQuery(
+                "SELECT COUNT(*) FROM sys_role_menu WHERE role_id = " + roleId + " AND menu_id = " + menuId)) {
+            assertTrue(result.next());
+            return result.getInt(1);
+        }
     }
 
     private List<Integer> newMenuAssignments(List<RoleMenuRow> rows, int roleId) {
@@ -291,6 +351,10 @@ class VlmMenuSeedDataTest {
         return new RoleMenuRow(id, roleId, menuId);
     }
 
+    private RoleMenuMapping mapping(int roleId, int menuId) {
+        return new RoleMenuMapping(roleId, menuId);
+    }
+
     private String seedSql() throws IOException {
         return resourceSql("/sql/admin_system.sql");
     }
@@ -310,6 +374,9 @@ class VlmMenuSeedDataTest {
     }
 
     private record RoleMenuRow(int id, int roleId, int menuId) {
+    }
+
+    private record RoleMenuMapping(int roleId, int menuId) {
     }
 
     private record MenuUpsert(String insertClause, String updateClause) {

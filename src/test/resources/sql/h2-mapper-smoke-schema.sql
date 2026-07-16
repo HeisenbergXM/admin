@@ -21,6 +21,7 @@ CREATE TABLE t_vehicle (
     lifecycle_stage VARCHAR(30) NOT NULL,
     deleted TINYINT NOT NULL DEFAULT 0
 );
+CREATE INDEX idx_lifecycle_deleted_id ON t_vehicle (lifecycle_stage, deleted, id);
 
 CREATE TABLE t_veh_inbound (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

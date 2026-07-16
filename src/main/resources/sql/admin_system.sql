@@ -1004,7 +1004,8 @@ CREATE TABLE `t_vehicle`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `deleted` tinyint NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_vin`(`vin` ASC) USING BTREE
+  UNIQUE INDEX `uk_vin`(`vin` ASC) USING BTREE,
+  INDEX `idx_lifecycle_deleted_id`(`lifecycle_stage` ASC, `deleted` ASC, `id` ASC) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 26 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '车辆主表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
