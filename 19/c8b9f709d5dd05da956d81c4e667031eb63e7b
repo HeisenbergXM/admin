@@ -1,0 +1,23 @@
+docs/superpowers/plans/2026-07-16-vin-logistics-backend-plan.md
+  s_e7919551a71f83::t_08aa18688c78b4 913-914,918-919,926-927,965,1074-1076
+  s_e7919551a71f83::t_8e91c01e110788 556,565,859
+  s_e7919551a71f83::t_671b99014de0f1 11-20
+  s_e7919551a71f83::t_495ac5c79f83e0 1-10,21-555,557-564,566-836,838-858,860-912,915-917,920-925,928-964,966-1073,1077-1175
+  s_e7919551a71f83::t_8949dc6f3d8205 837
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "19c8b9f709d5dd05da956d81c4e667031eb63e7b",
+  "prompts": {},
+  "sessions": {
+    "s_e7919551a71f83": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f6b19-263f-78d0-b950-b7fca5b630ba",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
