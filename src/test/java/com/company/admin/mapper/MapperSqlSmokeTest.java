@@ -26,6 +26,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.beans.PropertyAccessorFactory.forBeanPropertyAccess;
 
@@ -59,7 +60,9 @@ class MapperSqlSmokeTest {
         Page<InboundResponse> page = vehInboundMapper.selectInboundPage(new Page<>(1, 10), request);
 
         assertEquals(1, page.getRecords().size());
-        assertEquals("PENDING_INBOUND", page.getRecords().get(0).getStageStatus());
+        InboundResponse row = page.getRecords().get(0);
+        assertNull(row.getId());
+        assertEquals("PENDING_INBOUND", row.getStageStatus());
     }
 
     @Test
