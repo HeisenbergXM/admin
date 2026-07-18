@@ -1,0 +1,24 @@
+{
+  "spec_id": "D00004",
+  "status": "pending_approval",
+  "title": "运输管理改造 · 前端页面设计（按 VIN 单车维护，页面与流转说明）",
+  "created": "2026-07-12",
+  "artifacts": {
+    "source": "source.md",
+    "metadata": "metadata.yaml",
+    "design": "design.md",
+    "tasks": "tasks.md"
+  },
+  "key_decisions": [
+    "文档范围=仅运输管理模块页面变更，其余模块引用 D00002 不重复",
+    "交互形态=独立表单页（待办列表点维护跳转表单，三态与 D00002 一致）",
+    "新增 N1/N1.1 入库、N2/N2.1 配送共四页；取代 D00002 P2/P2.1/P3/P3.1/P3.2",
+    "旧运输页面从菜单隐藏、组件保留可恢复；全景视图物流分区改取 t_veh_inbound/t_veh_delivery",
+    "配送经销商只读带出（取销售分配）；保留 trolly_type/fully_load 可选字段"
+  ],
+  "approval": {
+    "approved": false,
+    "approved_by": null,
+    "approved_at": null
+  }
+}

@@ -1,0 +1,21 @@
+spec_id: D00003
+external_id: D00003
+request_type: 优化需求
+request_type_code: optimization
+title: 运输管理改造 — 按 VIN 单车维护物流信息
+source_files:
+  - ../D00001/specs/design.md
+derived_from: D00001
+status: pending_approval
+created: 2026-07-12
+key_decisions:
+  - 两套运输管理共存、各自独立：旧单据式（D00001）保留、新按 VIN 单车维护上线，运输管理入口切换为新功能
+  - 旧单据式功能停用方式=仅隐藏菜单入口；6 张单据表与后端代码/API 全部保留不删，日后可快速恢复
+  - 新增 t_veh_inbound（入库）、t_veh_delivery（配送）两张阶段表，与其他 veh_* 阶段表同构；按 VIN 单车维护
+  - 保留「草稿→确认锁定→推进 lifecycle_stage」机制，改为按 VIN 单车确认；确认后锁定、记录确认人/时间
+  - 两套共享同一 t_vehicle 与同一套生命周期卡控；旧入口停用后仅新功能推进，不冲突
+  - 生命周期 7 阶段顺序与卡控规则不变，仅改物流两段操作粒度（单据 → 单车）
+  - 配送阶段保留 trolly_type/fully_load 为可选描述字段（不建轿运车实体）
+  - 隔离与不回归约束（§8）：只增不改、复用不改写共享卡控、旧代码/表/API保留可恢复、既有测试须全过
+  - 不建中转仓库实体，沿用 D00001，仅记录到仓日期等字段
+  - D00001 需求文档保持现状不动

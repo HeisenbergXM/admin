@@ -1,0 +1,27 @@
+{
+  "spec_id": "D00003",
+  "status": "pending_approval",
+  "title": "运输管理改造 — 按 VIN 单车维护物流信息",
+  "created": "2026-07-12",
+  "artifacts": {
+    "source": "source.md",
+    "metadata": "metadata.yaml",
+    "design": "design.md",
+    "tasks": "tasks.md"
+  },
+  "key_decisions": [
+    "两套运输管理共存、各自独立、互不影响：旧单据式保留、新按 VIN 上线并切换为唯一入口",
+    "旧单据式停用=仅隐藏菜单入口；6 张单据表与后端代码/API 全部保留不删，可快速恢复",
+    "新增 t_veh_inbound / t_veh_delivery 两张阶段表，按 VIN 单车维护",
+    "两套共享同一 t_vehicle 与生命周期卡控；旧入口停用后仅新功能推进",
+    "保留草稿→确认锁定→推进机制，改为单车确认；生命周期 7 阶段卡控不变",
+    "配送阶段保留 trolly_type/fully_load 为可选字段",
+    "隔离与不回归约束：只增不改、复用不改写共享卡控、旧代码/表/API保留可恢复、既有测试须全过",
+    "不建中转仓库实体，沿用 D00001"
+  ],
+  "approval": {
+    "approved": false,
+    "approved_by": null,
+    "approved_at": null
+  }
+}
