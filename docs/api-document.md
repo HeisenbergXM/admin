@@ -709,13 +709,13 @@ Authorization: Bearer <token>
 
 | 嵌套对象 | 可写字段 | 必填/校验规则 |
 |------|------|------|
-| `production` | `id`、`modelId`、`exteriorColorId`、`interiorColorId`、`engineNumber`、`yearMake`、`material`、`shipment`、`batch`、`offlineEpmbDate`、`epmbOkDate`、`remark1` | `id`、车型、内/外饰颜色和发动机号必填；车型及颜色必须为启用数据；`remark1` 最长 500 字符 |
+| `production` | `id`、`modelId`、`exteriorColorId`、`interiorColorId`、`engineNumber`、`yearMake`、`material`、`shipment`、`batch`、`offlineEpmbDate`、`epmbOkDate`、`remark1` | `id`、车型、内/外饰颜色和发动机号必填；车型及颜色必须为启用数据；`engineNumber` 最长 50 字符；`yearMake` 最长 20 字符；`material`、`shipment`、`batch` 最长 100 字符；`remark1` 最长 500 字符 |
 | `inbound` | `id`、`saicBuyOffDate`、`dateToStorageYard`、`remark2` | 已确认记录的两个日期均不可为空；`remark2` 最长 500 字符 |
-| `allocation` | `id`、`allocatedDate`、`dealerId`、`salesStatus`、`remark3` | `dealerId` 必填且必须为启用经销商；销售状态须为有效字典值；`remark3` 最长 500 字符 |
-| `invoices` | 数组项的 `id`、`invoiceType`、`invoiceNo`、`invoiceDate`、`remark` | 每项的 `id`、发票类型、发票号和发票日期必填；发票类型须为有效字典值；`remark` 最长 500 字符 |
-| `payment` | `id`、`paymentDate`、`creditFullPaymentDate`、`paymentStatus`、`remark5` | `paymentDate` 必填；收款状态须为有效字典值；`remark5` 最长 500 字符 |
-| `delivery` | `id`、`etdToDealer`、`etaToDealer`、`trollyType`、`fullyLoad`、`receivedDate`、`deliveryStatus`、`remark7` | 已确认记录的签收日期不可为空；预计到达日不得早于发车日；拖运车类型仅限 `4 units` 或 `6 units`；配送状态须为有效字典值；`remark7` 最长 500 字符 |
-| `registration` | `id`、`drosstechStatus`、`uploadDate`、`registrationDate`、`customerRegion`、`remark8` | `customerRegion` 最长 100 字符；`remark8` 最长 500 字符；状态须为有效字典值 |
+| `allocation` | `id`、`allocatedDate`、`dealerId`、`salesStatus`、`remark3` | `dealerId` 必填且必须为启用经销商；销售状态须为有效字典值；`salesStatus` 最长 50 字符；`remark3` 最长 500 字符 |
+| `invoices` | 数组项的 `id`、`invoiceType`、`invoiceNo`、`invoiceDate`、`remark` | 每项的 `id`、发票类型、发票号和发票日期必填；发票类型须为有效字典值；`invoiceType` 最长 50 字符；`invoiceNo` 最长 100 字符；`remark` 最长 500 字符 |
+| `payment` | `id`、`paymentDate`、`creditFullPaymentDate`、`paymentStatus`、`remark5` | `paymentDate` 必填；收款状态须为有效字典值；`paymentStatus` 最长 50 字符；`remark5` 最长 500 字符 |
+| `delivery` | `id`、`etdToDealer`、`etaToDealer`、`trollyType`、`fullyLoad`、`receivedDate`、`deliveryStatus`、`remark7` | 已确认记录的签收日期不可为空；预计到达日不得早于发车日；拖运车类型仅限 `4 units` 或 `6 units`；配送状态须为有效字典值；`trollyType` 最长 20 字符；`deliveryStatus` 最长 50 字符；`remark7` 最长 500 字符 |
+| `registration` | `id`、`drosstechStatus`、`uploadDate`、`registrationDate`、`customerRegion`、`remark8` | `drosstechStatus` 最长 50 字符；`customerRegion` 最长 100 字符；`remark8` 最长 500 字符；状态须为有效字典值 |
 
 请求示例：
 
@@ -868,6 +868,7 @@ VIN、车辆 ID、生命周期阶段、阶段处理状态（`stageStatus`）、�
 | 4002 | Token 无效 |
 | 5000 | 系统内部错误 |
 | 6001 | 车辆不存在 |
+| 6007 | 阶段数据不存在 |
 | 6018 | 修订记录与车辆不匹配 |
 
 ---

@@ -47,10 +47,15 @@ public class VehicleCorrectionUpdateRequest {
         @NotNull
         private Long interiorColorId;
         @NotBlank
+        @Size(max = 50)
         private String engineNumber;
+        @Size(max = 20)
         private String yearMake;
+        @Size(max = 100)
         private String material;
+        @Size(max = 100)
         private String shipment;
+        @Size(max = 100)
         private String batch;
         private LocalDate offlineEpmbDate;
         private LocalDate epmbOkDate;
@@ -75,6 +80,7 @@ public class VehicleCorrectionUpdateRequest {
         private LocalDate allocatedDate;
         @NotNull
         private Long dealerId;
+        @Size(max = 50)
         private String salesStatus;
         @Size(max = 500)
         private String remark3;
@@ -85,8 +91,10 @@ public class VehicleCorrectionUpdateRequest {
         @NotNull
         private Long id;
         @NotBlank
+        @Size(max = 50)
         private String invoiceType;
         @NotBlank
+        @Size(max = 100)
         private String invoiceNo;
         @NotNull
         private LocalDate invoiceDate;
@@ -101,6 +109,7 @@ public class VehicleCorrectionUpdateRequest {
         @NotNull
         private LocalDate paymentDate;
         private LocalDate creditFullPaymentDate;
+        @Size(max = 50)
         private String paymentStatus;
         @Size(max = 500)
         private String remark5;
@@ -112,9 +121,11 @@ public class VehicleCorrectionUpdateRequest {
         private Long id;
         private LocalDate etdToDealer;
         private LocalDate etaToDealer;
+        @Size(max = 20)
         private String trollyType;
         private Boolean fullyLoad;
         private LocalDate receivedDate;
+        @Size(max = 50)
         private String deliveryStatus;
         @Size(max = 500)
         private String remark7;
@@ -124,6 +135,7 @@ public class VehicleCorrectionUpdateRequest {
     public static class RegistrationCorrection {
         @NotNull
         private Long id;
+        @Size(max = 50)
         private String drosstechStatus;
         private LocalDate uploadDate;
         private LocalDate registrationDate;
