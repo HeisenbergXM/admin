@@ -1,0 +1,23 @@
+src/test/java/com/company/admin/dto/request/VehicleCorrectionUpdateRequestTest.java
+  s_c11fd4e0062f48::t_15110be414ecee 14,61-136
+docs/api-document.md
+  s_c11fd4e0062f48::t_ee59f92e218725 712,714-718,871
+src/main/java/com/company/admin/dto/request/VehicleCorrectionUpdateRequest.java
+  s_c11fd4e0062f48::t_ec1a65d1f7c236 50,52,54,56,58,83,94,97,112,124,128,138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d05944baaa0763c8f525ba78ec776715c3598e69",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
