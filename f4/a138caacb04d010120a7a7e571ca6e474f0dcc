@@ -1,0 +1,31 @@
+src/main/java/com/company/admin/service/impl/VehicleCorrectionServiceImpl.java
+  s_c11fd4e0062f48::t_37e6957f17ed36 381,384-385
+  s_c11fd4e0062f48::t_6702f91e702d93 4,195-209,225-231,250-257,270-277,291-298,327-337,352-360,364-367,386
+  s_c11fd4e0062f48::t_4682744a106a14 368-369
+src/test/java/com/company/admin/service/impl/VehicleCorrectionServiceImplTest.java
+  s_c11fd4e0062f48::t_bf8251ec185141 658-659
+  s_c11fd4e0062f48::t_753c580891fbd0 62,64,120-126,216,232,257,352,373,392,423-424,444,483,577,592
+  s_c11fd4e0062f48::t_64f1a0ed5c8b98 224-231,233-242
+  s_c11fd4e0062f48::t_683f58c0e56506 3-4,44,107-113,127-131
+  s_c11fd4e0062f48::t_b25089b61d93d8 223,521-560,665,669-677
+  s_c11fd4e0062f48::t_66386fc24e3e6a 678
+src/test/java/com/company/admin/service/impl/VehicleCorrectionServiceIntegrationTest.java
+  s_c11fd4e0062f48::t_7461e4d3ad248b 24,127-149
+  s_c11fd4e0062f48::t_576581bc6d7d97 150-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f4a138caacb04d010120a7a7e571ca6e474f0dcc",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
