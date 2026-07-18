@@ -1,0 +1,20 @@
+docs/superpowers/specs/2026-07-18-vehicle-correction-master-sheet-list-export-design.md
+  s_c11fd4e0062f48::t_52e8c35b597963 3-4
+  s_c11fd4e0062f48::t_c3bbab6ca25b92 1-2,5-247
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a8586b48d97ef62b9f76f4e3b424eb4e942bf5d3",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
