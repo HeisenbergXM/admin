@@ -709,13 +709,13 @@ Authorization: Bearer <token>
 
 | 嵌套对象 | 可写字段 | 必填/校验规则 |
 |------|------|------|
-| `production` | `id`、`modelId`、`exteriorColorId`、`interiorColorId`、`engineNumber`、`yearMake`、`material`、`shipment`、`batch`、`offlineEpmbDate`、`epmbOkDate`、`remark1` | `id`、车型、内/外饰颜色和发动机号必填；车型及颜色必须为启用数据 |
-| `inbound` | `id`、`saicBuyOffDate`、`dateToStorageYard`、`remark2` | 已确认记录的两个日期均不可为空 |
-| `allocation` | `id`、`allocatedDate`、`dealerId`、`salesStatus`、`remark3` | `dealerId` 必填且必须为启用经销商；销售状态须为有效字典值 |
-| `invoices` | 数组项的 `id`、`invoiceType`、`invoiceNo`、`invoiceDate`、`remark` | 每项的 `id`、发票类型、发票号和发票日期必填；发票类型须为有效字典值 |
-| `payment` | `id`、`paymentDate`、`creditFullPaymentDate`、`paymentStatus`、`remark5` | `paymentDate` 必填；收款状态须为有效字典值 |
-| `delivery` | `id`、`etdToDealer`、`etaToDealer`、`trollyType`、`fullyLoad`、`receivedDate`、`deliveryStatus`、`remark7` | 已确认记录的签收日期不可为空；预计到达日不得早于发车日；拖运车类型仅限 `4 units` 或 `6 units`；配送状态须为有效字典值 |
-| `registration` | `id`、`drosstechStatus`、`uploadDate`、`registrationDate`、`customerRegion`、`remark8` | `customerRegion` 最长 100 字符；状态须为有效字典值 |
+| `production` | `id`、`modelId`、`exteriorColorId`、`interiorColorId`、`engineNumber`、`yearMake`、`material`、`shipment`、`batch`、`offlineEpmbDate`、`epmbOkDate`、`remark1` | `id`、车型、内/外饰颜色和发动机号必填；车型及颜色必须为启用数据；`remark1` 最长 500 字符 |
+| `inbound` | `id`、`saicBuyOffDate`、`dateToStorageYard`、`remark2` | 已确认记录的两个日期均不可为空；`remark2` 最长 500 字符 |
+| `allocation` | `id`、`allocatedDate`、`dealerId`、`salesStatus`、`remark3` | `dealerId` 必填且必须为启用经销商；销售状态须为有效字典值；`remark3` 最长 500 字符 |
+| `invoices` | 数组项的 `id`、`invoiceType`、`invoiceNo`、`invoiceDate`、`remark` | 每项的 `id`、发票类型、发票号和发票日期必填；发票类型须为有效字典值；`remark` 最长 500 字符 |
+| `payment` | `id`、`paymentDate`、`creditFullPaymentDate`、`paymentStatus`、`remark5` | `paymentDate` 必填；收款状态须为有效字典值；`remark5` 最长 500 字符 |
+| `delivery` | `id`、`etdToDealer`、`etaToDealer`、`trollyType`、`fullyLoad`、`receivedDate`、`deliveryStatus`、`remark7` | 已确认记录的签收日期不可为空；预计到达日不得早于发车日；拖运车类型仅限 `4 units` 或 `6 units`；配送状态须为有效字典值；`remark7` 最长 500 字符 |
+| `registration` | `id`、`drosstechStatus`、`uploadDate`、`registrationDate`、`customerRegion`、`remark8` | `customerRegion` 最长 100 字符；`remark8` 最长 500 字符；状态须为有效字典值 |
 
 请求示例：
 
