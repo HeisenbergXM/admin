@@ -13,4 +13,6 @@ public interface VehInvoiceMapper extends BaseMapper<VehInvoice> {
 
     Page<InvoiceListResponse> selectInvoicePage(Page<InvoiceListResponse> page,
                                                 @Param("query") InvoiceQueryRequest query);
+
+    VehInvoice selectByIdForUpdate(@Param("id") Long id);
 }

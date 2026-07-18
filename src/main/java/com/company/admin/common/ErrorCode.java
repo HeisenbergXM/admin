@@ -44,7 +44,8 @@ public enum ErrorCode {
     WAYBILL_DEALER_NOT_FOUND(6014, "经销商行不存在"),
     DICT_TYPE_NOT_FOUND(6015, "字典类型不存在"),
     DICT_ITEM_NOT_FOUND(6016, "字典项不存在"),
-    DICT_ITEM_ID_REQUIRED(6017, "字典项 ID 不能为空");
+    DICT_ITEM_ID_REQUIRED(6017, "字典项 ID 不能为空"),
+    CORRECTION_RECORD_MISMATCH(6018, "修订记录与车辆不匹配");
 
     private final int code;
     private final String message;

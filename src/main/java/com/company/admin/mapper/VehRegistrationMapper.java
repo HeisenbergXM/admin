@@ -13,4 +13,6 @@ public interface VehRegistrationMapper extends BaseMapper<VehRegistration> {
 
     Page<RegistrationResponse> selectRegistrationPage(Page<RegistrationResponse> page,
                                                       @Param("query") RegistrationQueryRequest query);
+
+    VehRegistration selectByIdForUpdate(@Param("id") Long id);
 }

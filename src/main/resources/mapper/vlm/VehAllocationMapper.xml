@@ -53,4 +53,9 @@
         </choose>
         ORDER BY v.id DESC
     </select>
+    <select id="selectByIdForUpdate" resultType="com.company.admin.entity.VehAllocation">
+        SELECT * FROM t_veh_allocation
+        WHERE id = #{id} AND deleted = 0
+        FOR UPDATE
+    </select>
 </mapper>

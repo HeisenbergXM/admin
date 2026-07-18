@@ -79,4 +79,9 @@
           AND i.deleted = 0
         FOR UPDATE
     </select>
+    <select id="selectByIdForUpdate" resultType="com.company.admin.entity.VehInbound">
+        SELECT * FROM t_veh_inbound
+        WHERE id = #{id} AND deleted = 0
+        FOR UPDATE
+    </select>
 </mapper>

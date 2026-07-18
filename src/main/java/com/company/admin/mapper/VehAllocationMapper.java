@@ -13,4 +13,6 @@ public interface VehAllocationMapper extends BaseMapper<VehAllocation> {
 
     Page<AllocationResponse> selectAllocationPage(Page<AllocationResponse> page,
                                                   @Param("query") AllocationQueryRequest query);
+
+    VehAllocation selectByIdForUpdate(@Param("id") Long id);
 }

@@ -42,4 +42,9 @@
         </choose>
         ORDER BY v.id DESC
     </select>
+    <select id="selectByIdForUpdate" resultType="com.company.admin.entity.VehRegistration">
+        SELECT * FROM t_veh_registration
+        WHERE id = #{id} AND deleted = 0
+        FOR UPDATE
+    </select>
 </mapper>

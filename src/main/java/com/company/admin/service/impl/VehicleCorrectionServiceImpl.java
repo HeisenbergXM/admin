@@ -1,19 +1,59 @@
 package com.company.admin.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
 import com.company.admin.common.PageResult;
+import com.company.admin.dto.request.VehicleCorrectionUpdateRequest;
+import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.AllocationCorrection;
+import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.DeliveryCorrection;
+import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.InboundCorrection;
+import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.InvoiceCorrection;
+import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.PaymentCorrection;
+import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.ProductionCorrection;
+import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.RegistrationCorrection;
 import com.company.admin.dto.request.VehicleQueryRequest;
 import com.company.admin.dto.response.VehicleListResponse;
 import com.company.admin.dto.response.VehiclePanoramaResponse;
+import com.company.admin.entity.Dealer;
+import com.company.admin.entity.ExteriorColor;
+import com.company.admin.entity.InteriorColor;
+import com.company.admin.entity.VehAllocation;
+import com.company.admin.entity.VehDelivery;
+import com.company.admin.entity.VehInbound;
+import com.company.admin.entity.VehInvoice;
+import com.company.admin.entity.VehPayment;
+import com.company.admin.entity.VehProduction;
+import com.company.admin.entity.VehRegistration;
 import com.company.admin.entity.Vehicle;
+import com.company.admin.entity.VehicleModel;
+import com.company.admin.mapper.DealerMapper;
+import com.company.admin.mapper.ExteriorColorMapper;
+import com.company.admin.mapper.InteriorColorMapper;
+import com.company.admin.mapper.VehAllocationMapper;
+import com.company.admin.mapper.VehDeliveryMapper;
+import com.company.admin.mapper.VehInboundMapper;
+import com.company.admin.mapper.VehInvoiceMapper;
+import com.company.admin.mapper.VehPaymentMapper;
+import com.company.admin.mapper.VehProductionMapper;
+import com.company.admin.mapper.VehRegistrationMapper;
 import com.company.admin.mapper.VehicleMapper;
+import com.company.admin.mapper.VehicleModelMapper;
 import com.company.admin.service.BusinessStatusLabelService;
+import com.company.admin.service.VehicleCorrectionAuditService;
+import com.company.admin.service.VehicleCorrectionAuditService.CorrectionDiff;
 import com.company.admin.service.VehicleCorrectionService;
 import com.company.admin.service.VehiclePanoramaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +62,18 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
     private final VehicleMapper vehicleMapper;
     private final VehiclePanoramaService vehiclePanoramaService;
     private final BusinessStatusLabelService statusLabelService;
+    private final VehProductionMapper vehProductionMapper;
+    private final VehInboundMapper vehInboundMapper;
+    private final VehAllocationMapper vehAllocationMapper;
+    private final VehInvoiceMapper vehInvoiceMapper;
+    private final VehPaymentMapper vehPaymentMapper;
+    private final VehDeliveryMapper vehDeliveryMapper;
+    private final VehRegistrationMapper vehRegistrationMapper;
+    private final VehicleModelMapper vehicleModelMapper;
+    private final ExteriorColorMapper exteriorColorMapper;
+    private final InteriorColorMapper interiorColorMapper;
+    private final DealerMapper dealerMapper;
+    private final Optional<VehicleCorrectionAuditService> auditService;
 
     @Override
     public PageResult<VehicleListResponse> pageCorrections(VehicleQueryRequest request) {
@@ -39,6 +91,310 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
             throw new BusinessException(ErrorCode.VEHICLE_NOT_FOUND);
         }
         return vehiclePanoramaService.getPanorama(vehicle.getVin());
+    }
+
+    @Override
+    @Transactional
+    public void updateCorrection(Long vehicleId, VehicleCorrectionUpdateRequest request) {
+        if (vehicleId == null || request == null) {
+            throw badRequest("车辆 ID 和修订内容不能为空");
+        }
+        Vehicle vehicle = vehicleMapper.selectByIdForUpdate(vehicleId);
+        if (vehicle == null) {
+            throw new BusinessException(ErrorCode.VEHICLE_NOT_FOUND);
+        }
+        validateInvoiceIds(request);
+
+        CorrectionDiff diff = new CorrectionDiff(vehicleId, vehicle.getVin());
+        if (request.getProduction() != null) {
+            updateProduction(vehicleId, request.getProduction(), diff);
+        }
+        if (request.getInbound() != null) {
+            updateInbound(vehicleId, request.getInbound(), diff);
+        }
+        if (request.getAllocation() != null) {
+            updateAllocation(vehicleId, request.getAllocation(), diff);
+        }
+        if (request.getInvoices() != null) {
+            for (InvoiceCorrection invoice : request.getInvoices()) {
+                updateInvoice(vehicleId, invoice, diff);
+            }
+        }
+        if (request.getPayment() != null) {
+            updatePayment(vehicleId, request.getPayment(), diff);
+        }
+        if (request.getDelivery() != null) {
+            updateDelivery(vehicleId, request.getDelivery(), diff);
+        }
+        if (request.getRegistration() != null) {
+            updateRegistration(vehicleId, request.getRegistration(), diff);
+        }
+        auditService.ifPresent(service -> service.recordSuccess(diff));
+    }
+
+    private void validateInvoiceIds(VehicleCorrectionUpdateRequest request) {
+        if (request.getInvoices() == null) {
+            return;
+        }
+        Set<Long> invoiceIds = new HashSet<>();
+        for (InvoiceCorrection invoice : request.getInvoices()) {
+            if (invoice == null || invoice.getId() == null) {
+                throw badRequest("发票记录 ID 不能为空");
+            }
+            if (!invoiceIds.add(invoice.getId())) {
+                throw badRequest("发票记录重复");
+            }
+        }
+    }
+
+    private void updateProduction(Long vehicleId, ProductionCorrection change, CorrectionDiff diff) {
+        requireId(change.getId(), "生产记录 ID");
+        VehProduction entity = vehProductionMapper.selectByIdForUpdate(change.getId());
+        requireOwned(entity, entity == null ? null : entity.getVehicleId(), vehicleId);
+        requireRequiredId(change.getModelId(), "车型");
+        requireRequiredId(change.getExteriorColorId(), "外饰颜色");
+        requireRequiredId(change.getInteriorColorId(), "内饰颜色");
+        requireActive(vehicleModelMapper.selectCount(new LambdaQueryWrapper<VehicleModel>()
+                .eq(VehicleModel::getId, change.getModelId())
+                .eq(VehicleModel::getStatus, 1)
+                .eq(VehicleModel::getDeleted, 0)), "车型");
+        requireActive(exteriorColorMapper.selectCount(new LambdaQueryWrapper<ExteriorColor>()
+                .eq(ExteriorColor::getId, change.getExteriorColorId())
+                .eq(ExteriorColor::getStatus, 1)
+                .eq(ExteriorColor::getDeleted, 0)), "外饰颜色");
+        requireActive(interiorColorMapper.selectCount(new LambdaQueryWrapper<InteriorColor>()
+                .eq(InteriorColor::getId, change.getInteriorColorId())
+                .eq(InteriorColor::getStatus, 1)
+                .eq(InteriorColor::getDeleted, 0)), "内饰颜色");
+
+        diff.before("production", entity.getId(), productionValues(entity));
+        entity.setModelId(change.getModelId());
+        entity.setExteriorColorId(change.getExteriorColorId());
+        entity.setInteriorColorId(change.getInteriorColorId());
+        entity.setEngineNumber(change.getEngineNumber());
+        entity.setYearMake(change.getYearMake());
+        entity.setMaterial(change.getMaterial());
+        entity.setShipment(change.getShipment());
+        entity.setBatch(change.getBatch());
+        entity.setOfflineEpmbDate(change.getOfflineEpmbDate());
+        entity.setEpmbOkDate(change.getEpmbOkDate());
+        entity.setRemark1(change.getRemark1());
+        vehProductionMapper.updateById(entity);
+        diff.after("production", entity.getId(), productionValues(entity));
+    }
+
+    private void updateInbound(Long vehicleId, InboundCorrection change, CorrectionDiff diff) {
+        requireId(change.getId(), "入库记录 ID");
+        VehInbound entity = vehInboundMapper.selectByIdForUpdate(change.getId());
+        requireOwned(entity, entity == null ? null : entity.getVehicleId(), vehicleId);
+        diff.before("inbound", entity.getId(), inboundValues(entity));
+        entity.setSaicBuyOffDate(change.getSaicBuyOffDate());
+        entity.setDateToStorageYard(change.getDateToStorageYard());
+        entity.setRemark2(change.getRemark2());
+        vehInboundMapper.updateById(entity);
+        diff.after("inbound", entity.getId(), inboundValues(entity));
+    }
+
+    private void updateAllocation(Long vehicleId, AllocationCorrection change, CorrectionDiff diff) {
+        requireId(change.getId(), "分配记录 ID");
+        VehAllocation entity = vehAllocationMapper.selectByIdForUpdate(change.getId());
+        requireOwned(entity, entity == null ? null : entity.getVehicleId(), vehicleId);
+        requireRequiredId(change.getDealerId(), "经销商");
+        requireActive(dealerMapper.selectCount(new LambdaQueryWrapper<Dealer>()
+                .eq(Dealer::getId, change.getDealerId())
+                .eq(Dealer::getStatus, 1)
+                .eq(Dealer::getDeleted, 0)), "经销商");
+        requireDictionary("sales_status", change.getSalesStatus());
+        diff.before("allocation", entity.getId(), allocationValues(entity));
+        entity.setAllocatedDate(change.getAllocatedDate());
+        entity.setDealerId(change.getDealerId());
+        entity.setSalesStatus(change.getSalesStatus());
+        entity.setRemark3(change.getRemark3());
+        vehAllocationMapper.updateById(entity);
+        diff.after("allocation", entity.getId(), allocationValues(entity));
+    }
+
+    private void updateInvoice(Long vehicleId, InvoiceCorrection change, CorrectionDiff diff) {
+        VehInvoice entity = vehInvoiceMapper.selectByIdForUpdate(change.getId());
+        requireOwned(entity, entity == null ? null : entity.getVehicleId(), vehicleId);
+        requireDictionary("invoice_status", change.getInvoiceType());
+        diff.before("invoice", entity.getId(), invoiceValues(entity));
+        entity.setInvoiceType(change.getInvoiceType());
+        entity.setInvoiceNo(change.getInvoiceNo());
+        entity.setInvoiceDate(change.getInvoiceDate());
+        entity.setRemark(change.getRemark());
+        vehInvoiceMapper.updateById(entity);
+        diff.after("invoice", entity.getId(), invoiceValues(entity));
+    }
+
+    private void updatePayment(Long vehicleId, PaymentCorrection change, CorrectionDiff diff) {
+        requireId(change.getId(), "收款记录 ID");
+        VehPayment entity = vehPaymentMapper.selectByIdForUpdate(change.getId());
+        requireOwned(entity, entity == null ? null : entity.getVehicleId(), vehicleId);
+        requireDictionary("payment_status", change.getPaymentStatus());
+        diff.before("payment", entity.getId(), paymentValues(entity));
+        entity.setPaymentDate(change.getPaymentDate());
+        entity.setCreditFullPaymentDate(change.getCreditFullPaymentDate());
+        entity.setPaymentStatus(change.getPaymentStatus());
+        entity.setRemark5(change.getRemark5());
+        vehPaymentMapper.updateById(entity);
+        diff.after("payment", entity.getId(), paymentValues(entity));
+    }
+
+    private void updateDelivery(Long vehicleId, DeliveryCorrection change, CorrectionDiff diff) {
+        requireId(change.getId(), "配送记录 ID");
+        VehDelivery entity = vehDeliveryMapper.selectByIdForUpdate(change.getId());
+        requireOwned(entity, entity == null ? null : entity.getVehicleId(), vehicleId);
+        if (change.getEtdToDealer() != null && change.getEtaToDealer() != null
+                && change.getEtaToDealer().isBefore(change.getEtdToDealer())) {
+            throw badRequest("预计到达日期不能早于发车日期");
+        }
+        if (change.getTrollyType() != null
+                && !"4 units".equals(change.getTrollyType())
+                && !"6 units".equals(change.getTrollyType())) {
+            throw badRequest("拖运车类型只能为4 units或6 units");
+        }
+        requireDictionary("delivery_status", change.getDeliveryStatus());
+        diff.before("delivery", entity.getId(), deliveryValues(entity));
+        entity.setEtdToDealer(change.getEtdToDealer());
+        entity.setEtaToDealer(change.getEtaToDealer());
+        entity.setTrollyType(change.getTrollyType());
+        entity.setFullyLoad(change.getFullyLoad());
+        entity.setReceivedDate(change.getReceivedDate());
+        entity.setDeliveryStatus(change.getDeliveryStatus());
+        entity.setRemark7(change.getRemark7());
+        vehDeliveryMapper.updateById(entity);
+        diff.after("delivery", entity.getId(), deliveryValues(entity));
+    }
+
+    private void updateRegistration(Long vehicleId, RegistrationCorrection change, CorrectionDiff diff) {
+        requireId(change.getId(), "上牌记录 ID");
+        VehRegistration entity = vehRegistrationMapper.selectByIdForUpdate(change.getId());
+        requireOwned(entity, entity == null ? null : entity.getVehicleId(), vehicleId);
+        requireDictionary("drosstech_status", change.getDrosstechStatus());
+        diff.before("registration", entity.getId(), registrationValues(entity));
+        entity.setDrosstechStatus(change.getDrosstechStatus());
+        entity.setUploadDate(change.getUploadDate());
+        entity.setRegistrationDate(change.getRegistrationDate());
+        entity.setCustomerRegion(change.getCustomerRegion());
+        entity.setRemark8(change.getRemark8());
+        vehRegistrationMapper.updateById(entity);
+        diff.after("registration", entity.getId(), registrationValues(entity));
+    }
+
+    private <T> T requireOwned(T entity, Long ownerVehicleId, Long requestedVehicleId) {
+        if (entity == null) {
+            throw new BusinessException(ErrorCode.STAGE_DATA_NOT_FOUND);
+        }
+        if (!requestedVehicleId.equals(ownerVehicleId)) {
+            throw new BusinessException(ErrorCode.CORRECTION_RECORD_MISMATCH);
+        }
+        return entity;
+    }
+
+    private void requireDictionary(String dictCode, String value) {
+        if (value == null || value.isBlank()) {
+            return;
+        }
+        Map<String, String> labels = statusLabelService.dictLabels(dictCode);
+        if (labels == null || !labels.containsKey(value)) {
+            throw badRequest("无效字典值: " + dictCode + "=" + value);
+        }
+    }
+
+    private void requireActive(Long count, String name) {
+        if (count == null || count == 0) {
+            throw badRequest(name + "不存在或已停用");
+        }
+    }
+
+    private void requireRequiredId(Long id, String name) {
+        if (id == null) {
+            throw badRequest(name + " ID 不能为空");
+        }
+    }
+
+    private void requireId(Long id, String name) {
+        if (id == null) {
+            throw badRequest(name + "不能为空");
+        }
+    }
+
+    private BusinessException badRequest(String message) {
+        return new BusinessException(ErrorCode.BAD_REQUEST.getCode(), message);
+    }
+
+    private Map<String, Object> productionValues(VehProduction entity) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("modelId", entity.getModelId());
+        values.put("exteriorColorId", entity.getExteriorColorId());
+        values.put("interiorColorId", entity.getInteriorColorId());
+        values.put("engineNumber", entity.getEngineNumber());
+        values.put("yearMake", entity.getYearMake());
+        values.put("material", entity.getMaterial());
+        values.put("shipment", entity.getShipment());
+        values.put("batch", entity.getBatch());
+        values.put("offlineEpmbDate", entity.getOfflineEpmbDate());
+        values.put("epmbOkDate", entity.getEpmbOkDate());
+        values.put("remark1", entity.getRemark1());
+        return values;
+    }
+
+    private Map<String, Object> inboundValues(VehInbound entity) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("saicBuyOffDate", entity.getSaicBuyOffDate());
+        values.put("dateToStorageYard", entity.getDateToStorageYard());
+        values.put("remark2", entity.getRemark2());
+        return values;
+    }
+
+    private Map<String, Object> allocationValues(VehAllocation entity) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("allocatedDate", entity.getAllocatedDate());
+        values.put("dealerId", entity.getDealerId());
+        values.put("salesStatus", entity.getSalesStatus());
+        values.put("remark3", entity.getRemark3());
+        return values;
+    }
+
+    private Map<String, Object> invoiceValues(VehInvoice entity) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("invoiceType", entity.getInvoiceType());
+        values.put("invoiceNo", entity.getInvoiceNo());
+        values.put("invoiceDate", entity.getInvoiceDate());
+        values.put("remark", entity.getRemark());
+        return values;
+    }
+
+    private Map<String, Object> paymentValues(VehPayment entity) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("paymentDate", entity.getPaymentDate());
+        values.put("creditFullPaymentDate", entity.getCreditFullPaymentDate());
+        values.put("paymentStatus", entity.getPaymentStatus());
+        values.put("remark5", entity.getRemark5());
+        return values;
+    }
+
+    private Map<String, Object> deliveryValues(VehDelivery entity) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("etdToDealer", entity.getEtdToDealer());
+        values.put("etaToDealer", entity.getEtaToDealer());
+        values.put("trollyType", entity.getTrollyType());
+        values.put("fullyLoad", entity.getFullyLoad());
+        values.put("receivedDate", entity.getReceivedDate());
+        values.put("deliveryStatus", entity.getDeliveryStatus());
+        values.put("remark7", entity.getRemark7());
+        return values;
+    }
+
+    private Map<String, Object> registrationValues(VehRegistration entity) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        values.put("drosstechStatus", entity.getDrosstechStatus());
+        values.put("uploadDate", entity.getUploadDate());
+        values.put("registrationDate", entity.getRegistrationDate());
+        values.put("customerRegion", entity.getCustomerRegion());
+        values.put("remark8", entity.getRemark8());
+        return values;
     }
 
     private void applyLabels(VehicleListResponse response) {

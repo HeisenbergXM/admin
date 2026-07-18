@@ -17,4 +17,6 @@ public interface VehDeliveryMapper extends BaseMapper<VehDelivery> {
     DeliveryResponse selectDeliveryByVehicleId(@Param("vehicleId") Long vehicleId);
 
     VehDelivery selectByVehicleIdForUpdate(@Param("vehicleId") Long vehicleId);
+
+    VehDelivery selectByIdForUpdate(@Param("id") Long id);
 }

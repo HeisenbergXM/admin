@@ -13,4 +13,6 @@ public interface VehPaymentMapper extends BaseMapper<VehPayment> {
 
     Page<PaymentResponse> selectPaymentPage(Page<PaymentResponse> page,
                                             @Param("query") PaymentQueryRequest query);
+
+    VehPayment selectByIdForUpdate(@Param("id") Long id);
 }

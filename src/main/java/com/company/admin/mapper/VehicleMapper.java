@@ -20,6 +20,8 @@ public interface VehicleMapper extends BaseMapper<Vehicle> {
     Page<VehicleListResponse> selectVehicleCorrectionPage(Page<VehicleListResponse> page,
                                                           @Param("query") VehicleQueryRequest query);
 
+    Vehicle selectByIdForUpdate(@Param("id") Long id);
+
     /**
      * 按 ID 查询车辆基本信息（JOIN 主数据表取车型/颜色名称）
      */
