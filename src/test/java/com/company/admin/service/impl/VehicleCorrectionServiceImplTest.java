@@ -1,5 +1,7 @@
 package com.company.admin.service.impl;
 
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
@@ -39,6 +41,7 @@ import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.VehicleCorrectionAuditService;
 import com.company.admin.service.VehicleCorrectionAuditService.CorrectionDiff;
 import com.company.admin.service.VehiclePanoramaService;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,7 +59,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -99,12 +104,31 @@ class VehicleCorrectionServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        initializeTableInfo(VehProduction.class);
+        initializeTableInfo(VehInbound.class);
+        initializeTableInfo(VehAllocation.class);
+        initializeTableInfo(VehInvoice.class);
+        initializeTableInfo(VehPayment.class);
+        initializeTableInfo(VehDelivery.class);
+        initializeTableInfo(VehRegistration.class);
         service = new VehicleCorrectionServiceImpl(
                 vehicleMapper, vehiclePanoramaService, statusLabelService,
                 vehProductionMapper, vehInboundMapper, vehAllocationMapper,
                 vehInvoiceMapper, vehPaymentMapper, vehDeliveryMapper,
                 vehRegistrationMapper, vehicleModelMapper, exteriorColorMapper,
                 interiorColorMapper, dealerMapper, auditService);
+        lenient().when(vehProductionMapper.update(isNull(), any())).thenReturn(1);
+        lenient().when(vehInboundMapper.update(isNull(), any())).thenReturn(1);
+        lenient().when(vehAllocationMapper.update(isNull(), any())).thenReturn(1);
+        lenient().when(vehInvoiceMapper.update(isNull(), any())).thenReturn(1);
+        lenient().when(vehPaymentMapper.update(isNull(), any())).thenReturn(1);
+        lenient().when(vehDeliveryMapper.update(isNull(), any())).thenReturn(1);
+        lenient().when(vehRegistrationMapper.update(isNull(), any())).thenReturn(1);
+    }
+
+    private void initializeTableInfo(Class<?> entityType) {
+        TableInfoHelper.initTableInfo(
+                new MapperBuilderAssistant(new MybatisConfiguration(), ""), entityType);
     }
 
     @Test
@@ -189,11 +213,31 @@ class VehicleCorrectionServiceImplTest {
         assertEquals("original-confirmer", production.getConfirmedBy());
         assertEquals(LocalDateTime.of(2026, 1, 2, 3, 4), production.getConfirmedAt());
         assertEquals("COMPLETED", vehicle.getLifecycleStage());
-        verify(vehProductionMapper).updateById(production);
+        verify(vehProductionMapper).update(isNull(), any());
         ArgumentCaptor<CorrectionDiff> captor = ArgumentCaptor.forClass(CorrectionDiff.class);
         verify(auditService).recordSuccess(captor.capture());
         assertEquals("OLD", captor.getValue().getBefore().get("production:801").get("engineNumber"));
         assertEquals("NEW", captor.getValue().getAfter().get("production:801").get("engineNumber"));
+    }
+
+    @Test
+    void updateRejectsWhenStageWriteDoesNotAffectExactlyOneRow() {
+        when(vehicleMapper.selectByIdForUpdate(80L))
+                .thenReturn(vehicle(80L, "VIN00000000000080", "COMPLETED"));
+        VehProduction production = new VehProduction();
+        production.setId(801L);
+        production.setVehicleId(80L);
+        when(vehProductionMapper.selectByIdForUpdate(801L)).thenReturn(production);
+        stubActiveMasterData();
+        when(vehProductionMapper.update(isNull(), any())).thenReturn(0);
+        VehicleCorrectionUpdateRequest request = new VehicleCorrectionUpdateRequest();
+        request.setProduction(validProduction(801L));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.updateCorrection(80L, request));
+
+        assertEquals(ErrorCode.STAGE_DATA_NOT_FOUND.getCode(), ex.getCode());
+        verify(auditService, never()).recordSuccess(any());
     }
 
     @Test
@@ -210,7 +254,7 @@ class VehicleCorrectionServiceImplTest {
                 () -> service.updateCorrection(80L, request));
 
         assertEquals(ErrorCode.CORRECTION_RECORD_MISMATCH.getCode(), ex.getCode());
-        verify(vehPaymentMapper, never()).updateById(any());
+        verify(vehPaymentMapper, never()).update(isNull(), any());
         verify(auditService, never()).recordSuccess(any());
     }
 
@@ -305,7 +349,7 @@ class VehicleCorrectionServiceImplTest {
                 () -> service.updateCorrection(80L, request));
 
         assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
-        verify(vehInboundMapper, never()).updateById(any());
+        verify(vehInboundMapper, never()).update(isNull(), any());
         verify(auditService, never()).recordSuccess(any());
     }
 
@@ -326,7 +370,7 @@ class VehicleCorrectionServiceImplTest {
                 () -> service.updateCorrection(80L, request));
 
         assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
-        verify(vehInboundMapper, never()).updateById(any());
+        verify(vehInboundMapper, never()).update(isNull(), any());
         verify(auditService, never()).recordSuccess(any());
     }
 
@@ -345,7 +389,7 @@ class VehicleCorrectionServiceImplTest {
                 () -> service.updateCorrection(80L, request));
 
         assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
-        verify(vehDeliveryMapper, never()).updateById(any());
+        verify(vehDeliveryMapper, never()).update(isNull(), any());
         verify(auditService, never()).recordSuccess(any());
     }
 
@@ -376,8 +420,8 @@ class VehicleCorrectionServiceImplTest {
 
         service.updateCorrection(80L, request);
 
-        verify(vehInboundMapper).updateById(inbound);
-        verify(vehDeliveryMapper).updateById(delivery);
+        verify(vehInboundMapper).update(isNull(), any());
+        verify(vehDeliveryMapper).update(isNull(), any());
         verify(auditService).recordSuccess(any());
     }
 
@@ -397,7 +441,7 @@ class VehicleCorrectionServiceImplTest {
                 () -> service.updateCorrection(80L, request));
 
         assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
-        verify(vehProductionMapper, never()).updateById(any());
+        verify(vehProductionMapper, never()).update(isNull(), any());
     }
 
     @Test
@@ -436,7 +480,7 @@ class VehicleCorrectionServiceImplTest {
                 () -> service.updateCorrection(80L, request));
 
         assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
-        verify(vehAllocationMapper, never()).updateById(any());
+        verify(vehAllocationMapper, never()).update(isNull(), any());
     }
 
     @Test
@@ -474,6 +518,46 @@ class VehicleCorrectionServiceImplTest {
                     record.setId(807L);
                     record.setVehicleId(80L);
                     when(vehRegistrationMapper.selectByIdForUpdate(807L)).thenReturn(record);
+        });
+    }
+
+    @Test
+    void updateRejectsBlankDictionaryValues() {
+        assertInvalidDictionary(requestWithAllocation(805L, "   "),
+                "sales_status", () -> {
+                    VehAllocation record = new VehAllocation();
+                    record.setId(805L);
+                    record.setVehicleId(80L);
+                    when(vehAllocationMapper.selectByIdForUpdate(805L)).thenReturn(record);
+                    doReturn(1L).when(dealerMapper).selectCount(any());
+                });
+        InvoiceCorrection invoice = invoiceChange(803L);
+        invoice.setInvoiceType("   ");
+        assertInvalidDictionary(requestWithInvoices(invoice),
+                "invoice_status", () -> {
+                    VehInvoice record = invoice(803L, 80L, 1);
+                    when(vehInvoiceMapper.selectByIdForUpdate(803L)).thenReturn(record);
+                });
+        assertInvalidDictionary(requestWithPayment(802L, "   "),
+                "payment_status", () -> {
+                    VehPayment record = new VehPayment();
+                    record.setId(802L);
+                    record.setVehicleId(80L);
+                    when(vehPaymentMapper.selectByIdForUpdate(802L)).thenReturn(record);
+                });
+        assertInvalidDictionary(requestWithDelivery(806L, "   "),
+                "delivery_status", () -> {
+                    VehDelivery record = new VehDelivery();
+                    record.setId(806L);
+                    record.setVehicleId(80L);
+                    when(vehDeliveryMapper.selectByIdForUpdate(806L)).thenReturn(record);
+                });
+        assertInvalidDictionary(requestWithRegistration(807L, "   "),
+                "drosstech_status", () -> {
+                    VehRegistration record = new VehRegistration();
+                    record.setId(807L);
+                    record.setVehicleId(80L);
+                    when(vehRegistrationMapper.selectByIdForUpdate(807L)).thenReturn(record);
                 });
     }
 
@@ -490,7 +574,7 @@ class VehicleCorrectionServiceImplTest {
                 () -> service.updateCorrection(80L, request));
 
         assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
-        verify(vehDeliveryMapper, never()).updateById(any());
+        verify(vehDeliveryMapper, never()).update(isNull(), any());
     }
 
     @Test
@@ -505,7 +589,7 @@ class VehicleCorrectionServiceImplTest {
                 () -> service.updateCorrection(80L, request));
 
         assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
-        verify(vehDeliveryMapper, never()).updateById(any());
+        verify(vehDeliveryMapper, never()).update(isNull(), any());
     }
 
     @Test
@@ -571,13 +655,25 @@ class VehicleCorrectionServiceImplTest {
         when(vehicleMapper.selectByIdForUpdate(80L))
                 .thenReturn(vehicle(80L, "VIN00000000000080", "COMPLETED"));
         stageStub.run();
-        when(statusLabelService.dictLabels(dictCode)).thenReturn(Map.of("VALID", "Valid"));
+        lenient().when(statusLabelService.dictLabels(dictCode))
+                .thenReturn(Map.of("VALID", "Valid"));
 
         BusinessException ex = assertThrows(BusinessException.class,
                 () -> service.updateCorrection(80L, request));
 
         assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+        verifyNoStageUpdate();
         verify(auditService, never()).recordSuccess(any());
+    }
+
+    private void verifyNoStageUpdate() {
+        verify(vehProductionMapper, never()).update(isNull(), any());
+        verify(vehInboundMapper, never()).update(isNull(), any());
+        verify(vehAllocationMapper, never()).update(isNull(), any());
+        verify(vehInvoiceMapper, never()).update(isNull(), any());
+        verify(vehPaymentMapper, never()).update(isNull(), any());
+        verify(vehDeliveryMapper, never()).update(isNull(), any());
+        verify(vehRegistrationMapper, never()).update(isNull(), any());
     }
 
     private void stubDelivery(Long id) {

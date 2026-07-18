@@ -21,6 +21,7 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -121,6 +122,31 @@ class VehicleCorrectionServiceIntegrationTest {
         assertEquals("SUCCESS", jdbcTemplate.queryForObject(
                 "SELECT result FROM sys_operation_log WHERE operation=?",
                 String.class, CORRECTION_OPERATION));
+    }
+
+    @Test
+    @WithMockUser(username = "correction-admin")
+    void correctionCanClearOptionalDateAndRemarkInDatabaseAndAudit() throws Exception {
+        VehicleCorrectionUpdateRequest request = validProductionRequest("NEW-ENGINE");
+        request.getProduction().setOfflineEpmbDate(null);
+        request.getProduction().setRemark1(null);
+
+        service.updateCorrection(90L, request);
+
+        assertNull(jdbcTemplate.queryForObject(
+                "SELECT offline_epmb_date FROM t_veh_production WHERE id=901", LocalDate.class));
+        assertNull(jdbcTemplate.queryForObject(
+                "SELECT remark1 FROM t_veh_production WHERE id=901", String.class));
+
+        String params = jdbcTemplate.queryForObject(
+                "SELECT params FROM sys_operation_log WHERE operation=?",
+                String.class, CORRECTION_OPERATION);
+        JsonNode after = objectMapper.readTree(params)
+                .path("after").path("production:901");
+        assertTrue(after.has("offlineEpmbDate"));
+        assertTrue(after.path("offlineEpmbDate").isNull());
+        assertTrue(after.has("remark1"));
+        assertTrue(after.path("remark1").isNull());
     }
 
     private VehicleCorrectionUpdateRequest validProductionRequest(String engineNumber) {

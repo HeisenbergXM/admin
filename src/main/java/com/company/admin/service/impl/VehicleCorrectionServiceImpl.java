@@ -1,6 +1,7 @@
 package com.company.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
@@ -191,7 +192,21 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         entity.setOfflineEpmbDate(change.getOfflineEpmbDate());
         entity.setEpmbOkDate(change.getEpmbOkDate());
         entity.setRemark1(change.getRemark1());
-        vehProductionMapper.updateById(entity);
+        requireSingleStageUpdate(vehProductionMapper.update(null,
+                new LambdaUpdateWrapper<VehProduction>()
+                        .eq(VehProduction::getId, entity.getId())
+                        .eq(VehProduction::getDeleted, 0)
+                        .set(VehProduction::getModelId, change.getModelId())
+                        .set(VehProduction::getExteriorColorId, change.getExteriorColorId())
+                        .set(VehProduction::getInteriorColorId, change.getInteriorColorId())
+                        .set(VehProduction::getEngineNumber, change.getEngineNumber())
+                        .set(VehProduction::getYearMake, change.getYearMake())
+                        .set(VehProduction::getMaterial, change.getMaterial())
+                        .set(VehProduction::getShipment, change.getShipment())
+                        .set(VehProduction::getBatch, change.getBatch())
+                        .set(VehProduction::getOfflineEpmbDate, change.getOfflineEpmbDate())
+                        .set(VehProduction::getEpmbOkDate, change.getEpmbOkDate())
+                        .set(VehProduction::getRemark1, change.getRemark1())));
         diff.after("production", entity.getId(), productionValues(entity));
     }
 
@@ -207,7 +222,13 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         entity.setSaicBuyOffDate(change.getSaicBuyOffDate());
         entity.setDateToStorageYard(change.getDateToStorageYard());
         entity.setRemark2(change.getRemark2());
-        vehInboundMapper.updateById(entity);
+        requireSingleStageUpdate(vehInboundMapper.update(null,
+                new LambdaUpdateWrapper<VehInbound>()
+                        .eq(VehInbound::getId, entity.getId())
+                        .eq(VehInbound::getDeleted, 0)
+                        .set(VehInbound::getSaicBuyOffDate, change.getSaicBuyOffDate())
+                        .set(VehInbound::getDateToStorageYard, change.getDateToStorageYard())
+                        .set(VehInbound::getRemark2, change.getRemark2())));
         diff.after("inbound", entity.getId(), inboundValues(entity));
     }
 
@@ -226,7 +247,14 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         entity.setDealerId(change.getDealerId());
         entity.setSalesStatus(change.getSalesStatus());
         entity.setRemark3(change.getRemark3());
-        vehAllocationMapper.updateById(entity);
+        requireSingleStageUpdate(vehAllocationMapper.update(null,
+                new LambdaUpdateWrapper<VehAllocation>()
+                        .eq(VehAllocation::getId, entity.getId())
+                        .eq(VehAllocation::getDeleted, 0)
+                        .set(VehAllocation::getAllocatedDate, change.getAllocatedDate())
+                        .set(VehAllocation::getDealerId, change.getDealerId())
+                        .set(VehAllocation::getSalesStatus, change.getSalesStatus())
+                        .set(VehAllocation::getRemark3, change.getRemark3())));
         diff.after("allocation", entity.getId(), allocationValues(entity));
     }
 
@@ -239,7 +267,14 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         entity.setInvoiceNo(change.getInvoiceNo());
         entity.setInvoiceDate(change.getInvoiceDate());
         entity.setRemark(change.getRemark());
-        vehInvoiceMapper.updateById(entity);
+        requireSingleStageUpdate(vehInvoiceMapper.update(null,
+                new LambdaUpdateWrapper<VehInvoice>()
+                        .eq(VehInvoice::getId, entity.getId())
+                        .eq(VehInvoice::getDeleted, 0)
+                        .set(VehInvoice::getInvoiceType, change.getInvoiceType())
+                        .set(VehInvoice::getInvoiceNo, change.getInvoiceNo())
+                        .set(VehInvoice::getInvoiceDate, change.getInvoiceDate())
+                        .set(VehInvoice::getRemark, change.getRemark())));
         diff.after("invoice", entity.getId(), invoiceValues(entity));
     }
 
@@ -253,7 +288,14 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         entity.setCreditFullPaymentDate(change.getCreditFullPaymentDate());
         entity.setPaymentStatus(change.getPaymentStatus());
         entity.setRemark5(change.getRemark5());
-        vehPaymentMapper.updateById(entity);
+        requireSingleStageUpdate(vehPaymentMapper.update(null,
+                new LambdaUpdateWrapper<VehPayment>()
+                        .eq(VehPayment::getId, entity.getId())
+                        .eq(VehPayment::getDeleted, 0)
+                        .set(VehPayment::getPaymentDate, change.getPaymentDate())
+                        .set(VehPayment::getCreditFullPaymentDate, change.getCreditFullPaymentDate())
+                        .set(VehPayment::getPaymentStatus, change.getPaymentStatus())
+                        .set(VehPayment::getRemark5, change.getRemark5())));
         diff.after("payment", entity.getId(), paymentValues(entity));
     }
 
@@ -282,7 +324,17 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         entity.setReceivedDate(change.getReceivedDate());
         entity.setDeliveryStatus(change.getDeliveryStatus());
         entity.setRemark7(change.getRemark7());
-        vehDeliveryMapper.updateById(entity);
+        requireSingleStageUpdate(vehDeliveryMapper.update(null,
+                new LambdaUpdateWrapper<VehDelivery>()
+                        .eq(VehDelivery::getId, entity.getId())
+                        .eq(VehDelivery::getDeleted, 0)
+                        .set(VehDelivery::getEtdToDealer, change.getEtdToDealer())
+                        .set(VehDelivery::getEtaToDealer, change.getEtaToDealer())
+                        .set(VehDelivery::getTrollyType, change.getTrollyType())
+                        .set(VehDelivery::getFullyLoad, change.getFullyLoad())
+                        .set(VehDelivery::getReceivedDate, change.getReceivedDate())
+                        .set(VehDelivery::getDeliveryStatus, change.getDeliveryStatus())
+                        .set(VehDelivery::getRemark7, change.getRemark7())));
         diff.after("delivery", entity.getId(), deliveryValues(entity));
     }
 
@@ -297,8 +349,22 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         entity.setRegistrationDate(change.getRegistrationDate());
         entity.setCustomerRegion(change.getCustomerRegion());
         entity.setRemark8(change.getRemark8());
-        vehRegistrationMapper.updateById(entity);
+        requireSingleStageUpdate(vehRegistrationMapper.update(null,
+                new LambdaUpdateWrapper<VehRegistration>()
+                        .eq(VehRegistration::getId, entity.getId())
+                        .eq(VehRegistration::getDeleted, 0)
+                        .set(VehRegistration::getDrosstechStatus, change.getDrosstechStatus())
+                        .set(VehRegistration::getUploadDate, change.getUploadDate())
+                        .set(VehRegistration::getRegistrationDate, change.getRegistrationDate())
+                        .set(VehRegistration::getCustomerRegion, change.getCustomerRegion())
+                        .set(VehRegistration::getRemark8, change.getRemark8())));
         diff.after("registration", entity.getId(), registrationValues(entity));
+    }
+
+    private void requireSingleStageUpdate(int updatedRows) {
+        if (updatedRows != 1) {
+            throw new BusinessException(ErrorCode.STAGE_DATA_NOT_FOUND);
+        }
     }
 
     private <T> T requireOwned(T entity, Long ownerVehicleId, Long requestedVehicleId) {
@@ -312,8 +378,11 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
     }
 
     private void requireDictionary(String dictCode, String value) {
-        if (value == null || value.isBlank()) {
+        if (value == null) {
             return;
+        }
+        if (value.isBlank()) {
+            throw badRequest("字典值不能为空: " + dictCode);
         }
         Map<String, String> labels = statusLabelService.dictLabels(dictCode);
         if (labels == null || !labels.containsKey(value)) {
