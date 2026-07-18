@@ -43,8 +43,8 @@ public class PoiVehicleCorrectionExcelExporter implements VehicleCorrectionExcel
             new Group(14, 16, "物流部门维护", (short) 2, -0.24998),
             new Group(17, 20, "销售部门维护", (short) 8, 0.59999),
             new Group(21, 24, "财务部门第一次维护（发票种类）", (short) 6, 0.59999),
-            new Group(25, 28, "财务部门第二次维护（收款状态）", (short) 9, 0.59999),
-            new Group(29, 32, "财务部门第三次维护（如果第一次发票为 Proforma Invoice）", (short) 9, 0.59999),
+            new Group(25, 28, "财务部门第二次维护（收款状态）\t\t", (short) 9, 0.59999),
+            new Group(29, 32, "财务部门第三次维护（如果第一次发票为 Proforma Invoice）\t\t", (short) 9, 0.59999),
             new Group(33, 39, "物流部门负责维护", (short) 2, -0.24998),
             new Group(40, 44, "销售部门根据列X维护", (short) 8, 0.59999)
     };
