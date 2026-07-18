@@ -693,6 +693,71 @@ Authorization: Bearer <token>
 
 管理员完整车辆分页查询。查询参数与 `GET /api/vehicles` 一致（`pageNum`、`pageSize`、`vin`、`modelId`、`modelName`、`series`、`lifecycleStage`、`dealerId`），但不固定生命周期阶段，可查询任意进行中或已完成车辆。
 
+返回类型为：
+
+```text
+Result<PageResult<VehicleCorrectionListResponse>>
+```
+
+`VehicleCorrectionListResponse.id` 是车辆主键，只用于打开修订详情，不是主表展示列。其余 45 个可见属性与主表/导出文件按 A:AS 的顺序完全一致：
+
+| 列 | 表头 | 响应属性 |
+|------|------|------|
+| 元数据 | 非展示 | `id` |
+| A | NO. | `no` |
+| B | MODEL | `model` |
+| C | EXTERIOR COLOR | `exteriorColor` |
+| D | INTERIOR COLOR | `interiorColor` |
+| E | VIN NUMBER | `vinNumber` |
+| F | ENGINE NUMBER | `engineNumber` |
+| G | MODEL CODE | `modelCode` |
+| H | Year Make | `yearMake` |
+| I | Material | `material` |
+| J | Shipment | `shipment` |
+| K | Batch | `batch` |
+| L | Offline EPMB | `offlineEpmb` |
+| M | EPMB ok | `epmbOk` |
+| N | Remark1 | `remark1` |
+| O | SAIC buy off | `saicBuyOff` |
+| P | Date to Strogare Yard | `dateToStorageYard` |
+| Q | remark2 | `remark2` |
+| R | Allocated Date | `allocatedDate` |
+| S | Dealer Code | `dealerCode` |
+| T | Dealer | `dealer` |
+| U | Remark3 | `remark3` |
+| V | Status1 | `status1` |
+| W | Invoice# | `invoiceNo1` |
+| X | Invoice Date | `invoiceDate1` |
+| Y | remark4 | `remark4` |
+| Z | Payment Date | `paymentDate` |
+| AA | Credit Full Payment Date | `creditFullPaymentDate` |
+| AB | Payment Status | `paymentStatus` |
+| AC | remark5 | `remark5` |
+| AD | Status2 | `status2` |
+| AE | Invoice# | `invoiceNo2` |
+| AF | Invoice Date | `invoiceDate2` |
+| AG | remark6 | `remark6` |
+| AH | ETD to Dealer | `etdToDealer` |
+| AI | ETA to Dealer | `etaToDealer` |
+| AJ | Trolly type / 4 units/ 6units | `trollyType` |
+| AK | Fully load or not | `fullyLoad` |
+| AL | Received date by Dealer | `receivedDateByDealer` |
+| AM | Delivery Status | `deliveryStatus` |
+| AN | remark7 | `remark7` |
+| AO | Drosstech Status | `drosstechStatus` |
+| AP | Upload Date | `uploadDate` |
+| AQ | Registration | `registration` |
+| AR | Customer region | `customerRegion` |
+| AS | remark8 | `remark8` |
+
+#### GET /api/vehicle-corrections/export
+
+**权限：** `vlm:vehicle-correction:export`
+
+请求筛选参数与分页列表相同（`pageNum`、`pageSize`、`vin`、`modelId`、`modelName`、`series`、`lifecycleStage`、`dealerId`），但 `pageNum`、`pageSize` 不限制导出范围；其余筛选条件仍然生效。接口导出当前筛选条件下的全部车辆，返回 `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` 文件。
+
+文件包含与 `Sample of Master Sheet.xlsx` 一致的 45 列第一层表头、部门分组第二层表头及 8 个合并区域；数据从第 3 行开始。导出列顺序与上述列表响应的 45 个可见属性完全一致。
+
 #### GET /api/vehicle-corrections/{vehicleId}
 
 **权限：** `vlm:vehicle-correction:list`
