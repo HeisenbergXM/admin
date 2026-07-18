@@ -158,8 +158,18 @@ class PoiVehicleCorrectionExcelExporterTest {
             }
 
             assertHeaderStyle(workbook, sheet.getRow(0).getCell(0));
-            assertDepartmentStyle(workbook, sheet.getRow(1).getCell(1), 12, 3, 0.74999);
-            assertDepartmentStyle(workbook, sheet.getRow(1).getCell(25), 11, 9, 0.59999);
+            assertFillArgb(sheet.getRow(0).getCell(0), "FFFFFFFF");
+            assertFillArgb(sheet.getRow(1).getCell(0), "FFFFFFFF");
+            assertDepartmentStyle(workbook, sheet.getRow(1).getCell(1), 12);
+            assertDepartmentStyle(workbook, sheet.getRow(1).getCell(25), 11);
+            int[] departmentColumns = {1, 14, 17, 21, 25, 29, 33, 40};
+            String[] departmentFillArgb = {
+                    "FFF9F9F9", "FF333F50", "FFB4C6E7", "FFD9D9D9",
+                    "FFC6E0B4", "FFC6E0B4", "FF333F50", "FFB4C6E7"
+            };
+            for (int index = 0; index < departmentColumns.length; index++) {
+                assertFillArgb(sheet.getRow(1).getCell(departmentColumns[index]), departmentFillArgb[index]);
+            }
             assertDataStyle(workbook, sheet.getRow(2).getCell(0));
         }
     }
@@ -291,7 +301,7 @@ class PoiVehicleCorrectionExcelExporterTest {
                 LocalDate.of(2026, 1, 14), "customer-region-44", "remark8-45");
     }
 
-    private void assertDepartmentStyle(Workbook workbook, Cell cell, int fontSize, int theme, double tint) {
+    private void assertDepartmentStyle(Workbook workbook, Cell cell, int fontSize) {
         CellStyle style = cell.getCellStyle();
         Font font = workbook.getFontAt(style.getFontIndexAsInt());
         assertEquals("Microsoft YaHei", font.getFontName());
@@ -301,9 +311,12 @@ class PoiVehicleCorrectionExcelExporterTest {
         assertEquals(VerticalAlignment.CENTER, style.getVerticalAlignment());
         assertTrue(style.getWrapText());
         assertThinBorders(style);
-        XSSFCellStyle xssfStyle = (XSSFCellStyle) style;
-        assertEquals(theme, xssfStyle.getFillForegroundXSSFColor().getTheme());
-        assertEquals(tint, xssfStyle.getFillForegroundXSSFColor().getTint(), 0.000001);
+    }
+
+    private void assertFillArgb(Cell cell, String expectedArgb) {
+        XSSFCellStyle style = (XSSFCellStyle) cell.getCellStyle();
+        assertNotNull(style.getFillForegroundXSSFColor());
+        assertEquals(expectedArgb, style.getFillForegroundXSSFColor().getARGBHex());
     }
 
     private void assertDataStyle(Workbook workbook, Cell cell) {

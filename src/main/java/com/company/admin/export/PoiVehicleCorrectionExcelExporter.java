@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.List;
 
 @Component
@@ -39,14 +40,14 @@ public class PoiVehicleCorrectionExcelExporter implements VehicleCorrectionExcel
     };
 
     private static final Group[] GROUPS = {
-            new Group(1, 13, "生产部门维护", (short) 3, 0.74999),
-            new Group(14, 16, "物流部门维护", (short) 2, -0.24998),
-            new Group(17, 20, "销售部门维护", (short) 8, 0.59999),
-            new Group(21, 24, "财务部门第一次维护（发票种类）", (short) 6, 0.59999),
-            new Group(25, 28, "财务部门第二次维护（收款状态）\t\t", (short) 9, 0.59999),
-            new Group(29, 32, "财务部门第三次维护（如果第一次发票为 Proforma Invoice）\t\t", (short) 9, 0.59999),
-            new Group(33, 39, "物流部门负责维护", (short) 2, -0.24998),
-            new Group(40, 44, "销售部门根据列X维护", (short) 8, 0.59999)
+            new Group(1, 13, "生产部门维护", "F9F9F9"),
+            new Group(14, 16, "物流部门维护", "333F50"),
+            new Group(17, 20, "销售部门维护", "B4C6E7"),
+            new Group(21, 24, "财务部门第一次维护（发票种类）", "D9D9D9"),
+            new Group(25, 28, "财务部门第二次维护（收款状态）\t\t", "C6E0B4"),
+            new Group(29, 32, "财务部门第三次维护（如果第一次发票为 Proforma Invoice）\t\t", "C6E0B4"),
+            new Group(33, 39, "物流部门负责维护", "333F50"),
+            new Group(40, 44, "销售部门根据列X维护", "B4C6E7")
     };
 
     private static final int[] COLUMN_WIDTHS = {
@@ -133,7 +134,7 @@ public class PoiVehicleCorrectionExcelExporter implements VehicleCorrectionExcel
         font.setBold(true);
         font.setColor(IndexedColors.BLACK.getIndex());
         style.setFont(font);
-        style.setFillForegroundColor(themeColor((short) 0, 0));
+        style.setFillForegroundColor(rgbColor("FFFFFF"));
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -150,7 +151,7 @@ public class PoiVehicleCorrectionExcelExporter implements VehicleCorrectionExcel
         font.setBold(true);
         font.setColor(IndexedColors.BLACK.getIndex());
         style.setFont(font);
-        style.setFillForegroundColor(themeColor(group.theme(), group.tint()));
+        style.setFillForegroundColor(rgbColor(group.rgb()));
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         style.setAlignment(HorizontalAlignment.CENTER);
         style.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -170,11 +171,8 @@ public class PoiVehicleCorrectionExcelExporter implements VehicleCorrectionExcel
         return style;
     }
 
-    private XSSFColor themeColor(short theme, double tint) {
-        XSSFColor color = new XSSFColor(new DefaultIndexedColorMap());
-        color.setTheme(theme);
-        color.setTint(tint);
-        return color;
+    private XSSFColor rgbColor(String rgb) {
+        return new XSSFColor(HexFormat.of().parseHex(rgb), new DefaultIndexedColorMap());
     }
 
     private void setBorders(CellStyle style, IndexedColors color) {
@@ -201,6 +199,6 @@ public class PoiVehicleCorrectionExcelExporter implements VehicleCorrectionExcel
                 row.getUploadDate(), row.getRegistration(), row.getCustomerRegion(), row.getRemark8());
     }
 
-    private record Group(int firstColumn, int lastColumn, String title, short theme, double tint) {
+    private record Group(int firstColumn, int lastColumn, String title, String rgb) {
     }
 }
