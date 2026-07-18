@@ -44,6 +44,7 @@ class VehicleCorrectionMenuSqlTest {
     private String resource(String path) throws IOException {
         InputStream stream = getClass().getResourceAsStream(path);
         assertNotNull(stream, "Missing SQL resource: " + path);
-        return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        return new String(stream.readAllBytes(), StandardCharsets.UTF_8)
+                .replace("\r\n", "\n");
     }
 }
