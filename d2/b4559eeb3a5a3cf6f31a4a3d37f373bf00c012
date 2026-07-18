@@ -1,0 +1,24 @@
+src/main/resources/sql/d00004_vehicle_stage_todo_correction_migration.sql
+  s_c11fd4e0062f48::t_8110fffd38232f 6
+  s_c11fd4e0062f48::t_bd13c9e5ee7958 7,35-39
+src/main/resources/sql/admin_system.sql
+  s_c11fd4e0062f48::t_5e3546a418d8b9 183,475
+src/test/java/com/company/admin/sql/VehicleCorrectionMenuSqlTest.java
+  s_c11fd4e0062f48::t_a50f0b4b858244 23,27-28,37,40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d2b4559eeb3a5a3cf6f31a4a3d37f373bf00c012",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
