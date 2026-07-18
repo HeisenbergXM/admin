@@ -86,7 +86,7 @@ CREATE TABLE `sys_menu`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1114 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '菜单/权限表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 1122 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '菜单/权限表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_menu
@@ -118,6 +118,7 @@ INSERT INTO `sys_menu` VALUES (113, 110, '内饰颜色', 2, '/master-data/interi
 INSERT INTO `sys_menu` VALUES (114, 110, '经销商维护', 2, '/master-data/dealer', 'sys:master:list', 'dealer', 104, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
 INSERT INTO `sys_menu` VALUES (120, 0, '生产管理', 1, '/production', NULL, 'production', 110, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
 INSERT INTO `sys_menu` VALUES (121, 120, '车辆录入', 2, '/production/vehicle', 'sys:vehicle:list', 'vehicle', 111, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
+INSERT INTO `sys_menu` VALUES (122, 120, '车辆数据修订', 2, '/production/vehicle-correction', 'vlm:vehicle-correction:list', 'edit', 112, 1, '2026-07-18 00:00:00', '2026-07-18 00:00:00', 0);
 INSERT INTO `sys_menu` VALUES (130, 0, '运输管理', 1, '/transport', NULL, 'transport', 120, 1, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
 INSERT INTO `sys_menu` VALUES (131, 130, '车厂到仓库', 2, '/transport/inbound', 'vlm:transport:list', 'inbound', 121, 0, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
 INSERT INTO `sys_menu` VALUES (132, 130, '仓库到经销商', 2, '/transport/outbound', 'vlm:dispatch:list', 'outbound', 122, 0, '2026-07-01 22:53:08', '2026-07-01 22:53:08', 0);
@@ -177,6 +178,8 @@ INSERT INTO `sys_menu` VALUES (1110, 134, '配送查询', 3, NULL, 'vlm:delivery
 INSERT INTO `sys_menu` VALUES (1111, 134, '配送新增', 3, NULL, 'vlm:delivery:add', NULL, 1111, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
 INSERT INTO `sys_menu` VALUES (1112, 134, '配送编辑', 3, NULL, 'vlm:delivery:edit', NULL, 1112, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
 INSERT INTO `sys_menu` VALUES (1113, 134, '配送确认', 3, NULL, 'vlm:delivery:confirm', NULL, 1113, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (1120, 122, '车辆修订查询', 3, NULL, 'vlm:vehicle-correction:list', NULL, 1120, 1, '2026-07-18 00:00:00', '2026-07-18 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (1121, 122, '车辆修订编辑', 3, NULL, 'vlm:vehicle-correction:edit', NULL, 1121, 1, '2026-07-18 00:00:00', '2026-07-18 00:00:00', 0);
 
 -- ----------------------------
 -- Table structure for sys_operation_log
@@ -249,7 +252,7 @@ CREATE TABLE `sys_role_menu`  (
   `role_id` bigint NOT NULL COMMENT '角色ID',
   `menu_id` bigint NOT NULL COMMENT '菜单ID',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 291 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色-菜单关联表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 294 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '角色-菜单关联表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_role_menu
@@ -465,6 +468,9 @@ INSERT INTO `sys_role_menu` VALUES (287, 105, 133);
 INSERT INTO `sys_role_menu` VALUES (288, 105, 134);
 INSERT INTO `sys_role_menu` VALUES (289, 105, 1100);
 INSERT INTO `sys_role_menu` VALUES (290, 105, 1110);
+INSERT INTO `sys_role_menu` VALUES (291, 1, 122);
+INSERT INTO `sys_role_menu` VALUES (292, 1, 1120);
+INSERT INTO `sys_role_menu` VALUES (293, 1, 1121);
 
 -- ----------------------------
 -- Table structure for sys_user
