@@ -1,0 +1,19 @@
+docs/superpowers/specs/2026-07-18-vehicle-stage-todo-and-correction-design.md
+  s_c11fd4e0062f48::t_e7efb0a5c73720 1-207
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "95c4daf69182b156a2b299f28fc37387173b1eaf",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
