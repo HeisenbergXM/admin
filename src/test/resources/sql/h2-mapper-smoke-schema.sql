@@ -1,3 +1,6 @@
+DROP TABLE IF EXISTS sys_operation_log;
+DROP TABLE IF EXISTS t_sys_dict_item;
+DROP TABLE IF EXISTS t_sys_dict_type;
 DROP TABLE IF EXISTS sys_user_role;
 DROP TABLE IF EXISTS sys_role_menu;
 DROP TABLE IF EXISTS sys_menu;
@@ -32,6 +35,10 @@ CREATE TABLE t_veh_inbound (
     remark2 VARCHAR(500),
     confirmed_by VARCHAR(50),
     confirmed_at TIMESTAMP,
+    created_by VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
@@ -48,6 +55,10 @@ CREATE TABLE t_veh_delivery (
     remark7 VARCHAR(500),
     confirmed_by VARCHAR(50),
     confirmed_at TIMESTAMP,
+    created_by VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
@@ -59,6 +70,19 @@ CREATE TABLE t_veh_production (
     year_make VARCHAR(20),
     exterior_color_id BIGINT,
     interior_color_id BIGINT,
+    engine_number VARCHAR(50),
+    material VARCHAR(100),
+    shipment VARCHAR(100),
+    batch VARCHAR(100),
+    offline_epmb_date DATE,
+    epmb_ok_date DATE,
+    remark1 VARCHAR(500),
+    confirmed_by VARCHAR(50),
+    confirmed_at TIMESTAMP,
+    created_by VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
@@ -68,18 +92,21 @@ CREATE TABLE t_md_model (
     series VARCHAR(100),
     spec VARCHAR(100),
     model_code VARCHAR(100),
+    status TINYINT NOT NULL DEFAULT 1,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE t_md_exterior_color (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     color_name VARCHAR(100),
+    status TINYINT NOT NULL DEFAULT 1,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE t_md_interior_color (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     color_name VARCHAR(100),
+    status TINYINT NOT NULL DEFAULT 1,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
@@ -91,6 +118,13 @@ CREATE TABLE t_veh_invoice (
     invoice_type VARCHAR(50),
     invoice_no VARCHAR(100),
     invoice_date DATE,
+    remark VARCHAR(500),
+    confirmed_by VARCHAR(50),
+    confirmed_at TIMESTAMP,
+    created_by VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
@@ -104,6 +138,10 @@ CREATE TABLE t_veh_payment (
     remark5 VARCHAR(500),
     confirmed_by VARCHAR(50),
     confirmed_at TIMESTAMP,
+    created_by VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
@@ -118,6 +156,10 @@ CREATE TABLE t_veh_registration (
     remark8 VARCHAR(500),
     confirmed_by VARCHAR(50),
     confirmed_at TIMESTAMP,
+    created_by VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
@@ -131,6 +173,10 @@ CREATE TABLE t_veh_allocation (
     remark3 VARCHAR(500),
     confirmed_by VARCHAR(50),
     confirmed_at TIMESTAMP,
+    created_by VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by VARCHAR(50),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted TINYINT NOT NULL DEFAULT 0
 );
 
@@ -138,7 +184,44 @@ CREATE TABLE t_md_dealer (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     dealer_code VARCHAR(50),
     dealer_name VARCHAR(100),
+    status TINYINT NOT NULL DEFAULT 1,
     deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE t_sys_dict_type (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    dict_code VARCHAR(50) NOT NULL,
+    dict_name VARCHAR(100) NOT NULL,
+    status TINYINT NOT NULL DEFAULT 1,
+    remark VARCHAR(200),
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE t_sys_dict_item (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    dict_type_id BIGINT NOT NULL,
+    item_value VARCHAR(100) NOT NULL,
+    item_label VARCHAR(100) NOT NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    status TINYINT NOT NULL DEFAULT 1,
+    remark VARCHAR(200),
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted TINYINT NOT NULL DEFAULT 0
+);
+
+CREATE TABLE sys_operation_log (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT,
+    username VARCHAR(100),
+    operation VARCHAR(100),
+    method VARCHAR(255),
+    params CLOB,
+    result CLOB,
+    ip VARCHAR(100),
+    create_time TIMESTAMP
 );
 
 CREATE TABLE sys_role (
