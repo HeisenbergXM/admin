@@ -180,6 +180,7 @@ INSERT INTO `sys_menu` VALUES (1112, 134, '配送编辑', 3, NULL, 'vlm:delivery
 INSERT INTO `sys_menu` VALUES (1113, 134, '配送确认', 3, NULL, 'vlm:delivery:confirm', NULL, 1113, 1, '2026-07-16 00:00:00', '2026-07-16 00:00:00', 0);
 INSERT INTO `sys_menu` VALUES (1120, 122, '车辆修订查询', 3, NULL, 'vlm:vehicle-correction:list', NULL, 1120, 1, '2026-07-18 00:00:00', '2026-07-18 00:00:00', 0);
 INSERT INTO `sys_menu` VALUES (1121, 122, '车辆修订编辑', 3, NULL, 'vlm:vehicle-correction:edit', NULL, 1121, 1, '2026-07-18 00:00:00', '2026-07-18 00:00:00', 0);
+INSERT INTO `sys_menu` VALUES (1122, 122, '车辆修订导出', 3, NULL, 'vlm:vehicle-correction:export', NULL, 1122, 1, '2026-07-18 00:00:00', '2026-07-18 00:00:00', 0);
 
 -- ----------------------------
 -- Table structure for sys_operation_log
@@ -471,6 +472,7 @@ INSERT INTO `sys_role_menu` VALUES (290, 105, 1110);
 INSERT INTO `sys_role_menu` VALUES (291, 1, 122);
 INSERT INTO `sys_role_menu` VALUES (292, 1, 1120);
 INSERT INTO `sys_role_menu` VALUES (293, 1, 1121);
+INSERT INTO `sys_role_menu` VALUES (294, 1, 1122);
 
 -- ----------------------------
 -- Table structure for sys_user

@@ -3,7 +3,8 @@ INSERT INTO `sys_menu`
 VALUES
   (122, 120, '车辆数据修订', 2, '/production/vehicle-correction', 'vlm:vehicle-correction:list', 'edit', 112, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
   (1120, 122, '车辆修订查询', 3, NULL, 'vlm:vehicle-correction:list', NULL, 1120, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
-  (1121, 122, '车辆修订编辑', 3, NULL, 'vlm:vehicle-correction:edit', NULL, 1121, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
+  (1121, 122, '车辆修订编辑', 3, NULL, 'vlm:vehicle-correction:edit', NULL, 1121, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+  (1122, 122, '车辆修订导出', 3, NULL, 'vlm:vehicle-correction:export', NULL, 1122, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
 ON DUPLICATE KEY UPDATE
   `parent_id` = VALUES(`parent_id`),
   `menu_name` = VALUES(`menu_name`),
@@ -30,4 +31,9 @@ INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
 SELECT 1, 1121
 WHERE NOT EXISTS (
     SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1121
+);
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+SELECT 1, 1122
+WHERE NOT EXISTS (
+    SELECT 1 FROM `sys_role_menu` WHERE `role_id` = 1 AND `menu_id` = 1122
 );
