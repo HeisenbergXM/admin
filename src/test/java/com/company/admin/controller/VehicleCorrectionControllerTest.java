@@ -3,6 +3,8 @@ package com.company.admin.controller;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
 import com.company.admin.common.PageResult;
+import com.company.admin.dto.request.VehicleQueryRequest;
+import com.company.admin.dto.response.VehicleCorrectionListResponse;
 import com.company.admin.entity.OperationLog;
 import com.company.admin.mapper.OperationLogMapper;
 import com.company.admin.service.VehicleCorrectionService;
@@ -20,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -31,6 +34,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -49,12 +54,45 @@ class VehicleCorrectionControllerTest {
     @Test
     @WithMockUser(authorities = "vlm:vehicle-correction:list")
     void listPermissionCanRead() throws Exception {
+        VehicleCorrectionListResponse response = new VehicleCorrectionListResponse();
+        response.setVinNumber("VIN90");
         when(vehicleCorrectionService.pageCorrections(any()))
-                .thenReturn(new PageResult<>(List.of(), 0, 1, 10));
+                .thenReturn(new PageResult<>(List.of(response), 1, 1, 10));
 
         mockMvc.perform(get("/api/vehicle-corrections"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(200));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.list[0].vinNumber").value("VIN90"));
+    }
+
+    @Test
+    @WithMockUser(authorities = "vlm:vehicle-correction:export")
+    void exportPermissionDownloadsFilteredWorkbook() throws Exception {
+        when(vehicleCorrectionService.exportCorrections(any())).thenReturn(new byte[]{1, 2, 3});
+
+        mockMvc.perform(get("/api/vehicle-corrections/export")
+                        .param("vin", "VIN90")
+                        .param("pageNum", "9")
+                        .param("pageSize", "5"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type",
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andExpect(header().string("Content-Disposition",
+                        matchesPattern("attachment;.*vehicle-corrections-\\d{14}\\.xlsx.*")))
+                .andExpect(content().bytes(new byte[]{1, 2, 3}));
+
+        ArgumentCaptor<VehicleQueryRequest> captor = ArgumentCaptor.forClass(VehicleQueryRequest.class);
+        verify(vehicleCorrectionService).exportCorrections(captor.capture());
+        assertEquals("VIN90", captor.getValue().getVin());
+    }
+
+    @Test
+    @WithMockUser(authorities = "vlm:vehicle-correction:list")
+    void listPermissionCannotExport() throws Exception {
+        mockMvc.perform(get("/api/vehicle-corrections/export"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(ErrorCode.FORBIDDEN.getCode()));
+        verify(vehicleCorrectionService, never()).exportCorrections(any());
     }
 
     @Test
