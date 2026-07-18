@@ -1,0 +1,21 @@
+src/test/java/com/company/admin/dto/request/VehicleCorrectionUpdateRequestTest.java
+  s_c11fd4e0062f48::t_c1eca655e0cf91 1-60
+src/main/java/com/company/admin/dto/request/VehicleCorrectionUpdateRequest.java
+  s_c11fd4e0062f48::t_99158fc9e37163 1-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0aa5aade61d3eb5ac6e0325b51f7ec3c869e1c55",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
