@@ -90,7 +90,7 @@ class VehicleCorrectionControllerTest {
 
         mockMvc.perform(put("/api/vehicle-corrections/90")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                        .content("{\"payment\":{\"id\":701,\"paymentDate\":\"2026-07-18\"}}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(ErrorCode.BAD_REQUEST.getCode()));
 
@@ -99,6 +99,9 @@ class VehicleCorrectionControllerTest {
         assertEquals("correction-admin", captor.getValue().getUsername());
         assertEquals("车辆数据修订", captor.getValue().getOperation());
         assertEquals("VehicleCorrectionController.update", captor.getValue().getMethod());
+        assertTrue(captor.getValue().getParams().contains("[90,"));
+        assertTrue(captor.getValue().getParams().contains("\"id\":701"));
+        assertTrue(captor.getValue().getParams().contains("\"paymentDate\":\"2026-07-18\""));
         assertTrue(captor.getValue().getResult().startsWith("异常:"));
     }
 }

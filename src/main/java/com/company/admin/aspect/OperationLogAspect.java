@@ -22,10 +22,11 @@ import java.time.LocalDateTime;
 public class OperationLogAspect {
 
     private final OperationLogMapper operationLogMapper;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    public OperationLogAspect(OperationLogMapper operationLogMapper) {
+    public OperationLogAspect(OperationLogMapper operationLogMapper, ObjectMapper objectMapper) {
         this.operationLogMapper = operationLogMapper;
+        this.objectMapper = objectMapper;
     }
 
     @Around("@annotation(com.company.admin.annotation.OpLog)")
