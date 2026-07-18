@@ -13,8 +13,9 @@
 3. [角色管理](#3-角色管理)
 4. [菜单管理](#4-菜单管理)
 5. [日志管理](#5-日志管理)
-6. [数据模型](#6-数据模型)
-7. [错误码](#7-错误码)
+6. [车辆生命周期与数据修订](#6-车辆生命周期与数据修订)
+7. [数据模型](#7-数据模型)
+8. [错误码](#8-错误码)
 
 ---
 
@@ -664,7 +665,103 @@ Authorization: Bearer <token>
 
 ---
 
-## 6. 数据模型
+## 6. 车辆生命周期与数据修订
+
+### 6.1 阶段待办列表规则
+
+所有面向业务操作人员的车辆/阶段列表均固定查询各自的**当前生命周期阶段**。调用方传入的 `lifecycleStage`、`stageStatus` 或 `CONFIRMED` 等筛选条件只能在该固定范围内进一步缩小结果，不能把已完成或其他阶段的历史数据重新查询出来。阶段确认成功后，车辆推进到下一阶段，并立即从原阶段的待办列表中消失。
+
+| 列表接口 | 固定生命周期阶段 | 用途 |
+|------|------|------|
+| `GET /api/vehicles` | `PENDING_OFFLINE` | 生产录入待办 |
+| `GET /api/inbounds` | `PENDING_INBOUND` | 入库待办 |
+| `GET /api/allocations` | `PENDING_ALLOCATION` | 销售分配待办 |
+| `GET /api/invoices` | `PENDING_INVOICE` | 发票待办 |
+| `GET /api/payments` | `PENDING_PAYMENT` | 收款待办 |
+| `GET /api/deliveries` | `PENDING_DELIVERY` | 配送待办 |
+| `GET /api/registrations` | `PENDING_REGISTRATION` | 上牌待办 |
+
+当前阶段尚未创建草稿记录的车辆，以及已创建草稿但尚未确认的车辆，都仍可在对应待办列表中出现；确认后的记录不提供通过 `CONFIRMED` 等参数回查历史的能力。需要查询或修订任意阶段历史数据时，应使用下述仅面向管理员的“车辆数据修订”接口。
+
+### 6.2 车辆数据修订
+
+“车辆数据修订”是确认后发现业务字段录入错误时的补救入口。它保留完整车辆历史，不受当前生命周期阶段限制；默认菜单与权限只授予 `ADMIN`，普通业务专员和业务主管没有访问权限。
+
+#### GET /api/vehicle-corrections
+
+**权限：** `vlm:vehicle-correction:list`
+
+管理员完整车辆分页查询。查询参数与 `GET /api/vehicles` 一致（`pageNum`、`pageSize`、`vin`、`modelId`、`modelName`、`series`、`lifecycleStage`、`dealerId`），但不固定生命周期阶段，可查询任意进行中或已完成车辆。
+
+#### GET /api/vehicle-corrections/{vehicleId}
+
+**权限：** `vlm:vehicle-correction:list`
+
+返回车辆全景聚合数据，包括生产、入库、销售分配、多张发票、收款、配送和上牌的既有数据。没有对应阶段记录时，单条阶段对象返回 `null`，发票返回空列表；不存在或已删除的车辆返回 `VEHICLE_NOT_FOUND`。
+
+#### PUT /api/vehicle-corrections/{vehicleId}
+
+**权限：** `vlm:vehicle-correction:edit`
+
+只更新请求中出现、且已经属于路径中 `vehicleId` 的既有阶段记录；本接口不创建阶段记录。每个传入阶段记录会在同一数据库事务中加锁并校验归属，任一步失败都会回滚本次请求的全部更新。成功后记录字段级的修改前后差异审计日志；失败请求仍由通用操作日志记录异常。
+
+请求体只接受以下七个嵌套对象；未出现的对象不修改。除可选字段外，`id` 必填；`invoices` 可以一次提交多条发票，但每一项的 `id` 必须唯一，且必须属于路径车辆。
+
+| 嵌套对象 | 可写字段 | 必填/校验规则 |
+|------|------|------|
+| `production` | `id`、`modelId`、`exteriorColorId`、`interiorColorId`、`engineNumber`、`yearMake`、`material`、`shipment`、`batch`、`offlineEpmbDate`、`epmbOkDate`、`remark1` | `id`、车型、内/外饰颜色和发动机号必填；车型及颜色必须为启用数据 |
+| `inbound` | `id`、`saicBuyOffDate`、`dateToStorageYard`、`remark2` | 已确认记录的两个日期均不可为空 |
+| `allocation` | `id`、`allocatedDate`、`dealerId`、`salesStatus`、`remark3` | `dealerId` 必填且必须为启用经销商；销售状态须为有效字典值 |
+| `invoices` | 数组项的 `id`、`invoiceType`、`invoiceNo`、`invoiceDate`、`remark` | 每项的 `id`、发票类型、发票号和发票日期必填；发票类型须为有效字典值 |
+| `payment` | `id`、`paymentDate`、`creditFullPaymentDate`、`paymentStatus`、`remark5` | `paymentDate` 必填；收款状态须为有效字典值 |
+| `delivery` | `id`、`etdToDealer`、`etaToDealer`、`trollyType`、`fullyLoad`、`receivedDate`、`deliveryStatus`、`remark7` | 已确认记录的签收日期不可为空；预计到达日不得早于发车日；拖运车类型仅限 `4 units` 或 `6 units`；配送状态须为有效字典值 |
+| `registration` | `id`、`drosstechStatus`、`uploadDate`、`registrationDate`、`customerRegion`、`remark8` | `customerRegion` 最长 100 字符；状态须为有效字典值 |
+
+请求示例：
+
+```json
+{
+  "production": {
+    "id": 101,
+    "modelId": 10,
+    "exteriorColorId": 20,
+    "interiorColorId": 30,
+    "engineNumber": "ENG-0001",
+    "yearMake": "2026",
+    "material": "M-01",
+    "shipment": "S-01",
+    "batch": "B-01",
+    "offlineEpmbDate": "2026-07-01",
+    "epmbOkDate": "2026-07-02",
+    "remark1": "修正生产信息"
+  },
+  "invoices": [
+    {
+      "id": 201,
+      "invoiceType": "PROFORMA_INVOICED",
+      "invoiceNo": "PI-202607-001",
+      "invoiceDate": "2026-07-03",
+      "remark": "修正发票号"
+    }
+  ],
+  "delivery": {
+    "id": 301,
+    "etdToDealer": "2026-07-04",
+    "etaToDealer": "2026-07-05",
+    "trollyType": "4 units",
+    "fullyLoad": true,
+    "receivedDate": "2026-07-05",
+    "deliveryStatus": "DELIVERED",
+    "remark7": "修正配送信息"
+  }
+}
+```
+
+VIN、车辆 ID、生命周期阶段、阶段处理状态（`stageStatus`）、发票序号、确认人/确认时间、创建/更新时间及删除标记均不在请求白名单内，无法通过本接口写入；接口也不会触发生命周期推进或阶段确认。
+
+---
+
+## 7. 数据模型
 
 ### User 用户
 
@@ -752,7 +849,7 @@ Authorization: Bearer <token>
 
 ---
 
-## 7. 错误码
+## 8. 错误码
 
 | 错误码 | 说明 |
 |--------|------|
@@ -770,6 +867,8 @@ Authorization: Bearer <token>
 | 4001 | Token 已过期 |
 | 4002 | Token 无效 |
 | 5000 | 系统内部错误 |
+| 6001 | 车辆不存在 |
+| 6018 | 修订记录与车辆不匹配 |
 
 ---
 
