@@ -39,7 +39,7 @@
             GROUP BY vehicle_id
         ) cnt ON cnt.vehicle_id = v.id
         WHERE v.deleted = 0
-          AND v.lifecycle_stage IN ('PENDING_INVOICE', 'PENDING_PAYMENT')
+          AND v.lifecycle_stage = 'PENDING_INVOICE'
         <if test="query.vin != null and query.vin != ''">
             AND v.vin LIKE CONCAT('%', #{query.vin}, '%')
         </if>

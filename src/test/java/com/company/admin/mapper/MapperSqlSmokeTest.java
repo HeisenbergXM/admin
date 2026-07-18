@@ -7,6 +7,7 @@ import com.company.admin.dto.request.InboundQueryRequest;
 import com.company.admin.dto.request.InvoiceQueryRequest;
 import com.company.admin.dto.request.PaymentQueryRequest;
 import com.company.admin.dto.request.RegistrationQueryRequest;
+import com.company.admin.dto.request.VehicleQueryRequest;
 import com.company.admin.dto.request.DeliverySaveRequest;
 import com.company.admin.dto.request.InboundSaveRequest;
 import com.company.admin.dto.response.AllocationResponse;
@@ -15,6 +16,7 @@ import com.company.admin.dto.response.InboundResponse;
 import com.company.admin.dto.response.InvoiceListResponse;
 import com.company.admin.dto.response.PaymentResponse;
 import com.company.admin.dto.response.RegistrationResponse;
+import com.company.admin.dto.response.VehicleListResponse;
 import com.company.admin.entity.Menu;
 import com.company.admin.entity.VehDelivery;
 import com.company.admin.entity.VehInbound;
@@ -74,6 +76,8 @@ class MapperSqlSmokeTest {
     private VehPaymentMapper vehPaymentMapper;
     @Autowired
     private VehRegistrationMapper vehRegistrationMapper;
+    @Autowired
+    private VehicleMapper vehicleMapper;
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -225,16 +229,15 @@ class MapperSqlSmokeTest {
     }
 
     @Test
-    void deliveryConfirmedFilterFindsAdvancedVehicle() {
-        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (45, 'VIN00000000000045', 'PENDING_REGISTRATION', 0)");
-        jdbcTemplate.update("INSERT INTO t_veh_delivery (vehicle_id, stage_status, delivery_status, deleted) VALUES (45, 'CONFIRMED', 'DELIVERED', 0)");
+    void deliveryConfirmedFilterExcludesAdvancedVehicle() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (65, 'VIN00000000000065', 'PENDING_REGISTRATION', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_delivery (vehicle_id, stage_status, delivery_status, deleted) VALUES (65, 'CONFIRMED', 'DELIVERED', 0)");
         DeliveryQueryRequest request = new DeliveryQueryRequest();
         request.setStageStatus("CONFIRMED");
 
         Page<DeliveryResponse> page = vehDeliveryMapper.selectDeliveryPage(new Page<>(1, 10), request);
 
-        assertEquals(List.of(45L), page.getRecords().stream().map(DeliveryResponse::getVehicleId).toList());
-        assertEquals("DELIVERED", page.getRecords().get(0).getDeliveryStatus());
+        assertTrue(page.getRecords().isEmpty());
     }
 
     @Test
@@ -266,9 +269,9 @@ class MapperSqlSmokeTest {
     }
 
     @Test
-    void inboundConfirmedFilterFindsAdvancedVehicleByStorageDate() {
-        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (22, 'VIN00000000000022', 'PENDING_ALLOCATION', 0)");
-        jdbcTemplate.update("INSERT INTO t_veh_inbound (vehicle_id, stage_status, date_to_storage_yard, deleted) VALUES (22, 'CONFIRMED', '2026-07-14', 0)");
+    void inboundConfirmedFilterExcludesAdvancedVehicleByStorageDate() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (61, 'VIN00000000000061', 'PENDING_ALLOCATION', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_inbound (vehicle_id, stage_status, date_to_storage_yard, deleted) VALUES (61, 'CONFIRMED', '2026-07-14', 0)");
         InboundQueryRequest request = new InboundQueryRequest();
         request.setStageStatus("CONFIRMED");
         request.setStorageStartDate(LocalDate.of(2026, 7, 14));
@@ -276,7 +279,65 @@ class MapperSqlSmokeTest {
 
         Page<InboundResponse> page = vehInboundMapper.selectInboundPage(new Page<>(1, 10), request);
 
-        assertEquals(List.of(22L), page.getRecords().stream().map(InboundResponse::getVehicleId).toList());
+        assertTrue(page.getRecords().isEmpty());
+    }
+
+    @Test
+    void vehiclePageExcludesAdvancedVehicle() {
+        jdbcTemplate.execute("ALTER TABLE t_vehicle ADD create_time TIMESTAMP");
+        jdbcTemplate.execute("ALTER TABLE t_vehicle ADD update_time TIMESTAMP");
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (60, 'VIN00000000000060', 'PENDING_INBOUND', 0)");
+
+        Page<VehicleListResponse> page = vehicleMapper.selectVehiclePage(
+                new Page<>(1, 10), new VehicleQueryRequest());
+
+        assertTrue(page.getRecords().isEmpty());
+    }
+
+    @Test
+    void allocationConfirmedFilterExcludesAdvancedVehicle() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (62, 'VIN00000000000062', 'PENDING_INVOICE', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_allocation (vehicle_id, stage_status, deleted) VALUES (62, 'CONFIRMED', 0)");
+        AllocationQueryRequest request = new AllocationQueryRequest();
+        request.setStageStatus("CONFIRMED");
+
+        Page<AllocationResponse> page = vehAllocationMapper.selectAllocationPage(new Page<>(1, 10), request);
+
+        assertTrue(page.getRecords().isEmpty());
+    }
+
+    @Test
+    void invoicePageExcludesAdvancedVehicle() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (63, 'VIN00000000000063', 'PENDING_PAYMENT', 0)");
+
+        Page<InvoiceListResponse> page = vehInvoiceMapper.selectInvoicePage(
+                new Page<>(1, 10), new InvoiceQueryRequest());
+
+        assertTrue(page.getRecords().isEmpty());
+    }
+
+    @Test
+    void paymentConfirmedFilterExcludesAdvancedVehicle() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (64, 'VIN00000000000064', 'PENDING_DELIVERY', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_payment (vehicle_id, stage_status, deleted) VALUES (64, 'CONFIRMED', 0)");
+        PaymentQueryRequest request = new PaymentQueryRequest();
+        request.setStageStatus("CONFIRMED");
+
+        Page<PaymentResponse> page = vehPaymentMapper.selectPaymentPage(new Page<>(1, 10), request);
+
+        assertTrue(page.getRecords().isEmpty());
+    }
+
+    @Test
+    void registrationConfirmedFilterExcludesAdvancedVehicle() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (66, 'VIN00000000000066', 'COMPLETED', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_registration (vehicle_id, stage_status, deleted) VALUES (66, 'CONFIRMED', 0)");
+        RegistrationQueryRequest request = new RegistrationQueryRequest();
+        request.setStageStatus("CONFIRMED");
+
+        Page<RegistrationResponse> page = vehRegistrationMapper.selectRegistrationPage(new Page<>(1, 10), request);
+
+        assertTrue(page.getRecords().isEmpty());
     }
 
     @Test

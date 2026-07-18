@@ -52,6 +52,7 @@
         <include refid="DeliveryColumns"/>
         <include refid="DeliveryJoins"/>
         WHERE v.deleted = 0
+        AND v.lifecycle_stage = 'PENDING_DELIVERY'
         <if test="query.vin != null and query.vin != ''">
             AND v.vin LIKE CONCAT('%', #{query.vin}, '%')
         </if>
@@ -62,9 +63,7 @@
             AND a.dealer_id = #{query.dealerId}
         </if>
         <choose>
-            <when test="query.stageStatus == null or query.stageStatus == '' or query.stageStatus == 'PENDING_DELIVERY'">
-                AND v.lifecycle_stage = 'PENDING_DELIVERY'
-            </when>
+            <when test="query.stageStatus == null or query.stageStatus == '' or query.stageStatus == 'PENDING_DELIVERY'"/>
             <when test="query.stageStatus == 'DRAFT' or query.stageStatus == 'CONFIRMED'">
                 AND dv.stage_status = #{query.stageStatus}
             </when>

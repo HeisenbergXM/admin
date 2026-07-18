@@ -63,6 +63,7 @@
         LEFT JOIN t_veh_allocation a ON a.vehicle_id = v.id AND a.deleted = 0
         LEFT JOIN t_md_dealer d ON d.id = a.dealer_id AND d.deleted = 0
         WHERE v.deleted = 0
+        AND v.lifecycle_stage = 'PENDING_OFFLINE'
         <if test="query.vin != null and query.vin != ''">
             AND v.vin LIKE CONCAT('%', #{query.vin}, '%')
         </if>

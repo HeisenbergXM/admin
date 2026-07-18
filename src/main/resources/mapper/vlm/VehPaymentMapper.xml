@@ -43,13 +43,12 @@
             AND p.payment_status = #{query.paymentStatus}
         </if>
         <choose>
-            <when test="query.stageStatus == 'PENDING_PAYMENT'">
-                AND v.lifecycle_stage = #{query.stageStatus}
+            <when test="query.stageStatus == null or query.stageStatus == '' or query.stageStatus == 'PENDING_PAYMENT'"/>
+            <when test="query.stageStatus == 'DRAFT' or query.stageStatus == 'CONFIRMED'">
+                AND p.stage_status = #{query.stageStatus}
             </when>
             <otherwise>
-                <if test="query.stageStatus != null and query.stageStatus != ''">
-                    AND p.stage_status = #{query.stageStatus}
-                </if>
+                AND 1 = 0
             </otherwise>
         </choose>
         <if test="query.hasFormalInvoice != null and query.hasFormalInvoice">
