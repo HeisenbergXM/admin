@@ -18,9 +18,6 @@ public interface VehicleMapper extends BaseMapper<Vehicle> {
     Page<VehicleListResponse> selectVehiclePage(Page<VehicleListResponse> page,
                                                 @Param("query") VehicleQueryRequest query);
 
-    Page<VehicleListResponse> selectVehicleCorrectionPage(Page<VehicleListResponse> page,
-                                                          @Param("query") VehicleQueryRequest query);
-
     Page<VehicleCorrectionListResponse> selectVehicleCorrectionMasterSheetPage(
             Page<VehicleCorrectionListResponse> page,
             @Param("query") VehicleQueryRequest query);

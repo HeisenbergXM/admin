@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
 import com.company.admin.common.PageResult;
+import com.company.admin.export.VehicleCorrectionExcelExporter;
 import com.company.admin.dto.request.VehicleCorrectionUpdateRequest;
 import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.AllocationCorrection;
 import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.DeliveryCorrection;
@@ -15,7 +16,7 @@ import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.PaymentCorre
 import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.ProductionCorrection;
 import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.RegistrationCorrection;
 import com.company.admin.dto.request.VehicleQueryRequest;
-import com.company.admin.dto.response.VehicleListResponse;
+import com.company.admin.dto.response.VehicleCorrectionListResponse;
 import com.company.admin.dto.response.VehiclePanoramaResponse;
 import com.company.admin.entity.Dealer;
 import com.company.admin.entity.ExteriorColor;
@@ -52,6 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -74,14 +76,22 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
     private final InteriorColorMapper interiorColorMapper;
     private final DealerMapper dealerMapper;
     private final VehicleCorrectionAuditService auditService;
+    private final VehicleCorrectionExcelExporter vehicleCorrectionExcelExporter;
 
     @Override
-    public PageResult<VehicleListResponse> pageCorrections(VehicleQueryRequest request) {
-        Page<VehicleListResponse> page = vehicleMapper.selectVehicleCorrectionPage(
+    public PageResult<VehicleCorrectionListResponse> pageCorrections(VehicleQueryRequest request) {
+        Page<VehicleCorrectionListResponse> page = vehicleMapper.selectVehicleCorrectionMasterSheetPage(
                 new Page<>(request.getPageNum(), request.getPageSize()), request);
-        page.getRecords().forEach(this::applyLabels);
-        return new PageResult<>(page.getRecords(), page.getTotal(),
-                request.getPageNum(), request.getPageSize());
+        long firstNo = ((long) request.getPageNum() - 1L) * request.getPageSize() + 1L;
+        prepareRows(page.getRecords(), firstNo);
+        return new PageResult<>(page.getRecords(), page.getTotal(), request.getPageNum(), request.getPageSize());
+    }
+
+    @Override
+    public byte[] exportCorrections(VehicleQueryRequest request) {
+        List<VehicleCorrectionListResponse> rows = vehicleMapper.selectVehicleCorrections(request);
+        prepareRows(rows, 1L);
+        return vehicleCorrectionExcelExporter.export(rows);
     }
 
     @Override
@@ -485,8 +495,28 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         return values;
     }
 
-    private void applyLabels(VehicleListResponse response) {
-        response.setLifecycleStageLabel(statusLabelService.lifecycleStageLabel(response.getLifecycleStage()));
-        response.setProductionStatusLabel(statusLabelService.stageStatusLabel(response.getProductionStatus()));
+    private void prepareRows(List<VehicleCorrectionListResponse> rows, long firstNo) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+        Map<String, String> invoiceLabels = statusLabelService.dictLabels("invoice_status");
+        Map<String, String> paymentLabels = statusLabelService.dictLabels("payment_status");
+        Map<String, String> deliveryLabels = statusLabelService.dictLabels("delivery_status");
+        Map<String, String> drosstechLabels = statusLabelService.dictLabels("drosstech_status");
+        for (int index = 0; index < rows.size(); index++) {
+            VehicleCorrectionListResponse row = rows.get(index);
+            row.setNo(firstNo + index);
+            row.setStatus1(label(invoiceLabels, row.getStatus1()));
+            row.setStatus2(label(invoiceLabels, row.getStatus2()));
+            row.setPaymentStatus(label(paymentLabels, row.getPaymentStatus()));
+            row.setDeliveryStatus(label(deliveryLabels, row.getDeliveryStatus()));
+            row.setDrosstechStatus(label(drosstechLabels, row.getDrosstechStatus()));
+            row.setFullyLoad(row.getFullyLoadValue() == null
+                    ? null : Boolean.TRUE.equals(row.getFullyLoadValue()) ? "Full" : "Not Full");
+        }
+    }
+
+    private String label(Map<String, String> labels, String value) {
+        return value == null || labels == null ? value : labels.getOrDefault(value, value);
     }
 }

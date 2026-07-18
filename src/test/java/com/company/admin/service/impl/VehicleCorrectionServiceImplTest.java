@@ -15,7 +15,7 @@ import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.PaymentCorre
 import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.ProductionCorrection;
 import com.company.admin.dto.request.VehicleCorrectionUpdateRequest.RegistrationCorrection;
 import com.company.admin.dto.request.VehicleQueryRequest;
-import com.company.admin.dto.response.VehicleListResponse;
+import com.company.admin.dto.response.VehicleCorrectionListResponse;
 import com.company.admin.dto.response.VehiclePanoramaResponse;
 import com.company.admin.entity.VehAllocation;
 import com.company.admin.entity.VehDelivery;
@@ -37,6 +37,7 @@ import com.company.admin.mapper.VehProductionMapper;
 import com.company.admin.mapper.VehRegistrationMapper;
 import com.company.admin.mapper.VehicleMapper;
 import com.company.admin.mapper.VehicleModelMapper;
+import com.company.admin.export.VehicleCorrectionExcelExporter;
 import com.company.admin.service.BusinessStatusLabelService;
 import com.company.admin.service.VehicleCorrectionAuditService;
 import com.company.admin.service.VehicleCorrectionAuditService.CorrectionDiff;
@@ -55,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -99,6 +101,8 @@ class VehicleCorrectionServiceImplTest {
     private DealerMapper dealerMapper;
     @Mock
     private VehicleCorrectionAuditService auditService;
+    @Mock
+    private VehicleCorrectionExcelExporter vehicleCorrectionExcelExporter;
 
     private VehicleCorrectionServiceImpl service;
 
@@ -116,7 +120,7 @@ class VehicleCorrectionServiceImplTest {
                 vehProductionMapper, vehInboundMapper, vehAllocationMapper,
                 vehInvoiceMapper, vehPaymentMapper, vehDeliveryMapper,
                 vehRegistrationMapper, vehicleModelMapper, exteriorColorMapper,
-                interiorColorMapper, dealerMapper, auditService);
+                interiorColorMapper, dealerMapper, auditService, vehicleCorrectionExcelExporter);
         lenient().when(vehProductionMapper.update(isNull(), any())).thenReturn(1);
         lenient().when(vehInboundMapper.update(isNull(), any())).thenReturn(1);
         lenient().when(vehAllocationMapper.update(isNull(), any())).thenReturn(1);
@@ -132,25 +136,53 @@ class VehicleCorrectionServiceImplTest {
     }
 
     @Test
-    void pageCorrectionsUsesUnscopedCorrectionQueryAndAddsLabels() {
+    void pageCorrectionsAddsGlobalNumberAndBatchedDisplayLabels() {
         VehicleQueryRequest request = new VehicleQueryRequest();
-        Page<VehicleListResponse> page = new Page<>(1, 10);
-        VehicleListResponse completed = new VehicleListResponse();
-        completed.setLifecycleStage("COMPLETED");
-        completed.setProductionStatus("CONFIRMED");
-        page.setRecords(List.of(completed));
-        page.setTotal(1);
-        when(vehicleMapper.selectVehicleCorrectionPage(any(), eq(request))).thenReturn(page);
-        when(statusLabelService.lifecycleStageLabel("COMPLETED")).thenReturn("Completed");
-        when(statusLabelService.stageStatusLabel("CONFIRMED")).thenReturn("Confirmed");
+        request.setPageNum(3);
+        request.setPageSize(10);
+        VehicleCorrectionListResponse row = new VehicleCorrectionListResponse();
+        row.setStatus1("PROFORMA_INVOICED");
+        row.setStatus2("INVOICED");
+        row.setPaymentStatus("PAID");
+        row.setDeliveryStatus("DELIVERED");
+        row.setDrosstechStatus("UPLOADED");
+        row.setFullyLoadValue(Boolean.TRUE);
+        Page<VehicleCorrectionListResponse> page = new Page<>(3, 10);
+        page.setRecords(List.of(row));
+        page.setTotal(21);
+        when(vehicleMapper.selectVehicleCorrectionMasterSheetPage(any(), eq(request))).thenReturn(page);
+        when(statusLabelService.dictLabels("invoice_status")).thenReturn(Map.of(
+                "PROFORMA_INVOICED", "Proforma Invoiced", "INVOICED", "Invoiced"));
+        when(statusLabelService.dictLabels("payment_status")).thenReturn(Map.of("PAID", "Paid"));
+        when(statusLabelService.dictLabels("delivery_status")).thenReturn(Map.of("DELIVERED", "Delivered"));
+        when(statusLabelService.dictLabels("drosstech_status")).thenReturn(Map.of("UPLOADED", "Uploaded"));
 
-        PageResult<VehicleListResponse> result = service.pageCorrections(request);
+        PageResult<VehicleCorrectionListResponse> result = service.pageCorrections(request);
 
-        assertEquals(1, result.getTotal());
-        assertEquals("COMPLETED", result.getList().get(0).getLifecycleStage());
-        assertEquals("Completed", result.getList().get(0).getLifecycleStageLabel());
-        assertEquals("Confirmed", result.getList().get(0).getProductionStatusLabel());
+        assertEquals(21L, result.getList().get(0).getNo());
+        assertEquals("Proforma Invoiced", result.getList().get(0).getStatus1());
+        assertEquals("Invoiced", result.getList().get(0).getStatus2());
+        assertEquals("Paid", result.getList().get(0).getPaymentStatus());
+        assertEquals("Delivered", result.getList().get(0).getDeliveryStatus());
+        assertEquals("Uploaded", result.getList().get(0).getDrosstechStatus());
+        assertEquals("Full", result.getList().get(0).getFullyLoad());
         verify(vehicleMapper, never()).selectVehiclePage(any(), any());
+    }
+
+    @Test
+    void exportCorrectionsUsesAllFilteredRowsAndIgnoresPagination() {
+        VehicleQueryRequest request = new VehicleQueryRequest();
+        request.setPageNum(9);
+        request.setPageSize(5);
+        request.setVin("VIN90");
+        VehicleCorrectionListResponse row = new VehicleCorrectionListResponse();
+        when(vehicleMapper.selectVehicleCorrections(request)).thenReturn(List.of(row));
+        when(vehicleCorrectionExcelExporter.export(List.of(row))).thenReturn(new byte[]{1, 2, 3});
+
+        assertArrayEquals(new byte[]{1, 2, 3}, service.exportCorrections(request));
+        assertEquals(1L, row.getNo());
+        verify(vehicleMapper).selectVehicleCorrections(request);
+        verify(vehicleMapper, never()).selectVehicleCorrectionMasterSheetPage(any(), any());
     }
 
     @Test

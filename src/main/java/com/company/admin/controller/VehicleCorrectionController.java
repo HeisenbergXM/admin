@@ -5,7 +5,7 @@ import com.company.admin.common.PageResult;
 import com.company.admin.common.Result;
 import com.company.admin.dto.request.VehicleCorrectionUpdateRequest;
 import com.company.admin.dto.request.VehicleQueryRequest;
-import com.company.admin.dto.response.VehicleListResponse;
+import com.company.admin.dto.response.VehicleCorrectionListResponse;
 import com.company.admin.dto.response.VehiclePanoramaResponse;
 import com.company.admin.service.VehicleCorrectionService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,7 +30,7 @@ public class VehicleCorrectionController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('vlm:vehicle-correction:list')")
-    public Result<PageResult<VehicleListResponse>> list(VehicleQueryRequest request) {
+    public Result<PageResult<VehicleCorrectionListResponse>> list(VehicleQueryRequest request) {
         return Result.success(vehicleCorrectionService.pageCorrections(request));
     }
 

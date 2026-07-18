@@ -97,14 +97,6 @@
         ORDER BY v.id DESC
     </select>
 
-    <select id="selectVehicleCorrectionPage" resultType="com.company.admin.dto.response.VehicleListResponse">
-        <include refid="VehiclePageColumns"/>
-        <include refid="VehiclePageJoins"/>
-        WHERE v.deleted = 0
-        <include refid="VehiclePageFilters"/>
-        ORDER BY v.id DESC
-    </select>
-
     <sql id="VehicleCorrectionColumns">
         SELECT v.id,
                m.model_name AS model,
