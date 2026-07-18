@@ -52,7 +52,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -73,7 +72,7 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
     private final ExteriorColorMapper exteriorColorMapper;
     private final InteriorColorMapper interiorColorMapper;
     private final DealerMapper dealerMapper;
-    private final Optional<VehicleCorrectionAuditService> auditService;
+    private final VehicleCorrectionAuditService auditService;
 
     @Override
     public PageResult<VehicleListResponse> pageCorrections(VehicleQueryRequest request) {
@@ -98,6 +97,9 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
     public void updateCorrection(Long vehicleId, VehicleCorrectionUpdateRequest request) {
         if (vehicleId == null || request == null) {
             throw badRequest("车辆 ID 和修订内容不能为空");
+        }
+        if (!hasCorrectionSection(request)) {
+            throw badRequest("修订内容不能为空");
         }
         Vehicle vehicle = vehicleMapper.selectByIdForUpdate(vehicleId);
         if (vehicle == null) {
@@ -129,7 +131,17 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         if (request.getRegistration() != null) {
             updateRegistration(vehicleId, request.getRegistration(), diff);
         }
-        auditService.ifPresent(service -> service.recordSuccess(diff));
+        auditService.recordSuccess(diff);
+    }
+
+    private boolean hasCorrectionSection(VehicleCorrectionUpdateRequest request) {
+        return request.getProduction() != null
+                || request.getInbound() != null
+                || request.getAllocation() != null
+                || (request.getInvoices() != null && !request.getInvoices().isEmpty())
+                || request.getPayment() != null
+                || request.getDelivery() != null
+                || request.getRegistration() != null;
     }
 
     private void validateInvoiceIds(VehicleCorrectionUpdateRequest request) {
@@ -187,6 +199,10 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         requireId(change.getId(), "入库记录 ID");
         VehInbound entity = vehInboundMapper.selectByIdForUpdate(change.getId());
         requireOwned(entity, entity == null ? null : entity.getVehicleId(), vehicleId);
+        if ("CONFIRMED".equals(entity.getStageStatus())
+                && (change.getSaicBuyOffDate() == null || change.getDateToStorageYard() == null)) {
+            throw badRequest("已确认入库记录的 SAIC Buy Off 日期和入库日期不能为空");
+        }
         diff.before("inbound", entity.getId(), inboundValues(entity));
         entity.setSaicBuyOffDate(change.getSaicBuyOffDate());
         entity.setDateToStorageYard(change.getDateToStorageYard());
@@ -245,6 +261,9 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
         requireId(change.getId(), "配送记录 ID");
         VehDelivery entity = vehDeliveryMapper.selectByIdForUpdate(change.getId());
         requireOwned(entity, entity == null ? null : entity.getVehicleId(), vehicleId);
+        if ("CONFIRMED".equals(entity.getStageStatus()) && change.getReceivedDate() == null) {
+            throw badRequest("已确认配送记录的签收日期不能为空");
+        }
         if (change.getEtdToDealer() != null && change.getEtaToDealer() != null
                 && change.getEtaToDealer().isBefore(change.getEtdToDealer())) {
             throw badRequest("预计到达日期不能早于发车日期");

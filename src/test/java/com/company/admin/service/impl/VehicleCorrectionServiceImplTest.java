@@ -50,7 +50,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -105,7 +104,7 @@ class VehicleCorrectionServiceImplTest {
                 vehProductionMapper, vehInboundMapper, vehAllocationMapper,
                 vehInvoiceMapper, vehPaymentMapper, vehDeliveryMapper,
                 vehRegistrationMapper, vehicleModelMapper, exteriorColorMapper,
-                interiorColorMapper, dealerMapper, Optional.of(auditService));
+                interiorColorMapper, dealerMapper, auditService);
     }
 
     @Test
@@ -252,12 +251,134 @@ class VehicleCorrectionServiceImplTest {
     @Test
     void updateRejectsMissingVehicle() {
         when(vehicleMapper.selectByIdForUpdate(80L)).thenReturn(null);
+        VehicleCorrectionUpdateRequest request = new VehicleCorrectionUpdateRequest();
+        InboundCorrection inbound = new InboundCorrection();
+        inbound.setId(808L);
+        request.setInbound(inbound);
 
         BusinessException ex = assertThrows(BusinessException.class,
-                () -> service.updateCorrection(80L, new VehicleCorrectionUpdateRequest()));
+                () -> service.updateCorrection(80L, request));
 
         assertEquals(ErrorCode.VEHICLE_NOT_FOUND.getCode(), ex.getCode());
         verify(auditService, never()).recordSuccess(any());
+    }
+
+    @Test
+    void updateRejectsRequestWithNoSectionsBeforeLockOrAudit() {
+        VehicleCorrectionUpdateRequest request = new VehicleCorrectionUpdateRequest();
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.updateCorrection(80L, request));
+
+        assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+        verify(vehicleMapper, never()).selectByIdForUpdate(any());
+        verify(auditService, never()).recordSuccess(any());
+    }
+
+    @Test
+    void updateRejectsEmptyInvoiceListWithoutOtherSectionsBeforeLockOrAudit() {
+        VehicleCorrectionUpdateRequest request = new VehicleCorrectionUpdateRequest();
+        request.setInvoices(List.of());
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.updateCorrection(80L, request));
+
+        assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+        verify(vehicleMapper, never()).selectByIdForUpdate(any());
+        verify(auditService, never()).recordSuccess(any());
+    }
+
+    @Test
+    void updateConfirmedInboundRejectsMissingSaicBuyOffDateWithoutUpdateOrAudit() {
+        when(vehicleMapper.selectByIdForUpdate(80L))
+                .thenReturn(vehicle(80L, "VIN00000000000080", "COMPLETED"));
+        VehInbound inbound = new VehInbound();
+        protectedRecord(inbound, 808L, 80L);
+        when(vehInboundMapper.selectByIdForUpdate(808L)).thenReturn(inbound);
+        InboundCorrection change = new InboundCorrection();
+        change.setId(808L);
+        change.setDateToStorageYard(LocalDate.of(2026, 7, 18));
+        VehicleCorrectionUpdateRequest request = new VehicleCorrectionUpdateRequest();
+        request.setInbound(change);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.updateCorrection(80L, request));
+
+        assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+        verify(vehInboundMapper, never()).updateById(any());
+        verify(auditService, never()).recordSuccess(any());
+    }
+
+    @Test
+    void updateConfirmedInboundRejectsMissingStorageDateWithoutUpdateOrAudit() {
+        when(vehicleMapper.selectByIdForUpdate(80L))
+                .thenReturn(vehicle(80L, "VIN00000000000080", "COMPLETED"));
+        VehInbound inbound = new VehInbound();
+        protectedRecord(inbound, 808L, 80L);
+        when(vehInboundMapper.selectByIdForUpdate(808L)).thenReturn(inbound);
+        InboundCorrection change = new InboundCorrection();
+        change.setId(808L);
+        change.setSaicBuyOffDate(LocalDate.of(2026, 7, 17));
+        VehicleCorrectionUpdateRequest request = new VehicleCorrectionUpdateRequest();
+        request.setInbound(change);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.updateCorrection(80L, request));
+
+        assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+        verify(vehInboundMapper, never()).updateById(any());
+        verify(auditService, never()).recordSuccess(any());
+    }
+
+    @Test
+    void updateConfirmedDeliveryRejectsMissingReceivedDateWithoutUpdateOrAudit() {
+        when(vehicleMapper.selectByIdForUpdate(80L))
+                .thenReturn(vehicle(80L, "VIN00000000000080", "COMPLETED"));
+        VehDelivery delivery = new VehDelivery();
+        protectedRecord(delivery, 806L, 80L);
+        when(vehDeliveryMapper.selectByIdForUpdate(806L)).thenReturn(delivery);
+        VehicleCorrectionUpdateRequest request = requestWithDelivery(806L, "DELIVERED");
+        request.getDelivery().setReceivedDate(null);
+        request.getDelivery().setDeliveryStatus(null);
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> service.updateCorrection(80L, request));
+
+        assertEquals(ErrorCode.BAD_REQUEST.getCode(), ex.getCode());
+        verify(vehDeliveryMapper, never()).updateById(any());
+        verify(auditService, never()).recordSuccess(any());
+    }
+
+    @Test
+    void updateDraftInboundAndDeliveryKeepsNullableDateBehavior() {
+        when(vehicleMapper.selectByIdForUpdate(80L))
+                .thenReturn(vehicle(80L, "VIN00000000000080", "COMPLETED"));
+        VehInbound inbound = new VehInbound();
+        inbound.setId(808L);
+        inbound.setVehicleId(80L);
+        inbound.setStageStatus("DRAFT");
+        when(vehInboundMapper.selectByIdForUpdate(808L)).thenReturn(inbound);
+        VehDelivery delivery = new VehDelivery();
+        delivery.setId(806L);
+        delivery.setVehicleId(80L);
+        delivery.setStageStatus("DRAFT");
+        when(vehDeliveryMapper.selectByIdForUpdate(806L)).thenReturn(delivery);
+        when(statusLabelService.dictLabels("delivery_status"))
+                .thenReturn(Map.of("DELIVERED", "Delivered"));
+        InboundCorrection inboundChange = new InboundCorrection();
+        inboundChange.setId(808L);
+        DeliveryCorrection deliveryChange = new DeliveryCorrection();
+        deliveryChange.setId(806L);
+        deliveryChange.setDeliveryStatus("DELIVERED");
+        VehicleCorrectionUpdateRequest request = new VehicleCorrectionUpdateRequest();
+        request.setInbound(inboundChange);
+        request.setDelivery(deliveryChange);
+
+        service.updateCorrection(80L, request);
+
+        verify(vehInboundMapper).updateById(inbound);
+        verify(vehDeliveryMapper).updateById(delivery);
+        verify(auditService).recordSuccess(any());
     }
 
     @Test
@@ -416,6 +537,8 @@ class VehicleCorrectionServiceImplTest {
         VehicleCorrectionUpdateRequest request = new VehicleCorrectionUpdateRequest();
         InboundCorrection inboundChange = new InboundCorrection();
         inboundChange.setId(808L);
+        inboundChange.setSaicBuyOffDate(LocalDate.of(2026, 1, 1));
+        inboundChange.setDateToStorageYard(LocalDate.of(2026, 1, 2));
         inboundChange.setRemark2("inbound-updated");
         request.setInbound(inboundChange);
         request.setAllocation(allocationChange(805L, "SOLD"));
@@ -562,6 +685,7 @@ class VehicleCorrectionServiceImplTest {
         change.setEtdToDealer(LocalDate.of(2026, 1, 1));
         change.setEtaToDealer(LocalDate.of(2026, 1, 2));
         change.setTrollyType("4 units");
+        change.setReceivedDate(LocalDate.of(2026, 1, 3));
         change.setDeliveryStatus(status);
         return change;
     }

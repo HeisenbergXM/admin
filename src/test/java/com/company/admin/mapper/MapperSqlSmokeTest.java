@@ -24,9 +24,11 @@ import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
 import com.company.admin.service.VehDeliveryService;
 import com.company.admin.service.VehInboundService;
+import com.company.admin.service.VehicleCorrectionAuditService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -55,6 +57,9 @@ import static org.springframework.beans.PropertyAccessorFactory.forBeanPropertyA
 @ActiveProfiles("test")
 @Sql(scripts = "/sql/h2-mapper-smoke-schema.sql")
 class MapperSqlSmokeTest {
+
+    @MockBean
+    private VehicleCorrectionAuditService vehicleCorrectionAuditService;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
