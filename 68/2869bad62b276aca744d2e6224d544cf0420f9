@@ -1,0 +1,30 @@
+src/main/java/com/company/admin/service/impl/VehicleCorrectionServiceImpl.java
+  s_c11fd4e0062f48::t_54c8abae152a84 1-48
+src/test/java/com/company/admin/service/impl/VehicleCorrectionServiceImplTest.java
+  s_c11fd4e0062f48::t_54c8abae152a84 93-104
+  s_c11fd4e0062f48::t_4e94704e297862 1-92,105
+src/main/java/com/company/admin/service/VehicleCorrectionService.java
+  s_c11fd4e0062f48::t_54c8abae152a84 1-13
+src/main/java/com/company/admin/controller/VehicleCorrectionController.java
+  s_c11fd4e0062f48::t_54c8abae152a84 1-36
+src/main/java/com/company/admin/mapper/VehicleMapper.java
+  s_c11fd4e0062f48::t_c74e34cbe26d39 20-22
+src/main/resources/mapper/vlm/VehicleMapper.xml
+  s_c11fd4e0062f48::t_fd545bbfe7736b 38,58-60,68-70,89-104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "682869bad62b276aca744d2e6224d544cf0420f9",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
