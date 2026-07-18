@@ -699,9 +699,9 @@ Authorization: Bearer <token>
 Result<PageResult<VehicleCorrectionListResponse>>
 ```
 
-`VehicleCorrectionListResponse.id` 是车辆主键，只用于打开修订详情，不是主表展示列。其余 45 个可见属性与主表/导出文件按 A:AS 的顺序完全一致：
+`VehicleCorrectionListResponse.id` 是车辆主键，只用于打开修订详情，不是主表展示列。其余 45 个可见属性与主表/导出文件按 A:AS 的顺序完全一致。下表“导出器 `HEADERS` 字面量（转义）”逐项对应 `PoiVehicleCorrectionExcelExporter.HEADERS`；其中 `\u0020` 表示原字面量中的一个 ASCII 空格（包括尾随空格），`\n` 表示单元格中的换行符。
 
-| 列 | 表头 | 响应属性 |
+| 列 | 导出器 `HEADERS` 字面量（转义） | 响应属性 |
 |------|------|------|
 | 元数据 | 非展示 | `id` |
 | A | NO. | `no` |
@@ -714,11 +714,11 @@ Result<PageResult<VehicleCorrectionListResponse>>
 | H | Year Make | `yearMake` |
 | I | Material | `material` |
 | J | Shipment | `shipment` |
-| K | Batch | `batch` |
+| K | `Batch\u0020` | `batch` |
 | L | Offline EPMB | `offlineEpmb` |
-| M | EPMB ok | `epmbOk` |
+| M | `EPMB ok\u0020` | `epmbOk` |
 | N | Remark1 | `remark1` |
-| O | SAIC buy off | `saicBuyOff` |
+| O | `SAIC buy off\u0020` | `saicBuyOff` |
 | P | Date to Strogare Yard | `dateToStorageYard` |
 | Q | remark2 | `remark2` |
 | R | Allocated Date | `allocatedDate` |
@@ -737,11 +737,11 @@ Result<PageResult<VehicleCorrectionListResponse>>
 | AE | Invoice# | `invoiceNo2` |
 | AF | Invoice Date | `invoiceDate2` |
 | AG | remark6 | `remark6` |
-| AH | ETD to Dealer | `etdToDealer` |
-| AI | ETA to Dealer | `etaToDealer` |
-| AJ | Trolly type / 4 units/ 6units | `trollyType` |
+| AH | `ETD\u0020\u0020to Dealer` | `etdToDealer` |
+| AI | `ETA to Dealer\u0020` | `etaToDealer` |
+| AJ | `Trolly type\n4 units/ 6units` | `trollyType` |
 | AK | Fully load or not | `fullyLoad` |
-| AL | Received date by Dealer | `receivedDateByDealer` |
+| AL | `Received date by Dealer\u0020` | `receivedDateByDealer` |
 | AM | Delivery Status | `deliveryStatus` |
 | AN | remark7 | `remark7` |
 | AO | Drosstech Status | `drosstechStatus` |
@@ -756,7 +756,7 @@ Result<PageResult<VehicleCorrectionListResponse>>
 
 请求筛选参数与分页列表相同（`pageNum`、`pageSize`、`vin`、`modelId`、`modelName`、`series`、`lifecycleStage`、`dealerId`），但 `pageNum`、`pageSize` 不限制导出范围；其余筛选条件仍然生效。接口导出当前筛选条件下的全部车辆，返回 `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` 文件。
 
-文件包含与 `Sample of Master Sheet.xlsx` 一致的 45 列第一层表头、部门分组第二层表头及 8 个合并区域；数据从第 3 行开始。导出列顺序与上述列表响应的 45 个可见属性完全一致。
+工作表固定为 `Sheet1`。文件包含与 `Sample of Master Sheet.xlsx` 一致的两行表头：第 1 行是按 A:AS 精确顺序排列的 45 列表头，第 2 行是部门分组表头；数据从第 3 行开始。第 2 行的 8 个合并区域依次为 `B2:N2`、`O2:Q2`、`R2:U2`、`V2:Y2`、`Z2:AC2`、`AD2:AG2`、`AH2:AN2`、`AO2:AS2`。导出列顺序与上述列表响应的 45 个可见属性完全一致。
 
 #### GET /api/vehicle-corrections/{vehicleId}
 
