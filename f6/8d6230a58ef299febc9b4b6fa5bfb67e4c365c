@@ -1,0 +1,23 @@
+src/main/java/com/company/admin/controller/VehicleCorrectionController.java
+  s_c11fd4e0062f48::t_74a35b2bb52016 14-17,26-28
+  s_c11fd4e0062f48::t_2e3e939777d7ba 44-59
+src/test/java/com/company/admin/controller/VehicleCorrectionControllerTest.java
+  s_c11fd4e0062f48::t_c2b8d292374be4 37-38
+  s_c11fd4e0062f48::t_383f9ea04e1d5f 6-7,25,57-58,60,64-95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "f68d6230a58ef299febc9b4b6fa5bfb67e4c365c",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
