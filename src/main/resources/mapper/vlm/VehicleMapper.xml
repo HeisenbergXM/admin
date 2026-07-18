@@ -105,6 +105,86 @@
         ORDER BY v.id DESC
     </select>
 
+    <sql id="VehicleCorrectionColumns">
+        SELECT v.id,
+               m.model_name AS model,
+               ec.color_name AS exterior_color,
+               ic.color_name AS interior_color,
+               v.vin AS vin_number,
+               p.engine_number,
+               m.model_code,
+               p.year_make,
+               p.material,
+               p.shipment,
+               p.batch,
+               p.offline_epmb_date AS offline_epmb,
+               p.epmb_ok_date AS epmb_ok,
+               p.remark1,
+               ib.saic_buy_off_date AS saic_buy_off,
+               ib.date_to_storage_yard,
+               ib.remark2,
+               a.allocated_date,
+               d.dealer_code,
+               d.dealer_name AS dealer,
+               a.remark3,
+               i1.invoice_type AS status1,
+               i1.invoice_no AS invoice_no1,
+               i1.invoice_date AS invoice_date1,
+               i1.remark AS remark4,
+               pay.payment_date,
+               pay.credit_full_payment_date,
+               pay.payment_status,
+               pay.remark5,
+               i2.invoice_type AS status2,
+               i2.invoice_no AS invoice_no2,
+               i2.invoice_date AS invoice_date2,
+               i2.remark AS remark6,
+               dl.etd_to_dealer,
+               dl.eta_to_dealer,
+               dl.trolly_type,
+               dl.fully_load AS fully_load_value,
+               dl.received_date AS received_date_by_dealer,
+               dl.delivery_status,
+               dl.remark7,
+               r.drosstech_status,
+               r.upload_date,
+               r.registration_date AS registration,
+               r.customer_region,
+               r.remark8
+    </sql>
+
+    <sql id="VehicleCorrectionJoins">
+        FROM t_vehicle v
+        LEFT JOIN t_veh_production p ON p.vehicle_id = v.id AND p.deleted = 0
+        LEFT JOIN t_md_model m ON m.id = p.model_id AND m.deleted = 0
+        LEFT JOIN t_md_exterior_color ec ON ec.id = p.exterior_color_id AND ec.deleted = 0
+        LEFT JOIN t_md_interior_color ic ON ic.id = p.interior_color_id AND ic.deleted = 0
+        LEFT JOIN t_veh_inbound ib ON ib.vehicle_id = v.id AND ib.deleted = 0
+        LEFT JOIN t_veh_allocation a ON a.vehicle_id = v.id AND a.deleted = 0
+        LEFT JOIN t_md_dealer d ON d.id = a.dealer_id AND d.deleted = 0
+        LEFT JOIN t_veh_invoice i1 ON i1.vehicle_id = v.id AND i1.invoice_seq = 1 AND i1.deleted = 0
+        LEFT JOIN t_veh_payment pay ON pay.vehicle_id = v.id AND pay.deleted = 0
+        LEFT JOIN t_veh_invoice i2 ON i2.vehicle_id = v.id AND i2.invoice_seq = 2 AND i2.deleted = 0
+        LEFT JOIN t_veh_delivery dl ON dl.vehicle_id = v.id AND dl.deleted = 0
+        LEFT JOIN t_veh_registration r ON r.vehicle_id = v.id AND r.deleted = 0
+    </sql>
+
+    <select id="selectVehicleCorrectionMasterSheetPage" resultType="com.company.admin.dto.response.VehicleCorrectionListResponse">
+        <include refid="VehicleCorrectionColumns"/>
+        <include refid="VehicleCorrectionJoins"/>
+        WHERE v.deleted = 0
+        <include refid="VehiclePageFilters"/>
+        ORDER BY v.id DESC
+    </select>
+
+    <select id="selectVehicleCorrections" resultType="com.company.admin.dto.response.VehicleCorrectionListResponse">
+        <include refid="VehicleCorrectionColumns"/>
+        <include refid="VehicleCorrectionJoins"/>
+        WHERE v.deleted = 0
+        <include refid="VehiclePageFilters"/>
+        ORDER BY v.id DESC
+    </select>
+
     <select id="selectBasicInfoByIds" resultType="com.company.admin.dto.response.VehicleBasicInfo">
         <include refid="basicInfoSelect"/>
         WHERE v.id IN

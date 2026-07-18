@@ -17,6 +17,7 @@ import com.company.admin.dto.response.InvoiceListResponse;
 import com.company.admin.dto.response.PaymentResponse;
 import com.company.admin.dto.response.RegistrationResponse;
 import com.company.admin.dto.response.VehicleListResponse;
+import com.company.admin.dto.response.VehicleCorrectionListResponse;
 import com.company.admin.entity.Menu;
 import com.company.admin.entity.VehDelivery;
 import com.company.admin.entity.VehInbound;
@@ -87,6 +88,39 @@ class MapperSqlSmokeTest {
     private UserMapper userMapper;
     @Autowired
     private MenuMapper menuMapper;
+
+    @Test
+    void correctionMasterSheetQueryMapsAllStagesAndBothInvoiceSequencesOnce() {
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (90, 'VIN00000000000090', 'COMPLETED', 0)");
+        jdbcTemplate.update("INSERT INTO t_md_model (id, model_name, series, model_code, deleted) VALUES (901, 'MG S5', 'S5', 'ZS3EMA', 0)");
+        jdbcTemplate.update("INSERT INTO t_md_exterior_color (id, color_name, deleted) VALUES (902, 'SILVER', 0)");
+        jdbcTemplate.update("INSERT INTO t_md_interior_color (id, color_name, deleted) VALUES (903, 'BLACK', 0)");
+        jdbcTemplate.update("INSERT INTO t_md_dealer (id, dealer_code, dealer_name, deleted) VALUES (904, '290933', 'SING HUAT', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_production (vehicle_id, stage_status, model_id, exterior_color_id, interior_color_id, engine_number, year_make, material, shipment, batch, offline_epmb_date, epmb_ok_date, remark1, deleted) VALUES (90, 'CONFIRMED', 901, 902, 903, 'ENG-90', '2026', 'MAT-90', 'SHP-90', 'BATCH-90', '2026-05-22', '2026-06-04', 'P-90', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_inbound (vehicle_id, stage_status, saic_buy_off_date, date_to_storage_yard, remark2, deleted) VALUES (90, 'CONFIRMED', '2026-06-04', '2026-06-05', 'I-90', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_allocation (vehicle_id, stage_status, allocated_date, dealer_id, remark3, deleted) VALUES (90, 'CONFIRMED', '2026-06-05', 904, 'A-90', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_invoice (vehicle_id, stage_status, invoice_seq, invoice_type, invoice_no, invoice_date, remark, deleted) VALUES (90, 'CONFIRMED', 1, 'PROFORMA_INVOICED', 'PF-90', '2026-06-06', 'F1-90', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_invoice (vehicle_id, stage_status, invoice_seq, invoice_type, invoice_no, invoice_date, remark, deleted) VALUES (90, 'CONFIRMED', 2, 'INVOICED', 'IV-90', '2026-06-10', 'F2-90', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_payment (vehicle_id, stage_status, payment_date, credit_full_payment_date, payment_status, remark5, deleted) VALUES (90, 'CONFIRMED', '2026-06-10', '2026-06-11', 'PAID', 'PAY-90', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_delivery (vehicle_id, stage_status, etd_to_dealer, eta_to_dealer, trolly_type, fully_load, received_date, delivery_status, remark7, deleted) VALUES (90, 'CONFIRMED', '2026-06-12', '2026-06-13', '6 units', 1, '2026-06-13', 'DELIVERED', 'D-90', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_registration (vehicle_id, stage_status, drosstech_status, upload_date, registration_date, customer_region, remark8, deleted) VALUES (90, 'CONFIRMED', 'UPLOADED', '2026-06-14', '2026-06-25', 'Kuala Lumpur', 'R-90', 0)");
+
+        VehicleQueryRequest query = new VehicleQueryRequest();
+        query.setVin("00000000000090");
+        List<VehicleCorrectionListResponse> rows = vehicleMapper.selectVehicleCorrections(query);
+
+        assertEquals(1, rows.size());
+        VehicleCorrectionListResponse row = rows.get(0);
+        assertEquals(90L, row.getId());
+        assertEquals("MG S5", row.getModel());
+        assertEquals("SILVER", row.getExteriorColor());
+        assertEquals("BLACK", row.getInteriorColor());
+        assertEquals("VIN00000000000090", row.getVinNumber());
+        assertEquals("PF-90", row.getInvoiceNo1());
+        assertEquals("IV-90", row.getInvoiceNo2());
+        assertEquals(Boolean.TRUE, row.getFullyLoadValue());
+        assertEquals("Kuala Lumpur", row.getCustomerRegion());
+    }
 
     @Test
     void inboundUpdateWaitsForLockThenRejectsConfirmedRowWithoutOverwriting() throws Exception {

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.dto.request.VehicleQueryRequest;
 import com.company.admin.dto.response.VehicleBasicInfo;
+import com.company.admin.dto.response.VehicleCorrectionListResponse;
 import com.company.admin.dto.response.VehicleListResponse;
 import com.company.admin.entity.Vehicle;
 import org.apache.ibatis.annotations.Mapper;
@@ -19,6 +20,13 @@ public interface VehicleMapper extends BaseMapper<Vehicle> {
 
     Page<VehicleListResponse> selectVehicleCorrectionPage(Page<VehicleListResponse> page,
                                                           @Param("query") VehicleQueryRequest query);
+
+    Page<VehicleCorrectionListResponse> selectVehicleCorrectionMasterSheetPage(
+            Page<VehicleCorrectionListResponse> page,
+            @Param("query") VehicleQueryRequest query);
+
+    List<VehicleCorrectionListResponse> selectVehicleCorrections(
+            @Param("query") VehicleQueryRequest query);
 
     Vehicle selectByIdForUpdate(@Param("id") Long id);
 
