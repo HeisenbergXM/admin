@@ -1,0 +1,23 @@
+docs/superpowers/plans/2026-07-18-vehicle-stage-todo-and-correction-plan.md
+  s_c11fd4e0062f48::t_e082d2638d16a9 547,559,561,566-567,664,666-690,722-723,725-728,834-846,859
+  s_c11fd4e0062f48::t_a582d437a99d68 954,1036
+  s_c11fd4e0062f48::t_ada2f3a18c7042 1-237,240-287,289-324,326-372,374-381,383-435,437-443,445-546,548-558,560,562-565,568-663,665,691-721,724,729-752,810-833,847-858,860-953,955-1035,1037-1237
+  s_c11fd4e0062f48::t_d897231ca52bcc 238-239,288,325,373,382,436,444
+  s_c11fd4e0062f48::t_3aa76443e80f96 753-809
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "1e8a5ff62a50427d909b647db6597f3086bc8a63",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
