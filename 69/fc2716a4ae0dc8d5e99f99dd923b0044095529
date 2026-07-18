@@ -1,0 +1,21 @@
+src/main/java/com/company/admin/export/PoiVehicleCorrectionExcelExporter.java
+  s_c11fd4e0062f48::t_ea3448e1c78d93 25,43-50,137,154,174-175,202
+src/test/java/com/company/admin/export/PoiVehicleCorrectionExcelExporterTest.java
+  s_c11fd4e0062f48::t_bee94ff85d49d8 161-172,304,314-319
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "69fc2716a4ae0dc8d5e99f99dd923b0044095529",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
