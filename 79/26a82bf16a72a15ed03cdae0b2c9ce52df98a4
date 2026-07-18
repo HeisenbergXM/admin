@@ -1,0 +1,19 @@
+src/test/java/com/company/admin/sql/VehicleCorrectionMenuSqlTest.java
+  s_c11fd4e0062f48::t_57615f61556911 47-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "7926a82bf16a72a15ed03cdae0b2c9ce52df98a4",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "unknown"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
