@@ -1,0 +1,23 @@
+docs/superpowers/plans/2026-07-18-vehicle-correction-master-sheet-list-export-plan.md
+  s_c11fd4e0062f48::t_55ea3c8d6e0317 397-410,473
+  s_c11fd4e0062f48::t_273c2b118938db 1-26,30-310,312-317,319-396,411-472,474-481,484-486,488-490,492-504,506-527,529-534,552-568,570-575,578-664,666-672,674-899,901-915,922,925-963
+  s_c11fd4e0062f48::t_603c90b329dd8d 535-551,916-921,923-924
+  s_c11fd4e0062f48::t_790e75214eee97 482-483,487,491,505,528,569,576-577,665,673,900
+  s_c11fd4e0062f48::t_cfa670f65b274e 27-29,311,318
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "e4df159d85e7fe04c6ee41e138ebbc3b99d3127c",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
