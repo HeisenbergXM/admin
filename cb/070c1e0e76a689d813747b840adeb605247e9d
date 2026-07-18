@@ -1,0 +1,41 @@
+src/test/java/com/company/admin/mapper/MapperSqlSmokeTest.java
+  s_c11fd4e0062f48::t_d38d09f05d4fae 240,272-274,282-313,316-317,319,324,328-329,331,336,340
+  s_c11fd4e0062f48::t_e9f96f4829829d 314-315
+  s_c11fd4e0062f48::t_a872cc58d9f08d 318
+  s_c11fd4e0062f48::t_ebe8416df4481b 320-323
+  s_c11fd4e0062f48::t_c43f8546fdf3e1 325-327
+  s_c11fd4e0062f48::t_0296e9c5cb8ed1 330
+  s_c11fd4e0062f48::t_c6a60eaadca455 332-335
+  s_c11fd4e0062f48::t_52e15223a0469f 337-339
+  s_c11fd4e0062f48::t_7963d8ecfb9cdd 10,19,80-81,232-234
+src/main/resources/mapper/vlm/VehDeliveryMapper.xml
+  s_c11fd4e0062f48::t_625e9d63842f06 55,66
+src/main/resources/mapper/vlm/VehInboundMapper.xml
+  s_c11fd4e0062f48::t_625e9d63842f06 43,57
+src/main/resources/mapper/vlm/VehAllocationMapper.xml
+  s_c11fd4e0062f48::t_51fe3a063c05a2 38,46-48,51
+src/main/resources/mapper/vlm/VehInvoiceMapper.xml
+  s_c11fd4e0062f48::t_251ff75cee817b 42
+src/main/resources/mapper/vlm/VehPaymentMapper.xml
+  s_c11fd4e0062f48::t_94df034afee6a7 46-48,51
+src/main/resources/mapper/vlm/VehRegistrationMapper.xml
+  s_c11fd4e0062f48::t_4ed1db55983d76 27,35-37,40
+src/main/resources/mapper/vlm/VehicleMapper.xml
+  s_c11fd4e0062f48::t_8526519215f49b 66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "cb070c1e0e76a689d813747b840adeb605247e9d",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
