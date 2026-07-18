@@ -1,0 +1,58 @@
+src/main/java/com/company/admin/service/VehicleCorrectionService.java
+  s_c11fd4e0062f48::t_be445c74d2d17c 5,14-15
+src/main/java/com/company/admin/service/impl/VehicleCorrectionServiceImpl.java
+  s_c11fd4e0062f48::t_3f70703bca244b 3,8-15,19-28,30-40,42,44-45,50-54,56,65-75,96-131,133-151,154-398
+  s_c11fd4e0062f48::t_69e41547119278 55,76,132
+  s_c11fd4e0062f48::t_245a5e1ef4be55 152-153
+  s_c11fd4e0062f48::t_8dab4673660f06 399
+src/main/java/com/company/admin/mapper/VehInboundMapper.java
+  s_c11fd4e0062f48::t_be445c74d2d17c 20-21
+src/main/java/com/company/admin/mapper/VehDeliveryMapper.java
+  s_c11fd4e0062f48::t_be445c74d2d17c 20-21
+src/main/java/com/company/admin/controller/VehicleCorrectionController.java
+  s_c11fd4e0062f48::t_be445c74d2d17c 3,6,17,19-21,42-49
+  s_c11fd4e0062f48::t_37a4869129527b 50
+src/main/resources/mapper/vlm/VehInboundMapper.xml
+  s_c11fd4e0062f48::t_be445c74d2d17c 82-86
+src/test/java/com/company/admin/service/impl/VehicleCorrectionServiceImplTest.java
+  s_c11fd4e0062f48::t_69e41547119278 53,108
+  s_c11fd4e0062f48::t_5d360c82063551 7-14,18-24,26-35,37,39-40,45,49-50,52,60,74-97,104-107,167-640
+src/main/resources/mapper/vlm/VehProductionMapper.xml
+  s_c11fd4e0062f48::t_be445c74d2d17c 1-13
+src/main/resources/mapper/vlm/VehDeliveryMapper.xml
+  s_c11fd4e0062f48::t_be445c74d2d17c 91-95
+src/main/java/com/company/admin/service/VehicleCorrectionAuditService.java
+  s_c11fd4e0062f48::t_be445c74d2d17c 1-29
+src/main/java/com/company/admin/common/ErrorCode.java
+  s_c11fd4e0062f48::t_d69cb3671e840b 47-48
+src/main/java/com/company/admin/mapper/VehPaymentMapper.java
+  s_c11fd4e0062f48::t_dc3c0aa1a5512f 16-17
+src/main/java/com/company/admin/mapper/VehRegistrationMapper.java
+  s_c11fd4e0062f48::t_210bb5ff190a68 16-17
+src/main/resources/mapper/vlm/VehAllocationMapper.xml
+  s_c11fd4e0062f48::t_254dcde6e3fa5a 56-60
+src/main/resources/mapper/vlm/VehInvoiceMapper.xml
+  s_c11fd4e0062f48::t_416bd9a66cf22d 60-64
+src/main/resources/mapper/vlm/VehPaymentMapper.xml
+  s_c11fd4e0062f48::t_afc237c52711fd 65-69
+src/main/resources/mapper/vlm/VehRegistrationMapper.xml
+  s_c11fd4e0062f48::t_e1ac0425aaf16f 45-49
+src/main/resources/mapper/vlm/VehicleMapper.xml
+  s_c11fd4e0062f48::t_5fe5873641cefc 128-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "dc1f08f2ba095b48a21584be46a94bdd144557a1",
+  "prompts": {},
+  "sessions": {
+    "s_c11fd4e0062f48": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019f7588-ea37-71f1-831f-45bc56e8cdbc",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "wangcl <wangchengliang@expservice.com.cn>"
+    }
+  }
+}
