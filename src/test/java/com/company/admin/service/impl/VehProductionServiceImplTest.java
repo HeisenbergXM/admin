@@ -1,9 +1,13 @@
 package com.company.admin.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
+import com.company.admin.common.PageResult;
+import com.company.admin.dto.request.ProductionQueryRequest;
 import com.company.admin.dto.request.ProductionSaveRequest;
 import com.company.admin.dto.response.ProductionResponse;
+import com.company.admin.dto.response.VehicleListResponse;
 import com.company.admin.entity.Vehicle;
 import com.company.admin.entity.VehProduction;
 import com.company.admin.enums.LifecycleStage;
@@ -48,6 +52,35 @@ class VehProductionServiceImplTest {
 
     @InjectMocks
     private VehProductionServiceImpl service;
+
+    @Test
+    void pageProductionsPassesFiltersAndAppliesChineseLabels() {
+        ProductionQueryRequest request = new ProductionQueryRequest();
+        request.setPageNum(2);
+        request.setPageSize(5);
+        request.setVin("LSJW");
+
+        VehicleListResponse record = new VehicleListResponse();
+        record.setLifecycleStage("PENDING_OFFLINE");
+        record.setProductionStatus("DRAFT");
+        Page<VehicleListResponse> page = new Page<>(2, 5);
+        page.setRecords(java.util.List.of(record));
+        page.setTotal(11);
+        when(vehProductionMapper.selectProductionPage(any(), eq(request))).thenReturn(page);
+        when(statusLabelService.lifecycleStageLabel("PENDING_OFFLINE")).thenReturn("草稿（新录入）");
+        when(statusLabelService.stageStatusLabel("DRAFT")).thenReturn("草稿");
+
+        PageResult<VehicleListResponse> result = service.pageProductions(request);
+
+        ArgumentCaptor<Page<VehicleListResponse>> pageCaptor = ArgumentCaptor.forClass(Page.class);
+        verify(vehProductionMapper).selectProductionPage(pageCaptor.capture(), eq(request));
+        assertEquals(2, pageCaptor.getValue().getCurrent());
+        assertEquals(5, pageCaptor.getValue().getSize());
+        assertEquals(11, result.getTotal());
+        assertEquals(2, result.getPageNum());
+        assertEquals("草稿（新录入）", result.getList().get(0).getLifecycleStageLabel());
+        assertEquals("草稿", result.getList().get(0).getProductionStatusLabel());
+    }
 
     @Test
     void createProductionRejectsDuplicateVin() {

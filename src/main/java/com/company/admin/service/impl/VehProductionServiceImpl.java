@@ -1,10 +1,14 @@
 package com.company.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.company.admin.common.BusinessException;
 import com.company.admin.common.ErrorCode;
+import com.company.admin.common.PageResult;
+import com.company.admin.dto.request.ProductionQueryRequest;
 import com.company.admin.dto.request.ProductionSaveRequest;
 import com.company.admin.dto.response.ProductionResponse;
+import com.company.admin.dto.response.VehicleListResponse;
 import com.company.admin.entity.Vehicle;
 import com.company.admin.entity.VehProduction;
 import com.company.admin.enums.LifecycleStage;
@@ -30,6 +34,20 @@ public class VehProductionServiceImpl implements VehProductionService {
     private final VehProductionMapper vehProductionMapper;
     private final LifecycleService lifecycleService;
     private final BusinessStatusLabelService statusLabelService;
+
+    @Override
+    public PageResult<VehicleListResponse> pageProductions(ProductionQueryRequest request) {
+        Page<VehicleListResponse> page = vehProductionMapper.selectProductionPage(
+                new Page<>(request.getPageNum(), request.getPageSize()), request);
+        page.getRecords().forEach(this::applyLabels);
+        return new PageResult<>(page.getRecords(), page.getTotal(),
+                request.getPageNum(), request.getPageSize());
+    }
+
+    private void applyLabels(VehicleListResponse response) {
+        response.setLifecycleStageLabel(statusLabelService.lifecycleStageLabel(response.getLifecycleStage()));
+        response.setProductionStatusLabel(statusLabelService.stageStatusLabel(response.getProductionStatus()));
+    }
 
     @Override
     @Transactional

@@ -6,6 +6,7 @@ import com.company.admin.dto.request.DeliveryQueryRequest;
 import com.company.admin.dto.request.InboundQueryRequest;
 import com.company.admin.dto.request.InvoiceQueryRequest;
 import com.company.admin.dto.request.PaymentQueryRequest;
+import com.company.admin.dto.request.ProductionQueryRequest;
 import com.company.admin.dto.request.RegistrationQueryRequest;
 import com.company.admin.dto.request.VehicleQueryRequest;
 import com.company.admin.dto.request.DeliverySaveRequest;
@@ -84,6 +85,8 @@ class MapperSqlSmokeTest {
     private VehRegistrationMapper vehRegistrationMapper;
     @Autowired
     private VehicleMapper vehicleMapper;
+    @Autowired
+    private VehProductionMapper vehProductionMapper;
     @Autowired
     private UserMapper userMapper;
     @Autowired
@@ -322,15 +325,53 @@ class MapperSqlSmokeTest {
     }
 
     @Test
-    void vehiclePageExcludesAdvancedVehicle() {
+    void vehiclePageReturnsAllLifecycleStagesAsGeneralQuery() {
         jdbcTemplate.execute("ALTER TABLE t_vehicle ADD create_time TIMESTAMP");
         jdbcTemplate.execute("ALTER TABLE t_vehicle ADD update_time TIMESTAMP");
         jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (60, 'VIN00000000000060', 'PENDING_INBOUND', 0)");
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (67, 'VIN00000000000067', 'PENDING_OFFLINE', 0)");
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (68, 'VIN00000000000068', 'COMPLETED', 0)");
 
         Page<VehicleListResponse> page = vehicleMapper.selectVehiclePage(
                 new Page<>(1, 10), new VehicleQueryRequest());
 
-        assertTrue(page.getRecords().isEmpty());
+        assertEquals(List.of(68L, 67L, 60L),
+                page.getRecords().stream().map(VehicleListResponse::getId).toList());
+    }
+
+    @Test
+    void vehiclePageCanNarrowByLifecycleStageFilter() {
+        jdbcTemplate.execute("ALTER TABLE t_vehicle ADD create_time TIMESTAMP");
+        jdbcTemplate.execute("ALTER TABLE t_vehicle ADD update_time TIMESTAMP");
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (69, 'VIN00000000000069', 'PENDING_INBOUND', 0)");
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (70, 'VIN00000000000070', 'COMPLETED', 0)");
+        VehicleQueryRequest request = new VehicleQueryRequest();
+        request.setLifecycleStage("COMPLETED");
+
+        Page<VehicleListResponse> page = vehicleMapper.selectVehiclePage(new Page<>(1, 10), request);
+
+        assertEquals(List.of(70L),
+                page.getRecords().stream().map(VehicleListResponse::getId).toList());
+    }
+
+    @Test
+    void productionPageOnlyReturnsPendingOfflineVehicles() {
+        jdbcTemplate.execute("ALTER TABLE t_vehicle ADD create_time TIMESTAMP");
+        jdbcTemplate.execute("ALTER TABLE t_vehicle ADD update_time TIMESTAMP");
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (71, 'VIN00000000000071', 'PENDING_OFFLINE', 0)");
+        jdbcTemplate.update("INSERT INTO t_vehicle (id, vin, lifecycle_stage, deleted) VALUES (72, 'VIN00000000000072', 'PENDING_INBOUND', 0)");
+        jdbcTemplate.update("INSERT INTO t_md_model (id, model_name, deleted) VALUES (710, 'MG S5', 0)");
+        jdbcTemplate.update("INSERT INTO t_veh_production (vehicle_id, stage_status, model_id, deleted) VALUES (71, 'DRAFT', 710, 0)");
+
+        Page<VehicleListResponse> page = vehProductionMapper.selectProductionPage(
+                new Page<>(1, 10), new ProductionQueryRequest());
+
+        assertEquals(1, page.getRecords().size());
+        VehicleListResponse row = page.getRecords().get(0);
+        assertEquals(71L, row.getId());
+        assertEquals("PENDING_OFFLINE", row.getLifecycleStage());
+        assertEquals("DRAFT", row.getProductionStatus());
+        assertEquals("MG S5", row.getModelName());
     }
 
     @Test

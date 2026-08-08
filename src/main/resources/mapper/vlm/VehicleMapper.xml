@@ -92,7 +92,6 @@
         <include refid="VehiclePageColumns"/>
         <include refid="VehiclePageJoins"/>
         WHERE v.deleted = 0
-        AND v.lifecycle_stage = 'PENDING_OFFLINE'
         <include refid="VehiclePageFilters"/>
         ORDER BY v.id DESC
     </select>

@@ -79,7 +79,7 @@ public class VehicleCorrectionServiceImpl implements VehicleCorrectionService {
     private final VehicleCorrectionExcelExporter vehicleCorrectionExcelExporter;
 
     @Override
-    public PageResult<VehicleCorrectionListResponse> pageCorrections(VehicleQueryRequest request) {
+    public PageResult<VehicleCorrectionListResponse>  pageCorrections(VehicleQueryRequest request) {
         Page<VehicleCorrectionListResponse> page = vehicleMapper.selectVehicleCorrectionMasterSheetPage(
                 new Page<>(request.getPageNum(), request.getPageSize()), request);
         long firstNo = ((long) request.getPageNum() - 1L) * request.getPageSize() + 1L;

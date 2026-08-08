@@ -673,7 +673,7 @@ Authorization: Bearer <token>
 
 | 列表接口 | 固定生命周期阶段 | 用途 |
 |------|------|------|
-| `GET /api/vehicles` | `PENDING_OFFLINE` | 生产录入待办 |
+| `GET /api/production` | `PENDING_OFFLINE` | 生产录入待办 |
 | `GET /api/inbounds` | `PENDING_INBOUND` | 入库待办 |
 | `GET /api/allocations` | `PENDING_ALLOCATION` | 销售分配待办 |
 | `GET /api/invoices` | `PENDING_INVOICE` | 发票待办 |
@@ -682,6 +682,22 @@ Authorization: Bearer <token>
 | `GET /api/registrations` | `PENDING_REGISTRATION` | 上牌待办 |
 
 当前阶段尚未创建草稿记录的车辆，以及已创建草稿但尚未确认的车辆，都仍可在对应待办列表中出现；确认后的记录不提供通过 `CONFIRMED` 等参数回查历史的能力。需要查询或修订任意阶段历史数据时，应使用下述仅面向管理员的“车辆数据修订”接口。
+
+> **注意（接口调整）：** `GET /api/vehicles` 不再固定 `PENDING_OFFLINE`，已恢复为通用车辆分页查询（可选 `lifecycleStage` 过滤，默认返回全部在途/已完成车辆）。生产录入待办已迁移到独立接口 `GET /api/production`。前端「生产录入」列表须从 `GET /api/vehicles` 切换到 `GET /api/production`。
+
+#### GET /api/production
+
+**权限：** `sys:vehicle:list`
+
+生产录入待办分页列表，后端固定 `v.lifecycle_stage = 'PENDING_OFFLINE'`，调用方无法通过参数扩大到其它阶段。
+
+查询参数：`pageNum`、`pageSize`、`vin`、`modelId`、`modelName`、`series`。返回类型 `Result<PageResult<VehicleListResponse>>`，字段与列表标签同 `GET /api/vehicles`。
+
+#### GET /api/vehicles
+
+**权限：** `sys:vehicle:list`
+
+通用车辆分页查询，不固定生命周期阶段。查询参数：`pageNum`、`pageSize`、`vin`、`modelId`、`modelName`、`series`、`lifecycleStage`、`dealerId`。返回类型 `Result<PageResult<VehicleListResponse>>`。
 
 ### 6.2 车辆数据修订
 

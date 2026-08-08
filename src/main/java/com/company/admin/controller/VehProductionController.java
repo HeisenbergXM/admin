@@ -1,9 +1,12 @@
 package com.company.admin.controller;
 
 import com.company.admin.annotation.OpLog;
+import com.company.admin.common.PageResult;
 import com.company.admin.common.Result;
+import com.company.admin.dto.request.ProductionQueryRequest;
 import com.company.admin.dto.request.ProductionSaveRequest;
 import com.company.admin.dto.response.ProductionResponse;
+import com.company.admin.dto.response.VehicleListResponse;
 import com.company.admin.service.VehProductionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,6 +30,13 @@ import javax.validation.Valid;
 public class VehProductionController {
 
     private final VehProductionService vehProductionService;
+
+    @GetMapping
+    @Operation(summary = "生产录入待办列表")
+    @PreAuthorize("hasAuthority('sys:vehicle:list')")
+    public Result<PageResult<VehicleListResponse>> listProductions(ProductionQueryRequest request) {
+        return Result.success(vehProductionService.pageProductions(request));
+    }
 
     @PostMapping
     @Operation(summary = "创建车辆和生产草稿")

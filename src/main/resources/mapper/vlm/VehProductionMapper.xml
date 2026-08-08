@@ -10,4 +10,25 @@
           AND deleted = 0
         FOR UPDATE
     </select>
+
+    <!-- 生产录入待办分页：固定 PENDING_OFFLINE，复用车辆列表的列/JOIN 片段 -->
+    <select id="selectProductionPage" resultType="com.company.admin.dto.response.VehicleListResponse">
+        <include refid="com.company.admin.mapper.VehicleMapper.VehiclePageColumns"/>
+        <include refid="com.company.admin.mapper.VehicleMapper.VehiclePageJoins"/>
+        WHERE v.deleted = 0
+        AND v.lifecycle_stage = 'PENDING_OFFLINE'
+        <if test="query.vin != null and query.vin != ''">
+            AND v.vin LIKE CONCAT('%', #{query.vin}, '%')
+        </if>
+        <if test="query.modelId != null">
+            AND p.model_id = #{query.modelId}
+        </if>
+        <if test="query.modelName != null and query.modelName != ''">
+            AND m.model_name LIKE CONCAT('%', #{query.modelName}, '%')
+        </if>
+        <if test="query.series != null and query.series != ''">
+            AND m.series = #{query.series}
+        </if>
+        ORDER BY v.id DESC
+    </select>
 </mapper>
